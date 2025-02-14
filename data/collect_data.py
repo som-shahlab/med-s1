@@ -6,6 +6,10 @@ import datasets
 
 from decontaminate_util import *
 
+# Use smaller writer batch size, e.g. 200 for large datasets to avoid OOM. Default to 1000.
+# Large datasets (>1GB): LiveCodeBench, MATH, USACO
+LARGE_DATASET_WRITER_BATCH_SIZE=1000
+
 BAD_OMNIMATH_SAMPLES = [
     {"question": "Let $\\mathbb{R}$ be the set of real numbers .  Determine all functions $f\u00a0: \\mathbb{R} \\rightarrow \\mathbb{R}$ such that\n  \nfor all pairs of real numbers $x$ and $y$ ."},
     {"question": "Find the sum of the ages of everyone who wrote a problem for this year's HMMT November contest. If your answer is $X$ and the actual value is $Y$, your score will be $\\max (0,20-|X-Y|)$"},
@@ -113,7 +117,8 @@ def load_generic(name, split, question_field="question", solution_field="solutio
 
 def load_math():
     ds = datasets.load_dataset("simplescaling/openaimath", trust_remote_code=True)["train"]
-    ds = ds.map(lambda x: {"question": x.pop("problem"), "solution": x.pop("solution"), "cot_type": "math", "source_type": "simplescaling/openaimath/" + x['subject'], "metadata": str(x)})
+    ds = ds.map(lambda x: {"question": x.pop("problem"), "solution": x.pop("solution"), "cot_type": "math", "source_type": "simplescaling/openaimath/" + x['subject'], "metadata": str(x)},
+                writer_batch_size=LARGE_DATASET_WRITER_BATCH_SIZE)
     ds = ds.remove_columns([c for c in ds.column_names if c not in DS_COLUMNS])
     return ds
 
@@ -262,7 +267,8 @@ def load_xword():
 
 def load_usaco():
     ds = datasets.load_dataset("codegenning/usacobench_formatted")['test']
-    ds = ds.map(lambda x: {"question": x.pop("question").strip(), "solution": None, "cot_type": "coding", "source_type": "codegenning/usacobench_formatted", "metadata": str(x)})
+    ds = ds.map(lambda x: {"question": x.pop("question").strip(), "solution": None, "cot_type": "coding", "source_type": "codegenning/usacobench_formatted", "metadata": str(x)},
+                writer_batch_size=LARGE_DATASET_WRITER_BATCH_SIZE)
     ds = ds.remove_columns([c for c in ds.column_names if c not in DS_COLUMNS])
     return ds
 
@@ -283,7 +289,7 @@ def load_livecodebench():
                 "cot_type": "coding", 
                 "source_type": f"LiveCodeBench/{version}", 
                 "metadata": str(x)
-            })
+            }, writer_batch_size=LARGE_DATASET_WRITER_BATCH_SIZE)
         # filter only the difficult questions
         ds = ds.filter(lambda x: x["difficulty"] == "hard")
         ds = ds.remove_columns([c for c in ds.column_names if c not in DS_COLUMNS])
@@ -450,7 +456,7 @@ if __name__ == "__main__":
     for ds_name, (load_fn, selection_fn, n_samples) in DS_TO_SELECTION.items():
         print(f"Processing {ds_name}...")
         ds = load_fn()
-        # ds = decontaminate_train_data(ds['question'], test_questions, ds, ngram_size=8)
+        ds = decontaminate_train_data(ds['question'], test_questions, ds, ngram_size=8)
         if selection_fn:
             # Outdated, needs to be updated
             if ds_name == "Omni-MATH":

@@ -37,7 +37,7 @@ class o1:
             for eos_token in [step_eos, think_eos, answer_eos]
         ]
 
-        self.system_prompt = tload(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/dataset/verifier_index.txt"))
+        self.system_prompt = tload(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/verifier_index.txt"))
 
 
     def generate(self, input_ids, dir_name="tot/outputs/math_o1", temperature=0.5, max_length=2048, do_sample=True, use_rebase=False, **kwargs):

@@ -200,12 +200,12 @@ class ChatCompletionSampler:
             # unknown error shall throw exception
 
 def doc_to_text(doc: dict) -> str:
-    return QUERY_TEMPLATE.format(Question=doc["problem"])
+    return QUERY_TEMPLATE.format(Question=doc.get("problem", doc.get("question")))
 
 def process_docs(dataset: datasets.Dataset) -> datasets.Dataset:
     def _process_doc(doc: dict) -> dict:
         solution = doc.get("solution", doc.get("orig_solution", doc.get("orig_orig_solution")))
-        problem = doc.get("problem", doc.get("orig_problem", doc.get("orig_orig_problem")))
+        problem = doc.get("problem", doc.get("question"))
         answer = doc.get("answer", doc.get("orig_answer", doc.get("orig_orig_answer")))
         if solution is None:
             print("Warning: No solution found; DOC:", doc)
