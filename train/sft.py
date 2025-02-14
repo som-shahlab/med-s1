@@ -8,17 +8,43 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 import transformers
 import trl
+import json
+
+def load_config() -> Dict:
+    """Load configuration from config.json"""
+    with open("config.json", "r") as f:
+        return json.load(f)
 
 @dataclass
 class TrainingConfig:
-    model_name: str = field(default="Qwen/Qwen2.5-32B-Instruct")
+    model_name: str = field(default=None)
     block_size: int = field(default=32768)
     wandb_project: Optional[str] = field(default="s1")
     wandb_entity: Optional[str] = field(default="hashimoto-group")
-    train_file_path: Optional[str] = field(default='simplescaling/s1K_tokenized')
+    train_file_path: Optional[str] = field(default=None)
     dagger: bool = field(default=False)
 
     def __post_init__(self):
+        # Load config if not provided
+        if self.model_name is None:
+            config = load_config()
+            model_key = config["model_choices"]["base"]
+            self.model_name = config["models"][model_key]["hf_path"]
+            self.block_size = config["models"][model_key]["max_length"]
+
+        # Get latest versioned dataset from med_s1k_output directory
+        config = load_config()
+        med_s1k_dir = config["data_paths"]["med_s1k_output"]
+        
+        # List all formatted datasets and sort by timestamp
+        formatted_dirs = [d for d in os.listdir(med_s1k_dir) if d.endswith('_formatted')]
+        if not formatted_dirs:
+            raise ValueError(f"No formatted datasets found in {med_s1k_dir}")
+            
+        # Sort by timestamp (part after v1_)
+        latest_dir = sorted(formatted_dirs, key=lambda x: x.split('_', 2)[2])[-1]
+        self.train_file_path = os.path.join(med_s1k_dir, latest_dir)
+        
         os.environ['WANDB_PROJECT'] = self.wandb_project
         os.environ['WANDB_ENTITY'] = self.wandb_entity
 
@@ -40,7 +66,12 @@ def train():
     else:
         model = transformers.AutoModelForCausalLM.from_pretrained(config.model_name)
 
-    dataset = load_dataset(config.train_file_path)
+    # Load dataset from either HuggingFace hub or local disk
+    if '/' in config.train_file_path and not config.train_file_path.startswith('data/'):
+        dataset = load_dataset(config.train_file_path)
+    else:
+        from datasets import load_from_disk
+        dataset = load_from_disk(config.train_file_path)
 
     # setting up trainer
     tokenizer = transformers.AutoTokenizer.from_pretrained(config.model_name, use_fast=True)

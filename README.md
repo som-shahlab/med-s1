@@ -16,6 +16,10 @@
 
 ****************************************************************
 
+**med-s1**: A medical variant of s1 that fine-tunes Llama instead of Qwen on medical reasoning data. Uses specialty-based diversity sampling and difficulty filtering against a base model. Key files: data/curate_med_s1k.py (data curation), train/sft.py (training), config.json (model/data settings). Requires OPENAI_API_KEY environment variable for specialty labeling and answer verification.
+
+****************************************************************
+
 This repository provides an overview of all resources for the paper ["s1: Simple test-time scaling"](https://arxiv.org/abs/2501.19393).
 
 - [Artifacts](#artifacts)

@@ -1,0 +1,26 @@
+{
+    "data_paths": {
+        "specialties_list": "data/Medical_Specialties_and_Subspecialties.csv",
+        "med_s1k_output": "data/med-s1k/"
+    },
+    "model_choices": {
+      "base": "llama3.1:8b",
+      "specialty_labeler": "gpt4o-mini",
+      "base_judge": "gpt4o-mini"
+    },
+    "models": {
+        "llama3.1:8b": {
+          "hf_path": "meta-llama/Llama-3.1-8B-Instruct",
+          "max_length": 128000
+        },
+        "gpt4o-mini": {
+          "max_length": 128000
+        }
+    },
+    "curation": {
+        "version": "v1",
+        "batch_size": 32,
+        "min_cot_length": 50,
+        "target_size": 1000
+    }
+}
