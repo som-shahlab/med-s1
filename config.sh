@@ -17,6 +17,7 @@ export MED_S1K_OUTPUT="$DATA_DIR"
 
 # HF and Gemini credentials
 
+
 # Debug: Print environment variables
 echo "Cache directory: $CACHE_DIR"
 echo "Data directory: $DATA_DIR"
