@@ -1,3 +1,25 @@
+# med-s1 Curation Pipeline
+
+The curation pipeline (`data/curate_med_s1k.py`) processes medical questions through:
+
+1. Quality filtering: Remove examples with missing fields
+2. Difficulty filtering: Remove examples that base model answers correctly
+3. Diversity sampling: Select examples with long chain-of-thought reasoning (≥1000 tokens), balanced across specialties
+
+Output files in `$MED_S1K_OUTPUT/[version]_[timestamp]/`:
+- `med_s1k_filtered.parquet`: Full dataset with filtering metadata
+- `med_s1k_curated.parquet`: Selected examples only
+- `med_s1k_formatted/`: HuggingFace dataset ready for training
+
+Setup requires:
+```bash
+source config.sh  # Sets HF cache, output dirs, API keys
+```
+
+See below for training details.
+
+---
+
 <div align="center">
   <h1>s1: Simple test-time scaling</h1>
   <p>Minimal recipe for test-time scaling and strong reasoning performance matching o1-preview with just 1,000 examples & budget forcing
@@ -16,7 +38,7 @@
 
 ****************************************************************
 
-**med-s1**: A medical variant of s1 that fine-tunes Llama instead of Qwen on medical reasoning data. Uses specialty-based diversity sampling and difficulty filtering against a base model. Key files: data/curate_med_s1k.py (data curation), train/sft.py (training), config.json (model/data settings). Requires OPENAI_API_KEY environment variable for specialty labeling and answer verification.
+**med-s1**: A medical variant of s1 that fine-tunes Llama instead of Qwen on medical reasoning data. Uses specialty-based diversity sampling and difficulty filtering against a base model. Key files: `data/curate_med_s1k.py` (data curation, replacing the pipeline in `data/filter.ipynb` and `data/tokenization.py`), `train/sft.py` (training), `config.json` (model/data settings). Requires `OPENAI_API_KEY` environment variable for specialty labeling and answer verification.
 
 ****************************************************************
 

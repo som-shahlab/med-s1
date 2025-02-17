@@ -6,50 +6,128 @@ from typing import Optional, Sequence, Dict
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
 import logging
+import atexit
 from functools import partial
+from huggingface_hub import login
+
+_model = None  # Global model instance
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
     with open("config.json", "r") as f:
         return json.load(f)
 
+def cleanup_model():
+    """Safely cleanup model resources"""
+    global _model
+    if _model and hasattr(_model, 'llm_engine'):
+        try:
+            _model.llm_engine._cleanup()
+        except:
+            pass
+        _model = None
+
+def initialize_model(
+    model_name: str,
+    tokenizer_path: str,
+    max_retries: int = 3
+) -> bool:
+    """Initialize the global model instance"""
+    global _model
+    
+    if _model is not None:
+        return True
+    
+    # Set HuggingFace token from environment
+    token = os.environ.get('HUGGING_FACE_HUB_TOKEN')
+    if not token:
+        logging.error("HUGGING_FACE_HUB_TOKEN not set")
+        return False
+    
+    # Login to HuggingFace (only once)
+    try:
+        login(token=token)
+    except Exception as e:
+        logging.error(f"Failed to login to HuggingFace: {e}")
+        return False
+        
+    for attempt in range(max_retries):
+        try:
+            _model = LLM(
+                model=model_name,
+                tokenizer=tokenizer_path,
+                tensor_parallel_size=1,
+                max_num_batched_tokens=32768,  # Match max_model_len
+                gpu_memory_utilization=0.75,  # Back to default
+                max_model_len=32768,  # Keep this value
+                enforce_eager=True,
+                trust_remote_code=True,
+                device="cuda",  # Explicitly set device
+                dtype="bfloat16"  # Use bfloat16 for efficiency
+            )
+            atexit.register(cleanup_model)
+            return True
+        except Exception as e:
+            logging.error(f"Error loading model (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(5)
+    
+    return False
+
 def _llama_forward(
     prompts: Sequence[str],
     model_name: str,
     tokenizer_path: str,
-    max_length: int = 128000,
+    max_length: int = 32768,  # Match reduced max_model_len
     temperature: float = 0.05,
 ) -> Optional[Sequence[str]]:
     """Forward pass through local Llama model using vLLM"""
+    global _model
+    
+    # Initialize model if needed
+    if not initialize_model(model_name, tokenizer_path):
+        return [None] * len(prompts)
+    
     sampling_params = SamplingParams(
         temperature=temperature,
-        max_tokens=max_length
+        max_tokens=1024,  # Limit output length
+        stop=["</s>", "\n\n"],  # Add stop tokens
+        top_p=0.9,
+        frequency_penalty=0.1
     )
     
-    # Use 2 GPUs for 8B model
-    tensor_parallel_size = 2
-    
-    model = None
-    while model is None:
-        try:
-            model = LLM(
-                model=model_name,
-                tokenizer=tokenizer_path,
-                tensor_parallel_size=tensor_parallel_size
-            )
-        except Exception as e:
-            logging.error(f"Error loading model: {e}")
-            time.sleep(10)
-            
-    outputs = model.generate(
-        prompts=prompts,
-        sampling_params=sampling_params
-    )
-    
-    result = []
-    for output in outputs:
-        result.append(output.outputs[0].text)
-    return result
+    try:
+        # Get batch size from config
+        config = load_config()
+        batch_size = config["curation"]["batch_size"]
+        all_outputs = []
+        
+        # Process prompts in batches with dynamic delay
+        total_batches = (len(prompts) + batch_size - 1) // batch_size
+        for i in range(0, len(prompts), batch_size):
+            batch_prompts = prompts[i:i + batch_size]
+            try:
+                outputs = _model.generate(
+                    prompts=batch_prompts,
+                    sampling_params=sampling_params,
+                    use_tqdm=True
+                )
+                all_outputs.extend([output.outputs[0].text for output in outputs])
+                
+                # Dynamic delay based on batch size
+                delay = min(0.5 * batch_size, 4.0)  # Cap at 4 seconds
+                if i + batch_size < len(prompts):  # Don't delay after last batch
+                    time.sleep(delay)
+                
+            except Exception as e:
+                logging.error(f"Batch generation error: {e}")
+                all_outputs.extend([None] * len(batch_prompts))
+                time.sleep(1)  # Brief delay on error before retrying
+        
+        return all_outputs
+    except Exception as e:
+        logging.error(f"Error in LLaMA inference: {e}")
+        return [None] * len(prompts)
 
 def format_medical_prompt(question: str) -> str:
     """Format medical question for base model"""
@@ -71,5 +149,5 @@ def get_base_model_answers(questions: Sequence[str]) -> Sequence[Optional[str]]:
         prompts=prompts,
         model_name=model_config["hf_path"],
         tokenizer_path=model_config["hf_path"],
-        max_length=model_config["max_length"]
+        max_length=104000  # Match max_model_len
     )

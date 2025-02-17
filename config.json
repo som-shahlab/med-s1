@@ -1,26 +1,34 @@
 {
-    "data_paths": {
-        "specialties_list": "data/Medical_Specialties_and_Subspecialties.csv",
-        "med_s1k_output": "data/med-s1k/"
-    },
     "model_choices": {
-      "base": "llama3.1:8b",
-      "specialty_labeler": "gpt4o-mini",
-      "base_judge": "gpt4o-mini"
+        "base": "llama3.1:8b",
+        "specialty_labeler": "gemini-2.0-flash",
+        "base_judge": "gemini-2.0-flash"
     },
     "models": {
         "llama3.1:8b": {
-          "hf_path": "meta-llama/Llama-3.1-8B-Instruct",
-          "max_length": 128000
+            "hf_path": "meta-llama/Llama-3.1-8B-Instruct",
+            "max_length": 128000
         },
         "gpt4o-mini": {
-          "max_length": 128000
+            "max_length": 128000,
+            "pricing": {
+                "input": 0.15,
+                "output": 0.60
+            }
+        },
+        "gemini-2.0-flash": {
+            "max_length": 128000,
+            "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "pricing": {
+                "input": 0.10,
+                "output": 0.40,
+                "rpm": 2000
+            }
         }
     },
     "curation": {
-        "version": "v1",
-        "batch_size": 32,
-        "min_cot_length": 50,
-        "target_size": 1000
+        "batch_size": 8,
+        "initial_sample": 10,
+        "version": "plumbing_test_001"
     }
 }

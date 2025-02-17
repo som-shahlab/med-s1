@@ -1,31 +1,49 @@
 import json
-import openai
 import os
 import pandas as pd
 from typing import Dict, Optional
 import logging
 import time
+import asyncio
 from functools import partial
+from openai import OpenAI, AsyncOpenAI
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
     with open("config.json", "r") as f:
         return json.load(f)
 
-def get_openai_response(
+async def get_model_response(
     prompt: str,
-    model: str = "gpt4o-mini",
+    model: str,
     max_retries: int = 3,
     retry_delay: int = 60,
 ) -> Optional[str]:
-    """Get response from OpenAI API with retries"""
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-    if not openai.api_key:
-        raise ValueError("OPENAI_API_KEY environment variable not set")
+    """Get response from model API with retries"""
+    config = load_config()
+    model_config = config["models"][model]
+    
+    # Configure client based on model type
+    if model == "gpt4o-mini":
+        api_key = os.getenv('OPENAI_API_KEY')
+        base_url = None  # Use default OpenAI URL
+    else:  # Gemini models
+        api_key = os.getenv('GEMINI_API_KEY')
+        base_url = model_config["base_url"]
+    
+    if not api_key:
+        logging.error(f"API key environment variable not set for model {model}")
+        return None
+    
+    # Create async client for this request
+    client = AsyncOpenAI(
+        api_key=api_key,
+        base_url=base_url
+    )
     
     for attempt in range(max_retries):
         try:
-            response = openai.ChatCompletion.create(
+            response = await client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,  # Low temperature for consistent outputs
@@ -33,15 +51,17 @@ def get_openai_response(
             )
             return response.choices[0].message.content
         except Exception as e:
-            logging.warning(f"OpenAI API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
+            logging.warning(f"API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
             if attempt < max_retries - 1:
-                time.sleep(retry_delay)
+                await asyncio.sleep(retry_delay)
             else:
-                logging.error(f"Failed to get OpenAI response after {max_retries} attempts")
+                logging.error(f"Failed to get response after {max_retries} attempts")
                 return None
+        finally:
+            await client.close()
 
-def verify_answer(question: str, model_answer: str, correct_answer: str) -> bool:
-    """Use GPT-4-mini to verify if model's answer matches the correct answer"""
+async def verify_answer(question: str, model_answer: str, correct_answer: str) -> tuple[bool, str]:
+    """Use model to verify if model's answer matches the correct answer and provide reasoning"""
     prompt = f"""You are an expert medical knowledge evaluator. Compare the following model answer to the correct answer and determine if they are equivalent in meaning. Consider medical terminology and concepts carefully.
 
 Question: {question}
@@ -52,15 +72,20 @@ Correct Answer: {correct_answer}
 
 Are these answers equivalent in meaning? Explain your reasoning and end with a single word 'Yes' or 'No'.
 """
-    response = get_openai_response(prompt)
+    model = load_config()["model_choices"]["base_judge"]
+    response = await get_model_response(prompt, model=model)
     if response is None:
-        return False
+        return False, "Failed to get model response"
     
-    # Extract final Yes/No
-    return response.strip().split()[-1].lower() == "yes"
+    # Extract final Yes/No and keep reasoning
+    parts = response.strip().split()
+    is_correct = parts[-1].lower() == "yes"
+    reasoning = " ".join(parts[:-1])  # Everything except the final Yes/No
+    
+    return is_correct, reasoning
 
-def label_specialty(question: str, specialties_df) -> Optional[str]:
-    """Use GPT-4-mini to label question with medical specialty"""
+async def label_specialty(question: str, specialties_df) -> Optional[str]:
+    """Use model to label question with medical specialty"""
     # Create a formatted list of specialties
     specialties = []
     for _, row in specialties_df.iterrows():
@@ -79,14 +104,52 @@ Question: {question}
 
 Analyze the question and select the most relevant specialty or subspecialty. Explain your reasoning and end with the number corresponding to your choice.
 """
-    response = get_openai_response(prompt)
+    model = load_config()["model_choices"]["specialty_labeler"]
+    response = await get_model_response(prompt, model=model)
     if response is None:
         return None
         
-    # Extract final number
-    try:
-        specialty_idx = int(response.strip().split()[-1]) - 1
-        return specialties[specialty_idx]
-    except:
-        logging.error(f"Failed to parse specialty from response: {response}")
+    # Extract final number with retry logic and better parsing
+    def extract_specialty_number(text: str) -> Optional[int]:
+        # Try different patterns
+        patterns = [
+            r'(\d+)\s*$',  # Number at the end
+            r'answer is (\d+)',  # "answer is X"
+            r'Therefore.*?(\d+)',  # "Therefore... X"
+            r'specialty.*?(\d+)',  # "specialty... X"
+        ]
+        
+        for pattern in patterns:
+            if match := re.search(pattern, text, re.IGNORECASE):
+                try:
+                    return int(match.group(1)) - 1
+                except ValueError:
+                    continue
         return None
+
+    max_retries = 2
+    for attempt in range(max_retries + 1):
+        try:
+            if specialty_idx := extract_specialty_number(response):
+                if 0 <= specialty_idx < len(specialties):
+                    return specialties[specialty_idx]
+            
+            if attempt < max_retries:
+                # Retry with more explicit prompt
+                response = await get_model_response(
+                    prompt + "\n\nIMPORTANT: Your response MUST end with a single number corresponding to your choice.",
+                    model=model
+                )
+                if not response:
+                    break
+            
+        except Exception as e:
+            if attempt < max_retries:
+                logging.warning(f"Attempt {attempt + 1} failed: {e}")
+                continue
+            else:
+                logging.error(f"All attempts failed: {e}")
+                break
+    
+    logging.warning(f"Could not parse specialty from response: {response[:100]}...")
+    return None
