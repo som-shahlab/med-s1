@@ -4,7 +4,7 @@ import re
 import time
 import pandas as pd
 import numpy as np
-from datasets import load_dataset, Dataset
+from datasets import load_dataset, Dataset, load_from_disk
 from collections import Counter
 from typing import Dict, List, Sequence, Optional
 import logging
@@ -139,9 +139,6 @@ def batch_verify_answers(df: pd.DataFrame, batch_size: int = 4) -> pd.DataFrame:
         # Update progress bar with cost estimate
         estimated_cost = (total_tokens / 1000) * 0.01
         pbar.set_postfix({'Est. Cost': f'${estimated_cost:.2f}'})
-        
-        # Rate limiting: 15 RPM = 4 seconds per batch
-        time.sleep(4)
     
     # Update dataframe with results
     df.loc[df['filter_status'] == 'kept', 'base_model_response'] = all_model_answers
@@ -429,40 +426,23 @@ def format_for_training(df: pd.DataFrame, config: Dict) -> Dataset:
     # Format each example
     formatted_data = []
     for idx, row in df_selected.iterrows():
-        logging.info(f"\nProcessing example {idx}:")
-        
         # Preprocess text
         question = preprocess(row['Question'])
         thinking = preprocess(row['Complex_CoT'])
         answer = preprocess(row['Response'])
         
-        logging.info(f"Question length: {len(question)}")
-        logging.info(f"Thinking length: {len(thinking)}")
-        logging.info(f"Answer length: {len(answer)}")
-        
         # Add "Answer:" prefix if needed
         answer = "Answer: " + answer if "Answer:" not in answer else answer
-        
-        # Log first 100 chars of each
-        logging.info(f"\nQuestion preview: {question[:100]}")
-        logging.info(f"Thinking preview: {thinking[:100]}")
-        logging.info(f"Answer preview: {answer[:100]}")
         
         # Format as chat with think/answer markers
         if "Llama" in model_name:
             assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
-                              f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
-            
-            logging.info(f"\nAssistant content preview:")
-            logging.info(assistant_content[:200])
+                               f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
             
             text = tokenizer.apply_chat_template([
                 {"role": "user", "content": question},
                 {"role": "assistant", "content": assistant_content}
             ], tokenize=False)
-            
-            logging.info(f"\nFormatted text preview:")
-            logging.info(text[:200])
         else:  # Qwen
             text = tokenizer.apply_chat_template([
                 {"role": "user", "content": question},
@@ -475,10 +455,12 @@ def format_for_training(df: pd.DataFrame, config: Dict) -> Dataset:
         formatted_data.append({"text": text})
     
     # Convert to HF dataset and create train/test split
-    dataset = Dataset.from_list(formatted_data)
+    dataset = Dataset.from_dict({'text': [d['text'] for d in formatted_data]})
     
     # Split into train/test (90/10 split)
     split = dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
+    
+    logging.info(f"Split dataset into {len(split['train'])} train and {len(split['test'])} test examples")
     
     return split
 
@@ -553,7 +535,10 @@ def main():
     # Save formatted dataset for training (this is what train/sft.py will use)
     formatted_path = os.path.join(version_dir, "med_s1k_formatted")
     dataset.save_to_disk(formatted_path)
-    logging.info(f"Saved formatted dataset to {formatted_path}")
+    
+    # Verify saved dataset can be loaded
+    loaded = load_from_disk(formatted_path)
+    logging.info(f"Successfully verified and saved formatted dataset to {formatted_path}")
     
     # Save metadata
     metadata = {

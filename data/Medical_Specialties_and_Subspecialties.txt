@@ -130,3 +130,5 @@ Dentistry
 Optometry
 Podiatry
 Chiropractic Care
+Math
+Biology

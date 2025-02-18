@@ -28,7 +28,7 @@
     },
     "curation": {
         "batch_size": 8,
-        "initial_sample": 10,
+        "initial_sample": 200,
         "version": "plumbing_test_001"
     }
 }
