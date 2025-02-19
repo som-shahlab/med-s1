@@ -66,11 +66,8 @@ def train():
         torch.cuda.reset_peak_memory_stats()
     
     # loading model
-    kwargs = {
-        "torch_dtype": torch.bfloat16,
-        "use_cache": False,
-        "low_cpu_mem_usage": True
-    }
+    kwargs = {"device_map": "auto", "torch_dtype": "auto",
+              "attn_implementation": "flash_attention_2", "use_cache": False}
     model = transformers.AutoModelForCausalLM.from_pretrained(
         config.model_name,
         **kwargs
@@ -120,21 +117,6 @@ def train():
     )
     args.dataset_text_field = 'text'
     args.max_seq_length = config.block_size
-    # Configure training settings for minimal memory usage
-    args.bf16 = True  # Use bfloat16 for reduced memory
-    args.optim = "adamw_torch"
-    args.dataloader_pin_memory = False
-    args.dataloader_num_workers = 0
-    args.gradient_accumulation_steps = 1
-    args.gradient_checkpointing = True
-    
-    # Configure FSDP for memory-efficient training
-    args.fsdp = ["full_shard", "offload_optimizer"]
-    args.fsdp_config = {
-        "fsdp_offload_params": True,
-        "fsdp_state_dict_type": "FULL_STATE_DICT",
-        "fsdp_transformer_layer_cls_to_wrap": "LlamaDecoderLayer"
-    }
     
     trainer = trl.SFTTrainer(
         model,
