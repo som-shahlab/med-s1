@@ -17,11 +17,19 @@ from datetime import datetime
 import random
 import asyncio
 
+# Configure logging to only show INFO and above, with minimal formatting
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(message)s',
     datefmt='%H:%M:%S'
 )
+
+# Disable all HTTP request logging
+logging.getLogger("openai").setLevel(logging.ERROR)
+logging.getLogger("requests").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("httpcore").setLevel(logging.ERROR)
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
@@ -473,6 +481,11 @@ def main():
     random.seed(42)
     np.random.seed(42)
     
+    # Reduce HTTP request logging
+    logging.getLogger("openai").setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    
     # Load medical dataset
     dataset = load_dataset("FreedomIntelligence/medical-o1-reasoning-SFT", "en", split="train")
     logging.info(f"Loaded {len(dataset)} examples")
@@ -500,11 +513,305 @@ def main():
     # Quality filtering
     df = quality_filter(df, config)
     
-    # Difficulty filtering with configured batch size
-    df = batch_verify_answers(df, batch_size=curation_config["batch_size"])
+    # Initialize DataFrame columns
+    df['base_model_response'] = None
+    df['base_model_correct'] = None
+    df['base_model_judgment'] = None
+    df['specialty'] = None
     
-    # Label specialties with configured batch size
-    df = batch_label_specialties(df, batch_size=curation_config["batch_size"])
+    # Set up queues for concurrent processing
+    llama_queue = asyncio.Queue()  # Queue for Llama inference results
+    gemini_queue = asyncio.Queue()  # Queue for Gemini verification results
+    specialty_queue = asyncio.Queue()  # Queue for specialty labeling
+    completion_queue = asyncio.Queue()  # Queue for signaling completion
+
+    async def llama_worker():
+        """Process questions through Llama model in batches"""
+        df_to_process = df[df['filter_status'] == 'kept'].copy()
+        questions = df_to_process['Question'].tolist()
+        total_processed = 0
+        
+        for i in range(0, len(questions), curation_config["llama_batch_size"]):
+            batch_questions = questions[i:i + curation_config["llama_batch_size"]]
+            batch_answers = get_base_model_answers(batch_questions)
+            
+            # Put entire batch into queue
+            batch_data = list(zip(batch_questions, batch_answers))
+            await llama_queue.put(batch_data)
+            
+            total_processed += len(batch_questions)
+            if total_processed % 100 == 0:
+                logging.info(f"Processed {total_processed} questions through Llama")
+        
+        # Signal completion
+        await llama_queue.put(None)
+
+    async def gemini_worker():
+        """Verify answers with Gemini using batched processing"""
+        results_dict = {}  # Store results by question
+        total_verified = 0
+        hard_questions = []  # Collect hard questions for specialty worker
+        start_time = time.time()
+        
+        try:
+            while True:
+                try:
+                    batch_data = await asyncio.wait_for(llama_queue.get(), timeout=0.1)
+                    if batch_data is None:
+                        break
+                    
+                    # Unpack batch data
+                    batch_questions = []
+                    batch_answers = []
+                    batch_correct = []
+                    
+                    for question, answer in batch_data:
+                        correct_answer = df[df['Question'] == question]['Response'].iloc[0]
+                        batch_questions.append(question)
+                        batch_answers.append(answer)
+                        batch_correct.append(correct_answer)
+                    
+                    total_to_verify = len(batch_questions)
+                    verified_count = 0
+                    
+                    # Process in sub-batches to stay within API limits
+                    for i in range(0, len(batch_questions), curation_config["gemini_batch_size"]):
+                        sub_batch_questions = batch_questions[i:i + curation_config["gemini_batch_size"]]
+                        sub_batch_answers = batch_answers[i:i + curation_config["gemini_batch_size"]]
+                        sub_batch_correct = batch_correct[i:i + curation_config["gemini_batch_size"]]
+                        
+                        logging.info(f"Verifying batch {i//curation_config['gemini_batch_size'] + 1}/{(total_to_verify + curation_config['gemini_batch_size'] - 1)//curation_config['gemini_batch_size']}")
+                        logging.info(f"Progress: {verified_count}/{total_to_verify} questions verified ({verified_count/total_to_verify*100:.1f}%)")
+                        
+                        results = await verify_answers_batch(
+                            sub_batch_questions,
+                            sub_batch_answers,
+                            sub_batch_correct
+                        )
+                        
+                        verified_count += len(sub_batch_questions)
+                        # Calculate and show ETA
+                        elapsed_time = time.time() - start_time
+                        avg_time_per_question = elapsed_time / verified_count if verified_count > 0 else 0
+                        remaining_questions = total_to_verify - verified_count
+                        eta_seconds = avg_time_per_question * remaining_questions
+                        eta_minutes = eta_seconds / 60
+                        
+                        logging.info(f"Batch complete. Progress: {verified_count}/{total_to_verify} ({verified_count/total_to_verify*100:.1f}%)")
+                        logging.info(f"Estimated time remaining: {eta_minutes:.1f} minutes")
+                        
+                        # Store results and collect hard questions
+                        for q, (is_correct, judgment), answer in zip(sub_batch_questions, results, sub_batch_answers):
+                            results_dict[q] = {
+                                'base_model_response': answer,
+                                'base_model_correct': is_correct,
+                                'base_model_judgment': judgment
+                            }
+                            if not is_correct:  # Hard question
+                                hard_questions.append(q)
+                        
+                        total_verified += len(sub_batch_questions)
+                        if total_verified % 50 == 0:
+                            logging.info(f"Verified {total_verified} answers")
+                        
+                        # Rate limiting to stay under 2000 RPM
+                        min_delay_per_request = 60/2000  # seconds per request
+                        batch_delay = len(sub_batch_questions) * min_delay_per_request
+                        logging.info(f"Rate limiting: sleeping for {batch_delay:.2f}s after batch of {len(sub_batch_questions)}")
+                        await asyncio.sleep(batch_delay)
+                    
+                    # Send hard questions to specialty worker immediately
+                    for q in hard_questions:
+                        await specialty_queue.put(q)
+                    hard_questions = []
+                    
+                except asyncio.TimeoutError:
+                    continue
+                except Exception as e:
+                    logging.error(f"Error processing batch: {str(e)}")
+                    continue
+            
+            # Process any remaining hard questions
+            for q in hard_questions:
+                await specialty_queue.put(q)
+            
+            # Update DataFrame with all results
+            for question, result in results_dict.items():
+                mask = df['Question'] == question
+                df.loc[mask, 'base_model_response'] = result['base_model_response']
+                df.loc[mask, 'base_model_correct'] = result['base_model_correct']
+                df.loc[mask, 'base_model_judgment'] = result['base_model_judgment']
+            
+            # Signal completion to specialty worker
+            await specialty_queue.put(None)
+            logging.info("Gemini verification complete, signaled specialty worker")
+            
+        except Exception as e:
+            logging.error(f"Fatal error in gemini_worker: {str(e)}")
+            await specialty_queue.put(None)  # Signal completion even on error
+            raise
+
+    async def specialty_worker():
+        """Label specialties for hard questions as they come in from gemini worker"""
+        questions_to_process = []
+        total_processed = 0
+        
+        while True:
+            try:
+                # Get next batch of hard questions or None if done
+                batch = await asyncio.wait_for(specialty_queue.get(), timeout=0.1)
+                if batch is None:
+                    # Process any remaining questions
+                    if questions_to_process:
+                        logging.info(f"Processing final specialty batch of {len(questions_to_process)} questions (total processed: {total_processed})")
+                        specialties = await batch_classify_specialties(
+                            questions=questions_to_process,
+                            model=config["model_choices"]["specialty_labeler"],
+                            batch_size=len(questions_to_process)
+                        )
+                        # Update dataframe
+                        for q, s in zip(questions_to_process, specialties):
+                            df.loc[df['Question'] == q, 'specialty'] = s
+                        total_processed += len(questions_to_process)
+                    break
+                
+                # Add new questions to processing queue
+                if isinstance(batch, list):
+                    logging.info(f"Received batch of {len(batch)} hard questions from gemini worker")
+                    questions_to_process.extend(batch)
+                else:
+                    logging.info("Received single hard question from gemini worker")
+                    questions_to_process.append(batch)
+                
+                # Process in batches when we have enough questions
+                while len(questions_to_process) >= curation_config["gemini_batch_size"]:
+                    current_batch = questions_to_process[:curation_config["gemini_batch_size"]]
+                    questions_to_process = questions_to_process[curation_config["gemini_batch_size"]:]
+                    
+                    total_questions = len(df[df['filter_status'] == 'kept'])
+                    batch_num = total_processed // curation_config["gemini_batch_size"] + 1
+                    total_batches = (total_questions + curation_config["gemini_batch_size"] - 1) // curation_config["gemini_batch_size"]
+                    
+                    logging.info(f"\nSpecialty Classification Batch {batch_num}/{total_batches}")
+                    logging.info(f"Overall Progress: {total_processed}/{total_questions} questions ({total_processed/total_questions*100:.1f}%)")
+                    logging.info(f"Current batch size: {len(current_batch)} questions")
+                    
+                    try:
+                        specialties = await batch_classify_specialties(
+                            questions=current_batch,
+                            model=config["model_choices"]["specialty_labeler"],
+                            batch_size=curation_config["gemini_batch_size"]
+                        )
+                        
+                        total_processed += len(current_batch)
+                        
+                        # Calculate and show ETA
+                        elapsed_time = time.time() - start_time
+                        avg_time_per_question = elapsed_time / total_processed
+                        remaining_questions = total_questions - total_processed
+                        eta_seconds = avg_time_per_question * remaining_questions
+                        eta_minutes = eta_seconds / 60
+                        
+                        current_time = datetime.now().strftime("%H:%M:%S")
+                        logging.info(f"[{current_time}] Batch complete. Progress: {total_processed}/{total_questions} ({total_processed/total_questions*100:.1f}%)")
+                        logging.info(f"[{current_time}] Processing rate: {total_processed/elapsed_time:.1f} questions/second")
+                        logging.info(f"[{current_time}] Estimated time remaining: {eta_minutes:.1f} minutes")
+                        
+                        # Show specialty distribution so far
+                        if total_processed % (curation_config["gemini_batch_size"] * 2) == 0:
+                            logging.info("\nCurrent specialty distribution:")
+                            current_dist = df[df['specialty'].notna()]['specialty'].value_counts()
+                            for specialty, count in current_dist.head().items():
+                                logging.info(f"- {specialty}: {count}")
+                    except Exception as e:
+                        logging.error(f"Error classifying specialties: {e}")
+                        raise
+                    
+                    # Update dataframe
+                    for q, s in zip(current_batch, specialties):
+                        df.loc[df['Question'] == q, 'specialty'] = s
+                    
+                    total_processed += len(current_batch)
+                    if total_processed % 50 == 0:
+                        logging.info(f"Processed {total_processed} specialties so far")
+                    
+                    # Rate limiting to stay under 2000 RPM
+                    min_delay_per_request = 60/2000  # seconds per request
+                    batch_delay = len(current_batch) * min_delay_per_request
+                    logging.info(f"Rate limiting: sleeping for {batch_delay:.2f}s after specialty batch of {len(current_batch)}")
+                    await asyncio.sleep(batch_delay)
+                    
+            except asyncio.TimeoutError:
+                # If we have accumulated questions but haven't received new ones,
+                # process what we have
+                if len(questions_to_process) >= curation_config["gemini_batch_size"] // 2:
+                    current_batch = questions_to_process
+                    questions_to_process = []
+                    
+                    logging.info(f"Processing accumulated batch of {len(current_batch)} questions")
+                    specialties = await batch_classify_specialties(
+                        questions=current_batch,
+                        model=config["model_choices"]["specialty_labeler"],
+                        batch_size=len(current_batch)
+                    )
+                    
+                    # Update dataframe
+                    for q, s in zip(current_batch, specialties):
+                        df.loc[df['Question'] == q, 'specialty'] = s
+                    
+                    total_processed += len(current_batch)
+                    if total_processed % 50 == 0:
+                        logging.info(f"Processed {total_processed} specialties so far")
+        
+        # Add timestamp after processing is complete
+        timestamp = datetime.now().isoformat()
+        df['specialty_label_timestamp'] = timestamp
+        logging.info(f"Completed specialty classification at {timestamp}: {total_processed} questions processed")
+
+    # Run workers concurrently
+    async def run_pipeline():
+        await asyncio.gather(
+            llama_worker(),
+            gemini_worker(),
+            specialty_worker()
+        )
+
+    # Execute the pipeline and track timing
+    start_time = time.time()
+    asyncio.run(run_pipeline())
+    pipeline_time = time.time() - start_time
+
+    # Ensure base model results are populated
+    if 'base_model_correct' not in df.columns:
+        raise ValueError("Pipeline did not properly populate base model results")
+        
+    # Log timing metrics for throughput analysis
+    total_examples = len(df)
+    examples_per_second = total_examples / pipeline_time
+    projected_full_time = (25000 / examples_per_second) / 3600  # hours
+    
+    logging.info("\nThroughput Analysis:")
+    logging.info(f"Total processing time: {pipeline_time:.2f}s")
+    logging.info(f"Examples per second: {examples_per_second:.2f}")
+    logging.info(f"Projected time for full dataset (25,000): {projected_full_time:.2f} hours")
+    
+    # Log verification results
+    logging.info("\nBase model performance:")
+    logging.info(f"Total processed: {len(df[df['base_model_response'].notna()])}")
+    logging.info(f"Correct: {len(df[df['base_model_correct'] == True])}")
+    logging.info(f"Incorrect: {len(df[df['base_model_correct'] == False])}")
+    
+    # Update difficulty scores and filter status
+    df.loc[df['filter_status'] == 'kept', 'difficulty_score'] = df.loc[df['filter_status'] == 'kept', 'base_model_correct'].map({True: 0, False: 1})
+    difficulty_mask = (df['filter_status'] == 'kept') & (df['base_model_correct'] == True)
+    df.loc[difficulty_mask, 'filter_status'] = 'removed'
+    df.loc[difficulty_mask, 'filter_stage'] = 'difficulty'
+    df.loc[difficulty_mask, 'filter_reason'] = 'base_model_correct'
+    
+    # Log difficulty filtering results
+    difficulty_filtered = df[df['filter_stage'] == 'difficulty']
+    logging.info("\nDifficulty filtering results:")
+    logging.info(f"Removed in difficulty stage: {len(difficulty_filtered)}")
     
     # Diversity sampling
     df = diversity_sample(df)
@@ -580,10 +887,10 @@ def main():
             "quality_score_distribution": {k: int(v) for k, v in df['quality_score'].value_counts().to_dict().items()},
             "specialty_distribution": {k: int(v) for k, v in df[df['selected_for_training']]['specialty'].value_counts().to_dict().items()},
             "cot_length_stats": {
-                "mean": float(df[df['selected_for_training']]['cot_length'].mean()),
-                "median": float(df[df['selected_for_training']]['cot_length'].median()),
-                "min": int(df[df['selected_for_training']]['cot_length'].min()),
-                "max": int(df[df['selected_for_training']]['cot_length'].max())
+                "mean": float(df[df['selected_for_training']]['cot_length'].mean()) if len(df[df['selected_for_training']]) > 0 else 0.0,
+                "median": float(df[df['selected_for_training']]['cot_length'].median()) if len(df[df['selected_for_training']]) > 0 else 0.0,
+                "min": int(df[df['selected_for_training']]['cot_length'].min()) if len(df[df['selected_for_training']]) > 0 else 0,
+                "max": int(df[df['selected_for_training']]['cot_length'].max()) if len(df[df['selected_for_training']]) > 0 else 0
             }
         }
     }

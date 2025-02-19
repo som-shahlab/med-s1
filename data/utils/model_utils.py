@@ -57,13 +57,13 @@ def initialize_model(
                 model=model_name,
                 tokenizer=tokenizer_path,
                 tensor_parallel_size=1,
-                max_num_batched_tokens=32768,  # Match max_model_len
-                gpu_memory_utilization=0.75,  # Back to default
-                max_model_len=32768,  # Keep this value
-                enforce_eager=True,
+                max_num_batched_tokens=131072,  # Doubled again for A100
+                gpu_memory_utilization=0.95,    # Keep at 95%
+                max_model_len=32768,
+                enforce_eager=False,            # Keep CUDA graph enabled
                 trust_remote_code=True,
-                device="cuda",  # Explicitly set device
-                dtype="bfloat16"  # Use bfloat16 for efficiency
+                device="cuda",
+                dtype="bfloat16"
             )
             atexit.register(cleanup_model)
             return True
@@ -78,7 +78,7 @@ def _llama_forward(
     prompts: Sequence[str],
     model_name: str,
     tokenizer_path: str,
-    max_length: int = 32768,  # Match reduced max_model_len
+    max_length: int = 32768,
     temperature: float = 0.05,
 ) -> Optional[Sequence[str]]:
     """Forward pass through local Llama model using vLLM"""
@@ -90,20 +90,19 @@ def _llama_forward(
     
     sampling_params = SamplingParams(
         temperature=temperature,
-        max_tokens=1024,  # Limit output length
-        stop=["</s>", "\n\n"],  # Add stop tokens
+        max_tokens=1024,
+        stop=["</s>", "\n\n"],
         top_p=0.9,
         frequency_penalty=0.1
     )
     
     try:
-        # Get batch size from config
+        # Get LLaMA batch size from config
         config = load_config()
-        batch_size = config["curation"]["batch_size"]
+        batch_size = config["curation"]["llama_batch_size"]
         all_outputs = []
         
-        # Process prompts in batches with dynamic delay
-        total_batches = (len(prompts) + batch_size - 1) // batch_size
+        # Process prompts in batches with memory management
         for i in range(0, len(prompts), batch_size):
             batch_prompts = prompts[i:i + batch_size]
             try:
@@ -114,15 +113,15 @@ def _llama_forward(
                 )
                 all_outputs.extend([output.outputs[0].text for output in outputs])
                 
-                # Dynamic delay based on batch size
-                delay = min(0.5 * batch_size, 4.0)  # Cap at 4 seconds
-                if i + batch_size < len(prompts):  # Don't delay after last batch
-                    time.sleep(delay)
-                
+                # # Force cache clearing after each batch
+                # if hasattr(_model, 'llm_engine'):
+                #     _model.llm_engine._cleanup()
+                    
+                # Small delay between batches
+                time.sleep(0.1)
             except Exception as e:
                 logging.error(f"Batch generation error: {e}")
                 all_outputs.extend([None] * len(batch_prompts))
-                time.sleep(1)  # Brief delay on error before retrying
         
         return all_outputs
     except Exception as e:

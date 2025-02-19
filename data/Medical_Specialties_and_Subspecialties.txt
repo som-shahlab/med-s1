@@ -132,3 +132,16 @@ Podiatry
 Chiropractic Care
 Math
 Biology
+Computer Science
+Statistics
+Physics
+Chemistry
+Economics
+Education
+Law
+History
+Geography
+Politics
+Religion
+General Knowledge
+Astronomy

@@ -4,61 +4,74 @@ import pandas as pd
 from typing import Dict, Optional
 import logging
 import time
+import random
 import asyncio
 from functools import partial
 from openai import OpenAI, AsyncOpenAI
+
+# Configure logging to only show warnings and errors
+logging.getLogger().setLevel(logging.WARNING)
+
+# Global clients for reuse
+_openai_client = None
+_gemini_client = None
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
     with open("config.json", "r") as f:
         return json.load(f)
 
+def get_client(model: str) -> AsyncOpenAI:
+    """Get or create API client"""
+    global _openai_client, _gemini_client
+    config = load_config()
+    model_config = config["models"][model]
+    
+    if model == "gpt4o-mini":
+        if _openai_client is None:
+            api_key = os.getenv('OPENAI_API_KEY')
+            if not api_key:
+                raise ValueError("OPENAI_API_KEY not set")
+            _openai_client = AsyncOpenAI(api_key=api_key)
+        return _openai_client
+    else:  # Gemini models
+        if _gemini_client is None:
+            api_key = os.getenv('GEMINI_API_KEY')
+            if not api_key:
+                raise ValueError("GEMINI_API_KEY not set")
+            _gemini_client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=model_config["base_url"]
+            )
+        return _gemini_client
+
 async def get_model_response(
     prompt: str,
     model: str,
     max_retries: int = 3,
-    retry_delay: int = 60,
+    initial_retry_delay: float = 0.1  # Start with 100ms delay
 ) -> Optional[str]:
-    """Get response from model API with retries"""
-    config = load_config()
-    model_config = config["models"][model]
-    
-    # Configure client based on model type
-    if model == "gpt4o-mini":
-        api_key = os.getenv('OPENAI_API_KEY')
-        base_url = None  # Use default OpenAI URL
-    else:  # Gemini models
-        api_key = os.getenv('GEMINI_API_KEY')
-        base_url = model_config["base_url"]
-    
-    if not api_key:
-        logging.error(f"API key environment variable not set for model {model}")
-        return None
-    
-    # Create async client for this request
-    client = AsyncOpenAI(
-        api_key=api_key,
-        base_url=base_url
-    )
+    """Get response from model API with exponential backoff"""
+    client = get_client(model)
     
     for attempt in range(max_retries):
         try:
             response = await client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,  # Low temperature for consistent outputs
+                temperature=0.1,
                 max_tokens=500
             )
             return response.choices[0].message.content
         except Exception as e:
-            logging.warning(f"API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
             if attempt < max_retries - 1:
-                await asyncio.sleep(retry_delay)
+                # Exponential backoff with jitter
+                delay = initial_retry_delay * (2 ** attempt) * (0.5 + random.random())
+                logging.warning(f"API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                await asyncio.sleep(delay)
             else:
                 logging.error(f"Failed to get response after {max_retries} attempts")
                 return None
-        finally:
-            await client.close()
 
 async def verify_answer(question: str, model_answer: str, correct_answer: str) -> tuple[bool, str]:
     """Use model to verify if model's answer matches the correct answer and provide reasoning"""
