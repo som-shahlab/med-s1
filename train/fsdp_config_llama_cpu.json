@@ -1,0 +1,12 @@
+{
+    "fsdp_offload_params": false,
+    "fsdp_state_dict_type": "FULL_STATE_DICT",
+    "fsdp_transformer_layer_cls_to_wrap": ["LlamaDecoderLayer"],
+    "activation_checkpointing": true,
+    "activation_checkpointing_policy": "transformer_based",
+    "limit_all_gathers": true,
+    "use_orig_params": true,
+    "sync_module_states": true,
+    "xla": false,
+    "xla_fsdp_grad_ckpt": false
+}

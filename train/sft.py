@@ -32,22 +32,9 @@ class TrainingConfig:
             self.model_name = config["models"][model_key]["hf_path"]
             self.block_size = config["models"][model_key]["max_length"]
 
-        # Get latest versioned dataset from environment variable
-        med_s1k_dir = os.environ.get('MED_S1K_OUTPUT')
-        if not med_s1k_dir:
-            raise ValueError("MED_S1K_OUTPUT environment variable not set")
-        
-        # List all version directories and sort by timestamp
-        version_dirs = [d for d in os.listdir(med_s1k_dir) if d.startswith('plumbing_test_')]
-        if not version_dirs:
-            raise ValueError(f"No version directories found in {med_s1k_dir}")
-            
-        # Sort by timestamp (part after plumbing_test_)
-        latest_dir = sorted(version_dirs, key=lambda x: x.split('_', 3)[3])[-1]
-        formatted_path = os.path.join(med_s1k_dir, latest_dir, 'med_s1k_formatted')
-        if not os.path.exists(formatted_path):
-            raise ValueError(f"No formatted dataset found at {formatted_path}")
-        self.train_file_path = formatted_path
+        # Use provided train_file_path if available
+        if self.train_file_path is None:
+            raise ValueError("train_file_path must be provided")
         
         os.environ['WANDB_PROJECT'] = self.wandb_project
         os.environ['WANDB_ENTITY'] = self.wandb_entity
@@ -65,9 +52,29 @@ def train():
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
     
+    # Initialize CUDA and distributed setup
+    local_rank = int(os.environ.get('LOCAL_RANK', 0))
+    world_size = int(os.environ.get('WORLD_SIZE', 1))
+    
+    # Initialize CUDA device
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available")
+    
+    # Set device and ensure it's initialized
+    torch.cuda.set_device(local_rank)
+    device = torch.device('cuda', local_rank)
+    torch.cuda.init()
+    
+    # Wait for all devices to be ready
+    torch.cuda.synchronize()
+    
     # loading model
-    kwargs = {"device_map": "auto", "torch_dtype": "auto",
-              "attn_implementation": "flash_attention_2", "use_cache": False}
+    kwargs = {
+        "device_map": {"": local_rank},
+        "torch_dtype": torch.bfloat16,
+        "use_cache": False,
+        "low_cpu_mem_usage": True
+    }
     model = transformers.AutoModelForCausalLM.from_pretrained(
         config.model_name,
         **kwargs
@@ -117,6 +124,10 @@ def train():
     )
     args.dataset_text_field = 'text'
     args.max_seq_length = config.block_size
+    
+    # Set distributed training configuration
+    args.ddp_backend = 'nccl'  # Use NCCL for GPU communication
+    args.distributed_state = None  # Let the Trainer handle distributed state
     
     trainer = trl.SFTTrainer(
         model,
