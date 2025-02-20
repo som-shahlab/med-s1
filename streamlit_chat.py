@@ -41,9 +41,11 @@ def main():
         # Show user message
         st.chat_message("user").write(user_input)
         
-        # Create chat format
-        dialog = [{"role": "user", "content": user_input}]
-        prompt = st.session_state.tokenizer.apply_chat_template(dialog, tokenize=False)
+        # Create chat format with system message
+        messages = [
+            {"role": "user", "content": "You are a medical expert responding to the following query from the user: " + user_input}
+        ]
+        prompt = st.session_state.tokenizer.apply_chat_template(messages, tokenize=False)
         
         # Tokenize input
         inputs = st.session_state.tokenizer(prompt, return_tensors="pt", padding=True).to(st.session_state.model.device)
