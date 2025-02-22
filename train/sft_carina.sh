@@ -18,11 +18,12 @@ mkdir -p /share/pi/nigam/users/calebwin/med-s1/logs
 # Set training parameters
 lr=1e-5
 epochs=5
-batch_size=8  # Reduced from 16 to be more conservative
+batch_size=4  # Reduced from 16 to be more conservative
 weight_decay=1e-4
+model="meta-llama/Llama-3.1-8B-Instruct"
+strategy="fsdp"
 path_to_train_dataset="/share/pi/nigam/data/med_s1k/s1_replication/med_s1k_formatted"
 dataset_name=$(basename "${path_to_train_dataset}")
-
 uid="$(date +%Y%m%d_%H%M%S)"
 
 # Parse command-line arguments
@@ -34,6 +35,8 @@ while [[ $# -gt 0 ]]; do
         --weight_decay) weight_decay="$2"; shift 2 ;;
         --path_to_train_dataset) path_to_train_dataset="$2"; shift 2 ;;
         --uid) uid="$2"; shift 2 ;;
+        --strategy) strategy="$2"; shift 2 ;;
+        --model) model="$2"; shift 2 ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
 done
@@ -62,7 +65,6 @@ export NCCL_NVLS_ENABLE=0
 export NCCL_ASYNC_ERROR_HANDLING=1
 
 # CUDA settings
-export CUDA_VISIBLE_DEVICES=0,1,2,3
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
 # Disable wandb
@@ -99,34 +101,63 @@ export MASTER_PORT=$master_port
 echo "Outputting to: ${CACHE_DIR}/ckpts/${run_name}"
 echo "Train file path: ${LOCAL_DATA_DIR}/med_s1k_formatted"
 
-torchrun \
-    --nproc_per_node=$gpu_count \
-    $(pwd)/train/sft.py \
-    --block_size=32768 \
-    --per_device_train_batch_size=1 \
-    --per_device_eval_batch_size=1 \
-    --gradient_accumulation_steps=$grad_acc \
-    --num_train_epochs=${epochs} \
-    --train_file_path="${LOCAL_DATA_DIR}/med_s1k_formatted" \
-    --model_name="meta-llama/Llama-3.1-8B-Instruct" \
-    --warmup_ratio=0.05 \
-    --report_to="none" \
-    --fsdp="full_shard auto_wrap" \
-    --fsdp_config="$(pwd)/train/fsdp_config_llama_cpu.json" \
-    --bf16=True \
-    --eval_strategy="no" \
-    --logging_steps=1 \
-    --save_strategy="epoch" \
-    --lr_scheduler_type="cosine" \
-    --learning_rate=${lr} \
-    --weight_decay=${weight_decay} \
-    --adam_beta1=0.9 \
-    --adam_beta2=0.95 \
-    --output_dir="${CACHE_DIR}/ckpts/${run_name}" \
-    --push_to_hub=false \
-    --save_only_model=True \
-    --ddp_find_unused_parameters=False \
-    --ddp_timeout=3600
+if [ "$strategy" == "fsdp" ]; then
+    torchrun \
+        --nproc_per_node=$gpu_count \
+        $(pwd)/train/sft.py \
+        --block_size=32768 \
+        --per_device_train_batch_size=1 \
+        --per_device_eval_batch_size=1 \
+        --gradient_accumulation_steps=$grad_acc \
+        --num_train_epochs=${epochs} \
+        --train_file_path="${LOCAL_DATA_DIR}/med_s1k_formatted" \
+        --model_name="${model}" \
+        --warmup_ratio=0.05 \
+        --report_to="none" \
+        --bf16=True \
+        --eval_strategy="no" \
+        --logging_steps=100 \
+        --save_strategy="epoch" \
+        --lr_scheduler_type="cosine" \
+        --learning_rate=${lr} \
+        --weight_decay=${weight_decay} \
+        --adam_beta1=0.9 \
+        --adam_beta2=0.95 \
+        --output_dir="${CACHE_DIR}/ckpts/${run_name}" \
+        --push_to_hub=false \
+        --save_only_model=True \
+        --ddp_find_unused_parameters=False \
+        --ddp_timeout=3600 \
+        --fsdp="full_shard auto_wrap" \
+        --fsdp_config="$(pwd)/train/fsdp_config_llama_cpu.json"
+else
+    torchrun \
+        --nproc_per_node=$gpu_count \
+        $(pwd)/train/sft.py \
+        --block_size=32768 \
+        --per_device_train_batch_size=1 \
+        --per_device_eval_batch_size=1 \
+        --gradient_accumulation_steps=$grad_acc \
+        --num_train_epochs=${epochs} \
+        --train_file_path="${LOCAL_DATA_DIR}/med_s1k_formatted" \
+        --model_name="${model}" \
+        --warmup_ratio=0.05 \
+        --report_to="none" \
+        --bf16=True \
+        --eval_strategy="no" \
+        --logging_steps=100 \
+        --save_strategy="epoch" \
+        --lr_scheduler_type="cosine" \
+        --learning_rate=${lr} \
+        --weight_decay=${weight_decay} \
+        --adam_beta1=0.9 \
+        --adam_beta2=0.95 \
+        --output_dir="${CACHE_DIR}/ckpts/${run_name}" \
+        --push_to_hub=false \
+        --save_only_model=True \
+        --ddp_find_unused_parameters=False \
+        --ddp_timeout=3600
+fi
 
 # Copy results back and cleanup
 echo "Copying results back to shared storage..."

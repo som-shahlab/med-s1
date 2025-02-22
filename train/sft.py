@@ -112,6 +112,8 @@ def train():
         response_template = "<|im_start|>assistant\n"
         # Use a token that is never used
         tokenizer.pad_token = "<|fim_pad|>"
+    else:
+        raise ValueError(f"Model name {config.model_name} not supported")
 
     # Only compute loss over assistant responses
     # Verified that it precisely starts where the thinking tokens start and ends with the first pad token
@@ -134,7 +136,7 @@ def train():
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'] if 'test' in dataset else dataset['train'],
         args=args,
-        data_collator=collator
+        data_collator=collator,
     )
 
     logging.critical(f'Outputting to: `{args.output_dir}`')
