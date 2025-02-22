@@ -113,7 +113,7 @@ Run eval on **HuatuoGPT-o1-8B** model:
 # Start SGLang server
 model_name="FreedomIntelligence/HuatuoGPT-o1-8B" # Path to the model you are deploying
 port=28035
-python -m sglang.launch_server --model-path $model_name --port $port --mem-fraction-static 0.8 --dp 1 --tp 1
+python -m sglang.launch_server --model-path $model_name --port $port --mem-fraction-static 0.8 --dp 1 --tp 1 > sglang.log 2>&1 &
 
 # Run evals
 python eval/eval.py --model_name $model_name  --path_to_eval_json eval/data/eval_data.json --port $port --path_to_output_dir eval/results
@@ -128,7 +128,7 @@ Run eval on **local model**:
 # Start SGLang server
 model_name="/share/pi/nigam/users/calebwin/hf_cache/ckpts/med_s1_/share/pi/nigam/data/med_s1k/s1_replication/med_s1k_formatted_bs8_lr1e-5_epoch5_wd1e-4_20250220_011621/checkpoint-450"
 port=28035
-python -m sglang.launch_server --model-path $model_name --port $port --mem-fraction-static 0.8 --dp 1 --tp 1
+python -m sglang.launch_server --model-path $model_name --port $port --mem-fraction-static 0.8 --dp 1 --tp 1 > sglang.log 2>&1 &
 
 # Run evals
 python eval/eval.py --model_name $model_name  --path_to_eval_json eval/data/eval_data.json --port $port --path_to_output_dir eval/results
