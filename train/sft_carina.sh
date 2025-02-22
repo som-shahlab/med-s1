@@ -20,7 +20,9 @@ lr=1e-5
 epochs=5
 batch_size=8  # Reduced from 16 to be more conservative
 weight_decay=1e-4
-train_dataset_name="/share/pi/nigam/data/med_s1k/s1_replication/med_s1k_formatted"
+path_to_train_dataset="/share/pi/nigam/data/med_s1k/s1_replication/med_s1k_formatted"
+dataset_name=$(basename "${path_to_train_dataset}")
+
 uid="$(date +%Y%m%d_%H%M%S)"
 
 # Parse command-line arguments
@@ -30,7 +32,7 @@ while [[ $# -gt 0 ]]; do
         --epochs) epochs="$2"; shift 2 ;;
         --batch_size) batch_size="$2"; shift 2 ;;
         --weight_decay) weight_decay="$2"; shift 2 ;;
-        --train_dataset_name) train_dataset_name="$2"; shift 2 ;;
+        --path_to_train_dataset) path_to_train_dataset="$2"; shift 2 ;;
         --uid) uid="$2"; shift 2 ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
@@ -44,9 +46,9 @@ source $(pwd)/config.sh || { echo "Failed to source config.sh"; exit 1; }
 
 # Setup environment
 echo "Setting up conda environment..."
-source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+# source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
 echo "Activating med-s1 environment..."
-conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+# conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Set environment variables
 echo "Setting environment variables..."
@@ -68,7 +70,7 @@ export WANDB_DISABLED=true
 export WANDB_MODE=disabled
 
 # Calculate gradient accumulation steps
-gpu_count=4  # Using 4 H100s
+gpu_count=$(nvidia-smi -L | wc -l) # use max number of GPUs on node
 grad_acc=$((batch_size/gpu_count))
 
 echo "Number of GPUs: $gpu_count"
@@ -82,18 +84,20 @@ mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; e
 
 # Copy data to local scratch
 echo "Copying data to local scratch..."
-echo "Source: ${train_dataset_name}"
-echo "Destination: $LOCAL_DATA_DIR"
-cp -rv "${train_dataset_name}" $LOCAL_DATA_DIR/ || { echo "Failed to copy data"; exit 1; }
+echo "  Source: ${path_to_train_dataset}"
+echo "  Destination: $LOCAL_DATA_DIR"
+cp -rv "${path_to_train_dataset}" $LOCAL_DATA_DIR/ || { echo "Failed to copy data"; exit 1; }
 
 # Launch training
 echo "Starting training..."
-run_name="med_s1_${train_dataset_name}_bs${batch_size}_lr${lr}_epoch${epochs}_wd${weight_decay}_${uid}"
+run_name="med_s1__${dataset_name}_bs${batch_size}_lr${lr}_epoch${epochs}_wd${weight_decay}_${uid}"
 # Set master address for distributed training
 master_addr=$(hostname)
 master_port=29500
 export MASTER_ADDR=$master_addr
 export MASTER_PORT=$master_port
+echo "Outputting to: ${CACHE_DIR}/ckpts/${run_name}"
+echo "Train file path: ${LOCAL_DATA_DIR}/med_s1k_formatted"
 
 torchrun \
     --nproc_per_node=$gpu_count \

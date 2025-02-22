@@ -137,6 +137,7 @@ def train():
         data_collator=collator
     )
 
+    logging.critical(f'Outputting to: `{args.output_dir}`')
     trainer.train()
     trainer.save_model(output_dir=args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
