@@ -76,7 +76,7 @@ Contents of `config.json`:
 
 ### 2. Generate med-s1k Dataset
 
-Generate the med-s1k dataset. This reads in the original HuaotoGPT training dataset with 25k examples (`data/huatuogpt_o1_train_questions/`) and filters it down to 1k samples using Caleb's s1-based filtering pipeline with these three steps:
+Next, we can generate the med-s1k dataset. This reads in the original HuaotoGPT training dataset with 25k examples (`data/huatuogpt_o1_train_questions/`) and filters it down to 1k samples using Caleb's s1-based filtering pipeline with these three steps:
 
 1. **Quality filtering:** Remove examples with missing fields
 2. **Difficulty filtering:** Remove examples that base model answers correctly
@@ -91,14 +91,52 @@ The output is a directory (`$MED_S1K_OUTPUT/[version]_[timestamp]/`) with the fo
 # Run script directly
 python3 data/curate_med_s1k.py
 
-# Or...run script with sbatch
+# Or... run script with sbatch
 sbatch curate_med_s1k.sh
 ```
 
 ### 3. Train Models
 
-Train the models on the med-s1k dataset.
+Train your model on the med-s1k dataset.
 
 ```bash
 sbatch train/sft_carina.sh
 ```
+
+## Eval
+
+Note: SGLang only work works with CUDA 12.1.
+
+Run eval on **HuatuoGPT-o1-8B** model:
+
+```bash
+# Start SGLang server
+model_name="FreedomIntelligence/HuatuoGPT-o1-8B" # Path to the model you are deploying
+port=28035
+python -m sglang.launch_server --model-path $model_name --port $port --mem-fraction-static 0.8 --dp 1 --tp 1
+
+# Run evals
+python eval/eval.py --model_name $model_name  --path_to_eval_json eval/data/eval_data.json --port $port --path_to_output_dir eval/results
+
+# Free up GPU memory
+bash eval/kill_sglang_server.sh
+```
+
+Run eval on **local model**:
+
+```bash
+# Start SGLang server
+model_name="/share/pi/nigam/users/calebwin/hf_cache/ckpts/med_s1_/share/pi/nigam/data/med_s1k/s1_replication/med_s1k_formatted_bs8_lr1e-5_epoch5_wd1e-4_20250220_011621/checkpoint-450"
+port=28035
+python -m sglang.launch_server --model-path $model_name --port $port --mem-fraction-static 0.8 --dp 1 --tp 1
+
+# Run evals
+python eval/eval.py --model_name $model_name  --path_to_eval_json eval/data/eval_data.json --port $port --path_to_output_dir eval/results
+
+# Free up GPU memory
+bash eval/kill_sglang_server.sh
+```
+
+These scripts will output two `.json` files in the `eval/results` directory, one containing the raw predictions and the other containing the overall scores. 
+
+This should take ~5 minutes to run on all 8k eval examples in `eval/data/eval_data.json` for an 8B model on 1 H100 with batch_size=1024.
