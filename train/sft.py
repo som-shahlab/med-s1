@@ -114,6 +114,10 @@ def train():
         tokenizer.pad_token = "<|fim_pad|>"
     else:
         raise ValueError(f"Model name {config.model_name} not supported")
+    
+    if args.is_debug:
+        dataset['train'] = dataset['train'].select(range(100))
+        dataset['test'] = dataset['test'].select(range(1))
 
     # Only compute loss over assistant responses
     # Verified that it precisely starts where the thinking tokens start and ends with the first pad token

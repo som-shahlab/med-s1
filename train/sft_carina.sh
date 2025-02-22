@@ -156,7 +156,8 @@ else
         --push_to_hub=false \
         --save_only_model=True \
         --ddp_find_unused_parameters=False \
-        --ddp_timeout=3600
+        --ddp_timeout=3600 \
+        --is_debug=True
 fi
 
 # Copy results back and cleanup
