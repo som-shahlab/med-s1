@@ -16,6 +16,8 @@ export HF_CACHE_DIR="$CACHE_DIR"
 export MED_S1K_OUTPUT="$DATA_DIR"
 
 # HF and Gemini credentials
+export ***REMOVED***"REDACTED"
+export ***REMOVED***"AIzaSyDZKSqEjdbOF5k8mbdtMNqDbwg-B0kiX4o"
 
 # Debug: Print environment variables
 echo "Cache directory: $CACHE_DIR"
