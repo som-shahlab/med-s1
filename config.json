@@ -29,7 +29,6 @@
     "curation": {
         "llama_batch_size": 1024,
         "gemini_batch_size": 512,
-        "initial_sample": 0,
-        "version": "plumbing_test_001"
+        "initial_sample": 0
     }
 }

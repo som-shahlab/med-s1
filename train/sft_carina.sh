@@ -11,36 +11,44 @@
 #SBATCH --time=06:00:00
 #SBATCH --account=nigam
 
+# Check if experiment name is provided
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <experiment_name>"
+    exit 1
+fi
+
+experiment_name=$1
+
+# Get experiment config from results.json
+config=$(jq -r ".experiments[\"$experiment_name\"].config" med-s1/results.json)
+
+if [ "$config" = "null" ]; then
+    echo "Error: Experiment '$experiment_name' not found in results.json"
+    exit 1
+fi
+
+# Extract training params
+learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
+batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
+num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
+
+# Get dataset path from results
+dataset_path=$(jq -r ".experiments[\"$experiment_name\"].results.curation.dataset_path" med-s1/results.json)
+
+if [ "$dataset_path" = "null" ]; then
+    echo "Error: Dataset path not found in results.json. Has curation been run for this experiment?"
+    exit 1
+fi
+
 # Create logs directory
 echo "Creating logs directory..."
 mkdir -p /share/pi/nigam/users/calebwin/med-s1/logs
 
-# Set training parameters
-lr=1e-5
-epochs=5
-batch_size=4  # Reduced from 16 to be more conservative
+# Set default parameters
 weight_decay=1e-4
 model="meta-llama/Llama-3.1-8B-Instruct"
 strategy="fsdp"
-path_to_train_dataset="/share/pi/nigam/data/med_s1k/s1_replication/med_s1k_formatted"
-dataset_name=$(basename "${path_to_train_dataset}")
 uid="$(date +%Y%m%d_%H%M%S)"
-
-# Parse command-line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --lr) lr="$2"; shift 2 ;;
-        --epochs) epochs="$2"; shift 2 ;;
-        --batch_size) batch_size="$2"; shift 2 ;;
-        --weight_decay) weight_decay="$2"; shift 2 ;;
-        --path_to_train_dataset) path_to_train_dataset="$2"; shift 2 ;;
-        --uid) uid="$2"; shift 2 ;;
-        --strategy) strategy="$2"; shift 2 ;;
-        --model) model="$2"; shift 2 ;;
-        *) echo "Unknown parameter: $1"; exit 1 ;;
-    esac
-done
-
 echo "Starting job..."
 
 # Source configuration
@@ -49,9 +57,9 @@ source $(pwd)/config.sh || { echo "Failed to source config.sh"; exit 1; }
 
 # Setup environment
 echo "Setting up conda environment..."
-# source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
 echo "Activating med-s1 environment..."
-# conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Set environment variables
 echo "Setting environment variables..."
@@ -71,8 +79,8 @@ export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export WANDB_DISABLED=true
 export WANDB_MODE=disabled
 
-# Calculate gradient accumulation steps
-gpu_count=$(nvidia-smi -L | wc -l) # use max number of GPUs on node
+# Calculate gradient accumulation steps based on batch size and GPU count
+gpu_count=$(nvidia-smi -L | wc -l)
 grad_acc=$((batch_size/gpu_count))
 
 echo "Number of GPUs: $gpu_count"
@@ -86,22 +94,34 @@ mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; e
 
 # Copy data to local scratch
 echo "Copying data to local scratch..."
-echo "  Source: ${path_to_train_dataset}"
+echo "  Source: ${dataset_path}"
 echo "  Destination: $LOCAL_DATA_DIR"
-cp -rv "${path_to_train_dataset}" $LOCAL_DATA_DIR/ || { echo "Failed to copy data"; exit 1; }
+cp -rv "${dataset_path}" $LOCAL_DATA_DIR/ || { echo "Failed to copy data"; exit 1; }
 
 # Launch training
 echo "Starting training..."
-run_name="med_s1__${dataset_name}_bs${batch_size}_lr${lr}_epoch${epochs}_wd${weight_decay}_${uid}"
+# Get dataset path from curation results
+dataset_path=$(jq -r ".experiments[\"$experiment_name\"].results.curation.dataset_path" med-s1/results.json)
+
+if [ "$dataset_path" = "null" ]; then
+    echo "Error: Dataset path not found in results.json. Has curation been run for this experiment?"
+    exit 1
+fi
+
+# Clean experiment name same way as curation (remove all non-alphanumeric except hyphens)
+safe_experiment_name=$(echo "$experiment_name" | sed 's/[^a-zA-Z0-9-]//g')
+checkpoint_dir="${CACHE_DIR}/ckpts/${safe_experiment_name}"
+
 # Set master address for distributed training
 master_addr=$(hostname)
 master_port=29500
 export MASTER_ADDR=$master_addr
 export MASTER_PORT=$master_port
-echo "Outputting to: ${CACHE_DIR}/ckpts/${run_name}"
+
+echo "Outputting to: ${checkpoint_dir}"
 echo "Train file path: ${LOCAL_DATA_DIR}/med_s1k_formatted"
 
-if [ "$strategy" == "fsdp" ]; then
+if [ "$strategy" = "fsdp" ]; then
     torchrun \
         --nproc_per_node=$gpu_count \
         $(pwd)/train/sft.py \
@@ -109,7 +129,7 @@ if [ "$strategy" == "fsdp" ]; then
         --per_device_train_batch_size=1 \
         --per_device_eval_batch_size=1 \
         --gradient_accumulation_steps=$grad_acc \
-        --num_train_epochs=${epochs} \
+        --num_train_epochs=${num_epochs} \
         --train_file_path="${LOCAL_DATA_DIR}/med_s1k_formatted" \
         --model_name="${model}" \
         --warmup_ratio=0.05 \
@@ -119,11 +139,11 @@ if [ "$strategy" == "fsdp" ]; then
         --logging_steps=100 \
         --save_strategy="epoch" \
         --lr_scheduler_type="cosine" \
-        --learning_rate=${lr} \
+        --learning_rate=${learning_rate} \
         --weight_decay=${weight_decay} \
         --adam_beta1=0.9 \
         --adam_beta2=0.95 \
-        --output_dir="${CACHE_DIR}/ckpts/${run_name}" \
+        --output_dir="${checkpoint_dir}" \
         --push_to_hub=false \
         --save_only_model=True \
         --ddp_find_unused_parameters=False \
@@ -131,6 +151,7 @@ if [ "$strategy" == "fsdp" ]; then
         --fsdp="full_shard auto_wrap" \
         --fsdp_config="$(pwd)/train/fsdp_config_llama_cpu.json"
 else
+    # Non-FSDP training path
     torchrun \
         --nproc_per_node=$gpu_count \
         $(pwd)/train/sft.py \
@@ -138,7 +159,7 @@ else
         --per_device_train_batch_size=1 \
         --per_device_eval_batch_size=1 \
         --gradient_accumulation_steps=$grad_acc \
-        --num_train_epochs=${epochs} \
+        --num_train_epochs=${num_epochs} \
         --train_file_path="${LOCAL_DATA_DIR}/med_s1k_formatted" \
         --model_name="${model}" \
         --warmup_ratio=0.05 \
@@ -148,11 +169,11 @@ else
         --logging_steps=100 \
         --save_strategy="epoch" \
         --lr_scheduler_type="cosine" \
-        --learning_rate=${lr} \
+        --learning_rate=${learning_rate} \
         --weight_decay=${weight_decay} \
         --adam_beta1=0.9 \
         --adam_beta2=0.95 \
-        --output_dir="${CACHE_DIR}/ckpts/${run_name}" \
+        --output_dir="${checkpoint_dir}" \
         --push_to_hub=false \
         --save_only_model=True \
         --ddp_find_unused_parameters=False \
@@ -160,11 +181,21 @@ else
         --is_debug=True
 fi
 
-# Copy results back and cleanup
-echo "Copying results back to shared storage..."
-cp -r $LOCAL_DATA_DIR/ckpts/* "${CACHE_DIR}/ckpts/"
-
+# Cleanup local scratch
 echo "Cleaning up local scratch..."
 rm -rf $LOCAL_DATA_DIR
+
+# Update results.json with model path and timestamp
+model_path="${checkpoint_dir}"
+timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Use jq to update results.json
+jq --arg path "$model_path" --arg time "$timestamp" \
+  ".experiments[\"$experiment_name\"].results.training = {
+    \"model_path\": \$path,
+    \"timestamp\": \$time,
+    \"metrics\": null
+  }" \
+  med-s1/results.json > med-s1/results.json.tmp && mv med-s1/results.json.tmp med-s1/results.json
 
 echo "Training complete!"

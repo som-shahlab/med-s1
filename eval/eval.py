@@ -1,5 +1,5 @@
 import argparse
-import openai
+from vllm import LLM, SamplingParams
 import os
 import json
 from tqdm import tqdm
@@ -7,20 +7,21 @@ from jinja2 import Template
 from transformers import AutoTokenizer
 from scorer import get_results
 from typing import List, Dict, Tuple
+from datetime import datetime
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default="meta-llama/Llama-2-7b-chat-hf")
-    parser.add_argument('--path_to_eval_json', type=str, required=True, help='Path to the evaluation data (i.e. `data/eval_data.json`)')
-    parser.add_argument('--path_to_output_dir', type=str, default='./results', help='Path to the output directory.')
-    parser.add_argument('--max_new_tokens', type=int, default=2000, help='Maximum number of new tokens to generate.')
-    parser.add_argument('--max_tokens', type=int, default=-1, help='Maximum number of tokens to generate. If -1, no truncation is performed.')
-    parser.add_argument('--use_chat_template',type=bool, default=True, help='Use chat template.')
-    parser.add_argument('--strict_prompt', action="store_true", help='Use strict prompt.')
-    parser.add_argument('--task', type=str, default='api', help='Task name.')
-    parser.add_argument('--port', type=int, default=30000, help='Port number.')
-    parser.add_argument('--batch_size', type=int, default=1024, help='Batch size.')    
-    parser.add_argument('--temperature', type=float, default=0.5, help='Temperature.')
+    parser.add_argument('--experiment_name', type=str, required=True, help='Name of experiment from results.json')
+    parser.add_argument('--model_path', type=str, required=True, help='Path to the model checkpoint')
+    parser.add_argument('--path_to_eval_json', type=str, required=True, help='Path to the evaluation data')
+    parser.add_argument('--path_to_output_dir', type=str, default='./results', help='Path to the output directory')
+    parser.add_argument('--max_new_tokens', type=int, default=2000, help='Maximum number of new tokens to generate')
+    parser.add_argument('--max_tokens', type=int, default=-1, help='Maximum number of tokens to generate. If -1, no truncation is performed')
+    parser.add_argument('--use_chat_template', type=bool, default=True, help='Use chat template')
+    parser.add_argument('--strict_prompt', action="store_true", help='Use strict prompt')
+    parser.add_argument('--batch_size', type=int, default=1024, help='Batch size')
+    parser.add_argument('--temperature', type=float, default=0.5, help='Temperature')
+    parser.add_argument('--tensor_parallel_size', type=int, default=1, help='Number of GPUs to use for tensor parallelism')
     return parser.parse_args()
 
 def print_indented(text: str):
@@ -82,16 +83,21 @@ def load_file(input_fp: str) -> List[Dict]:
         input_data.extend(v)
     return input_data
 
-def call_model(client: openai.Client, prompts: List[str], model: str, tokenizer: AutoTokenizer, template: Template, max_new_tokens: int = 50, temperature: float = 0, is_print_example: bool = False, is_use_chat_template: bool = False, max_tokens: int = -1) -> Tuple[List[str], List[str]]:
-    """Call the model to get the predicted output.
+def call_model(llm: LLM, prompts: List[str], tokenizer: AutoTokenizer, template: Template, max_new_tokens: int = 50, temperature: float = 0, is_print_example: bool = False, is_use_chat_template: bool = False, max_tokens: int = -1) -> Tuple[List[str], List[str]]:
+    """Call the model to get the predicted output using vllm.
     Args:
-        prompts (List[str]): The prompts to call the model with.
-        model (str): The model to call.
-        max_new_tokens (int): The maximum number of new tokens to generate.
-        is_print_example (bool): Whether to print an example.
+        llm (LLM): The vllm LLM instance
+        prompts (List[str]): The prompts to call the model with
+        tokenizer (AutoTokenizer): The tokenizer to use
+        template (Template): The chat template to use
+        max_new_tokens (int): Maximum number of new tokens to generate
+        temperature (float): Sampling temperature
+        is_print_example (bool): Whether to print an example
+        is_use_chat_template (bool): Whether to use the chat template
+        max_tokens (int): Maximum total tokens (-1 for no limit)
 
     Returns:
-        Tuple[List[str], List[str]]: A tuple containing the postprocessed predicted outputs and the raw predicted outputs.
+        Tuple[List[str], List[str]]: Tuple of (processed predictions, raw predictions)
     """
     if is_print_example:
         print("Raw prompt:")
@@ -99,17 +105,16 @@ def call_model(client: openai.Client, prompts: List[str], model: str, tokenizer:
         print_indented(prompts[0])
         print("```")
 
-    preds: List[str] = []
     if is_use_chat_template:
         prompts = [template.render(messages=[{"role": "user", "content": p}],
-                                   bos_token=tokenizer.bos_token, # '<|begin_of_text|>'
-                                   add_generation_prompt=True) 
+                                   bos_token=tokenizer.bos_token,
+                                   add_generation_prompt=True)
                    for p in prompts]
     
     if max_tokens > 0:
         new_prompts: List[str] = []
         for prompt in prompts:
-            input_ids: List[int] = tokenizer.encode(prompt,add_special_tokens= False)
+            input_ids: List[int] = tokenizer.encode(prompt, add_special_tokens=False)
             if len(input_ids) > max_tokens:
                 input_ids = input_ids[:max_tokens]
                 new_prompts.append(tokenizer.decode(input_ids))
@@ -123,15 +128,17 @@ def call_model(client: openai.Client, prompts: List[str], model: str, tokenizer:
         print_indented(prompts[0])
         print("```")
 
-    response = client.completions.create(
-        model="default",
-        prompt=prompts,
-        temperature=temperature, 
-        top_p=0.9, 
+    # Set up vllm sampling parameters
+    sampling_params = SamplingParams(
+        temperature=temperature,
+        top_p=0.9,
         max_tokens=max_new_tokens
     )
-    raw_preds: List[str] = [x.text for x in response.choices]
-    preds: List[str] = [postprocess_output(pred) for pred in raw_preds]
+
+    # Generate completions using vllm
+    outputs = llm.generate(prompts, sampling_params)
+    raw_preds = [output.outputs[0].text for output in outputs]
+    preds = [postprocess_output(pred) for pred in raw_preds]
     
     if is_print_example:
         print("Postprocessed predicted output:")
@@ -145,15 +152,20 @@ def main():
     args = parse_args()
     os.makedirs(args.path_to_output_dir, exist_ok=True)
 
-    print(f"Using local API server at port {args.port}")
-    client = openai.Client(base_url=f"http://127.0.0.1:{args.port}/v1", api_key="EMPTY")
-
-    if args.use_chat_template:
-        tokenizer: AutoTokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True, padding_side='left')
-        template: Template = Template(tokenizer.chat_template)
+    # Initialize vllm model
+    print(f"Initializing vllm with model: {args.model_path}")
+    print(f"Using tensor parallel size: {args.tensor_parallel_size}")
+    
+    llm = LLM(
+        model=args.model_path,
+        tensor_parallel_size=args.tensor_parallel_size,
+        trust_remote_code=True
+    )
+    
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, padding_side='left')
+    template = Template(tokenizer.chat_template) if args.use_chat_template else None
 
     input_data: List[Dict] = load_file(args.path_to_eval_json)
-    model: str = None
 
     final_results: List[Dict] = []
     if args.strict_prompt:
@@ -175,7 +187,17 @@ def main():
         # Always print the first example for sanity checking
         is_print_example: bool = idx == 0
 
-        preds, _ = call_model(client, processed_batch, model=model, tokenizer=tokenizer, template=template, max_new_tokens=args.max_new_tokens, is_print_example=is_print_example, temperature=args.temperature, is_use_chat_template=args.use_chat_template, max_tokens=args.max_tokens)
+        preds, _ = call_model(
+            llm=llm,
+            prompts=processed_batch,
+            tokenizer=tokenizer,
+            template=template,
+            max_new_tokens=args.max_new_tokens,
+            is_print_example=is_print_example,
+            temperature=args.temperature,
+            is_use_chat_template=args.use_chat_template,
+            max_tokens=args.max_tokens
+        )
 
         for j, item in enumerate(batch):
             pred = preds[j]
@@ -185,15 +207,28 @@ def main():
             final_results.append(item)
 
     # Save outputs
-    task_name: str = os.path.split(args.model_name)[-1]
-    task_name = task_name + os.path.basename(args.path_to_eval_json).replace('.json','') + f'_{args.task}' + ('_strict-prompt' if args.strict_prompt else '')
+    model_name: str = os.path.split(args.model_path)[-1]
+    task_name: str = model_name + os.path.basename(args.path_to_eval_json).replace('.json','') + ('_strict-prompt' if args.strict_prompt else '')
     file_name: str = f'{task_name}.json'
     path_to_output: str = os.path.join(args.path_to_output_dir, file_name)
     with open(path_to_output,'w') as fw:
         json.dump(final_results, fw, ensure_ascii=False, indent=2)
 
-    # Score outputs
-    get_results(path_to_output)
+    # Score outputs and get metrics
+    metrics = get_results(path_to_output)
+    
+    # Update results.json with eval results and metrics
+    with open("med-s1/results.json", "r") as f:
+        results = json.load(f)
+    
+    results["experiments"][args.experiment_name]["results"]["eval"] = {
+        "results_path": os.path.abspath(path_to_output),
+        "timestamp": datetime.now().isoformat(),
+        "metrics": metrics
+    }
+    
+    with open("med-s1/results.json", "w") as f:
+        json.dump(results, f, indent=2)
 
 
 if __name__ == "__main__":

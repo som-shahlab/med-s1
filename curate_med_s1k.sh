@@ -1,57 +1,32 @@
 #!/bin/bash
-#SBATCH --job-name=med-s1k-curation
-#SBATCH --partition=gpu
-#SBATCH --gres=gpu:1
-#SBATCH --mem=40GB
-#SBATCH --time=06:00:00
-#SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/curation_%j.log
-#SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/curation_%j.err
 
-# Debug mode
-set -x
+# Check if experiment name is provided
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <experiment_name>"
+    exit 1
+fi
 
-# Create logs directory
-LOGS_DIR="/share/pi/nigam/users/calebwin/med-s1/logs"
-mkdir -p $LOGS_DIR
-chmod 755 $LOGS_DIR
+experiment_name=$1
 
-# Print detailed environment info
-echo "=================== Job Start ==================="
-date
-echo "Node: $(hostname)"
-echo "Job ID: $SLURM_JOB_ID"
-echo "GPU: $CUDA_VISIBLE_DEVICES"
-echo "Current dir: $(pwd)"
-nvidia-smi
-echo "=============================================="
+# Get experiment config from results.json
+config=$(jq -r ".experiments[\"$experiment_name\"].config" med-s1/results.json)
 
-# Load conda environment
-echo "Loading conda environment..."
-cd /share/pi/nigam/users/calebwin/
-source /share/pi/nigam/users/calebwin/nfs_conda.sh
-conda activate med-s1
-which python
-python --version
-echo "CUDA devices: $CUDA_VISIBLE_DEVICES"
-echo "=============================================="
+if [ "$config" = "null" ]; then
+    echo "Error: Experiment '$experiment_name' not found in results.json"
+    exit 1
+fi
 
-# Go to project directory and run
-echo "Changing to project directory..."
-cd /share/pi/nigam/users/calebwin/med-s1
+# Create logs directory if it doesn't exist
+mkdir -p /share/pi/nigam/users/calebwin/med-s1/logs
 
-echo "Loading configuration..."
-source config.sh
-
-echo "Starting curation script..."
-# Enable Python unbuffered output
-export PYTHONUNBUFFERED=1
-# Run the script
-python data/curate_med_s1k.py
-
-echo "Job finished at: $(date)"
-
-# To monitor this job:
-# 1. View job status:    squeue -j $SLURM_JOB_ID
-# 2. Watch logs:         tail -f $LOGS_DIR/curation_$SLURM_JOB_ID.log
-# 3. GPU usage:          srun --jobid $SLURM_JOB_ID --pty nvidia-smi
-# 4. Cancel if needed:   scancel $SLURM_JOB_ID
+# Check if base dataset exists in hf_cache
+dataset_dir="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
+if [ -d "$dataset_dir" ] && [ -f "$dataset_dir/med_s1k_filtered.parquet" ]; then
+    echo "Base dataset already exists at $dataset_dir"
+    echo "Using CPU for processing since we only need to read and process existing data..."
+    sbatch med-s1/data/curate_med_s1k_cpu.sh "$experiment_name"
+else
+    echo "Base dataset needs to be created"
+    echo "Using GPU for processing since we need to run model inference..."
+    sbatch med-s1/data/curate_med_s1k_gpu.sh "$experiment_name"
+fi

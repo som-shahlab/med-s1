@@ -1,0 +1,243 @@
+{
+  "experiments": {
+    "med-s1-1k": {
+      "description": "Current configuration with existing hyperparameters",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "s1",
+          "n_samples": 1000
+        },
+        "training_params": {
+          "learning_rate": 1e-5,
+          "batch_size": 4,
+          "num_epochs": 5
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "med-s1-1k-tuned": {
+      "description": "Tuned version with adjusted hyperparameters",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "s1",
+          "n_samples": 1000
+        },
+        "training_params": {
+          "learning_rate": 2e-5,
+          "batch_size": 8,
+          "num_epochs": 8
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "med-s1-1k-curated": {
+      "description": "Iteration on curation methodology",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "s1",
+          "n_samples": 1000,
+          "specialty_weights": {
+            "Internal Medicine": 1.5,
+            "Emergency Medicine": 1.5,
+            "Critical Care": 1.2
+          }
+        },
+        "training_params": {
+          "learning_rate": 2e-5,
+          "batch_size": 8,
+          "num_epochs": 8
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "med-s1-5k": {
+      "description": "Larger curated dataset with 5k samples",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "s1",
+          "n_samples": 5000
+        },
+        "training_params": {
+          "learning_rate": 1e-5,
+          "batch_size": 4,
+          "num_epochs": 3
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "med-s1-25k": {
+      "description": "Full dataset without curation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "all",
+          "n_samples": 25371
+        },
+        "training_params": {
+          "learning_rate": 1e-5,
+          "batch_size": 2,
+          "num_epochs": 2
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "random-1k": {
+      "description": "Random sampling with 1k samples",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "n_samples": 1000
+        },
+        "training_params": {
+          "learning_rate": 1e-5,
+          "batch_size": 4,
+          "num_epochs": 5
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "random-5k": {
+      "description": "Random sampling with 5k samples",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "n_samples": 5000
+        },
+        "training_params": {
+          "learning_rate": 1e-5,
+          "batch_size": 4,
+          "num_epochs": 3
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": null,
+          "timestamp": null
+        },
+        "training": {
+          "model_path": null,
+          "timestamp": null,
+          "metrics": null
+        },
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    },
+    "base": {
+      "description": "Base LLaMA model without fine-tuning",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": null,
+        "training_params": null
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "results_path": null,
+          "timestamp": null,
+          "metrics": null
+        }
+      }
+    }
+  }
+}
