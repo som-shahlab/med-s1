@@ -8,6 +8,7 @@ from datasets import load_dataset, concatenate_datasets, DatasetDict
 import transformers
 import trl
 import json
+import torch
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -52,6 +53,7 @@ class TrainingConfig:
         os.environ['WANDB_ENTITY'] = self.wandb_entity
 
 def train():
+    
     # wandb
     wandb.init(entity="ehr-fm", project="med-s1")
 
@@ -61,7 +63,6 @@ def train():
     log_config = {**asdict(config), **asdict(args)}
     logging.info(f"Training config: {log_config}")
 
-    import torch
     # Clear GPU memory
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -154,6 +155,9 @@ def train():
     args.logging_dir = "./logs"
     args.logging_strategy = "steps"
     args.logging_steps = 1  # Log every 1 steps
+    
+    # Log config
+    wandb.config.update(log_config)
 
     # Create trainer with debug collator
     trainer = CustomTrainer(
@@ -161,7 +165,8 @@ def train():
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'] if 'test' in dataset else dataset['train'],
         args=args,
-        data_collator=collator
+        data_collator=collator,
+        max_seq_length=config.block_size,
     )
 
     logging.info(f"[Rank {local_rank}] After loading model: "
