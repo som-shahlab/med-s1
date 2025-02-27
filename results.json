@@ -105,63 +105,63 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-1k-tuned",
-          "timestamp": "2025-02-27T13:33:31Z",
+          "timestamp": "2025-02-27T18:43:27Z",
           "metrics": null
         },
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k-tuned/med-s1-1k-tunedeval_data_strict-prompt_debug.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k-tuned/med-s1-1k-tunedeval_data_strict-prompt_debug_metrics.json",
-          "timestamp": "2025-02-27T06:16:44.230936",
+          "timestamp": "2025-02-27T19:01:31.576157",
           "summary": {
             "MedMCQA_validation": {
-              "accuracy": 0.05,
+              "accuracy": 0.7,
               "accuracy_ci": [
-                0,
-                0.15
+                0.5,
+                0.9
               ],
-              "num_correct": 1,
+              "num_correct": 14,
               "total_examples": 20,
-              "num_answered": 1
-            },
-            "MMLU-Pro_Medical_test": {
-              "accuracy": 0.1,
-              "accuracy_ci": [
-                0,
-                0.25
-              ],
-              "num_correct": 2,
-              "total_examples": 20,
-              "num_answered": 2
+              "num_answered": 13
             },
             "MedQA_USLME_test": {
+              "accuracy": 0.55,
+              "accuracy_ci": [
+                0.3,
+                0.7
+              ],
+              "num_correct": 10,
+              "total_examples": 20,
+              "num_answered": 11
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.7,
+              "accuracy_ci": [
+                0.5,
+                0.9
+              ],
+              "num_correct": 14,
+              "total_examples": 20,
+              "num_answered": 14
+            },
+            "GPQA_Medical_test": {
               "accuracy": 0.45,
               "accuracy_ci": [
                 0.25,
-                0.6512499999999989
+                0.65
               ],
               "num_correct": 9,
               "total_examples": 20,
               "num_answered": 9
             },
-            "GPQA_Medical_test": {
-              "accuracy": 0.25,
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.65,
               "accuracy_ci": [
-                0.05,
-                0.45
+                0.45,
+                0.85
               ],
-              "num_correct": 5,
+              "num_correct": 13,
               "total_examples": 20,
-              "num_answered": 5
-            },
-            "PubMedQA_test": {
-              "accuracy": 0.1,
-              "accuracy_ci": [
-                0,
-                0.25
-              ],
-              "num_correct": 2,
-              "total_examples": 20,
-              "num_answered": 2
+              "num_answered": 12
             }
           }
         }
@@ -376,8 +376,8 @@
           }
         },
         "training": {
-          "model_path": null,
-          "timestamp": null,
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-5k",
+          "timestamp": "2025-02-27T18:22:54Z",
           "metrics": null
         },
         "eval": {
@@ -709,7 +709,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/random-1k",
-          "timestamp": "2025-02-27T06:06:03Z",
+          "timestamp": "2025-02-27T18:42:32Z",
           "metrics": null
         },
         "eval": {

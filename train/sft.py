@@ -153,7 +153,7 @@ def train():
 
             # Show first example's text
             logging.warning("\nFirst example decoded:")
-            logging.warning(tokenizer.decode(batch["input_ids"][0][:150]))
+            # logging.warning(tokenizer.decode(batch["input_ids"][0][:150]))
 
             # Log label stats and text
             if "labels" in batch:
@@ -205,9 +205,38 @@ def train():
     
     trainer.train()
     
-    # Save final model
-    logging.info("Saving model...")
+    # # Ensure all processes are ready to save
+    trainer.accelerator.wait_for_everyone()
+    
+    # Save final model (all ranks need to save their shards)
+    local_rank = trainer.args.local_rank
+    logging.info(f"[Rank {local_rank}] Saving model...")
+    
+    # Log existing files
+    if os.path.exists(args.output_dir):
+        logging.info(f"[Rank {local_rank}] Existing files: {os.listdir(args.output_dir)}")
+        
+        # Clean up any existing shard files to avoid FSDP save conflicts
+        if trainer.args.save_strategy == "no":
+            for f in os.listdir(args.output_dir):
+                if f.startswith("model-") and f.endswith(".safetensors"):
+                    try:
+                        os.remove(os.path.join(args.output_dir, f))
+                        logging.info(f"[Rank {local_rank}] Removed existing shard file: {f}")
+                    except OSError as e:
+                        logging.warning(f"[Rank {local_rank}] Failed to remove {f}: {e}")
+    
+    # Ensure all ranks are synced before saving
+    trainer.accelerator.wait_for_everyone()
+    
     trainer.save_model()
+    
+    # Log files after save
+    if os.path.exists(args.output_dir):
+        logging.info(f"[Rank {local_rank}] Files after save: {os.listdir(args.output_dir)}")
+
+    # Final sync point
+    trainer.accelerator.wait_for_everyone()
 
 
 if __name__ == "__main__":

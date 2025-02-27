@@ -2,7 +2,7 @@
 #SBATCH --job-name=med-s1-train
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
-#SBATCH --partition=gpu-long
+#SBATCH --partition=gpu
 #SBATCH --constraint="GPU_SKU:A100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -187,8 +187,8 @@ if [ "$strategy" = "fsdp" ]; then
         # Debug mode: 2 epochs, save every 25 steps, log every 5
         cmd="$cmd \
             --num_train_epochs=2 \
-            --max_steps=50 \
-            --logging_steps=5"
+            --save_strategy=no \
+            --logging_steps=1"
     else
         # Normal mode
         cmd="$cmd \
