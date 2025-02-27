@@ -8,3 +8,7 @@ logs/
 data/utils/__pycache__/
 carina.md
 *.out
+
+eval/__pycache__/
+eval/__pycache__/scorer.cpython-310.pyc
+*.pyc

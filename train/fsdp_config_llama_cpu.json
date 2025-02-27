@@ -1,12 +1,19 @@
 {
     "fsdp_offload_params": false,
-    "fsdp_state_dict_type": "FULL_STATE_DICT",
     "fsdp_transformer_layer_cls_to_wrap": ["LlamaDecoderLayer"],
     "activation_checkpointing": true,
     "activation_checkpointing_policy": "transformer_based",
-    "limit_all_gathers": true,
-    "use_orig_params": true,
+    "limit_all_gathers": false,
+    "use_orig_params": false,
     "sync_module_states": true,
+    "sharding_strategy": "FULL_SHARD",
+    "state_dict_type": "SHARDED_STATE_DICT",
+    "save_on_each_node": false,
     "xla": false,
-    "xla_fsdp_grad_ckpt": false
+    "xla_fsdp_grad_ckpt": false,
+    "mixed_precision": {
+        "param_dtype": "bf16",
+        "reduce_dtype": "bf16",
+        "buffer_dtype": "bf16"
+    }
 }

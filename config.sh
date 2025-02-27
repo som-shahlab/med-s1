@@ -1,8 +1,16 @@
 #!/bin/bash
 
-# Create directories if they don't exist
+# Set directory paths
+MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
 CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
 DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
+RESULTS_JSON="${MED_S1_DIR}/results.json"
+
+# Export paths for scripts
+export MED_S1_DIR
+export CACHE_DIR
+export DATA_DIR
+export RESULTS_JSON
 mkdir -p "$CACHE_DIR"
 mkdir -p "$DATA_DIR"
 

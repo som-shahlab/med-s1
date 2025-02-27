@@ -2,7 +2,8 @@
 #SBATCH --job-name=med-s1-train
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
-#SBATCH --partition=nigam-h100
+#SBATCH --partition=gpu-long
+#SBATCH --constraint="GPU_SKU:A100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
@@ -19,41 +20,36 @@ fi
 
 experiment_name=$1
 
+# Source configuration first to get environment variables
+echo "Sourcing config.sh..."
+source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
+
 # Get experiment config from results.json
-config=$(jq -r ".experiments[\"$experiment_name\"].config" med-s1/results.json)
+config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
 
 if [ "$config" = "null" ]; then
-    echo "Error: Experiment '$experiment_name' not found in results.json"
+    echo "Error: Experiment '$experiment_name' not found in $RESULTS_JSON"
     exit 1
 fi
 
-# Extract training params
-learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
-batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
-num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
-
-# Get dataset path from results
-dataset_path=$(jq -r ".experiments[\"$experiment_name\"].results.curation.dataset_path" med-s1/results.json)
-
-if [ "$dataset_path" = "null" ]; then
-    echo "Error: Dataset path not found in results.json. Has curation been run for this experiment?"
-    exit 1
-fi
+# Get model key from config
+model_key=$(jq -r ".model_key" <<< "$config")
+model=$(jq -r ".models[\"$model_key\"].hf_path" < "${MED_S1_DIR}/config.json")
 
 # Create logs directory
 echo "Creating logs directory..."
-mkdir -p /share/pi/nigam/users/calebwin/med-s1/logs
+mkdir -p "${MED_S1_DIR}/logs"
 
-# Set default parameters
-weight_decay=1e-4
-model="meta-llama/Llama-3.1-8B-Instruct"
+# Get training params
+learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
+batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
+num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
+weight_decay=$(jq -r ".training_params.weight_decay // \"1e-4\"" <<< "$config")  # Default to 1e-4 if not set
+
+# Set strategy
 strategy="fsdp"
 uid="$(date +%Y%m%d_%H%M%S)"
 echo "Starting job..."
-
-# Source configuration
-echo "Sourcing config.sh..."
-source $(pwd)/config.sh || { echo "Failed to source config.sh"; exit 1; }
 
 # Setup environment
 echo "Setting up conda environment..."
@@ -63,17 +59,20 @@ conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1;
 
 # Set environment variables
 echo "Setting environment variables..."
+
 # NCCL settings
 export NCCL_DEBUG=INFO
-export NCCL_IB_DISABLE=1
 export NCCL_P2P_DISABLE=0
 export NCCL_P2P_LEVEL=NVL
 export NCCL_SOCKET_IFNAME=eth0
 export NCCL_NVLS_ENABLE=0
 export NCCL_ASYNC_ERROR_HANDLING=1
+export NCCL_SOCKET_NTHREADS=8
 
 # CUDA settings
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Disable wandb
 export WANDB_DISABLED=true
@@ -87,26 +86,32 @@ echo "Number of GPUs: $gpu_count"
 echo "Gradient accumulation steps: $grad_acc"
 echo "Memory per GPU: 80GB"
 
-# Create local scratch directory for data
-echo "Creating local scratch directory..."
-LOCAL_DATA_DIR="/local-scratch/${SLURM_JOB_ID}"
-mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; exit 1; }
+# Get dataset path from curation results
+dataset_path=$(jq -r ".experiments[\"$experiment_name\"].results.curation.dataset_path" "$RESULTS_JSON")
 
-# Copy data to local scratch
-echo "Copying data to local scratch..."
-echo "  Source: ${dataset_path}"
-echo "  Destination: $LOCAL_DATA_DIR"
-cp -rv "${dataset_path}" $LOCAL_DATA_DIR/ || { echo "Failed to copy data"; exit 1; }
+if [ "$dataset_path" = "null" ]; then
+    echo "Error: Dataset path not found in $RESULTS_JSON. Has curation been run for this experiment?"
+    exit 1
+fi
+
+# Set up data directory
+if [ -d "/local-scratch" ]; then
+    echo "Using local scratch directory..."
+    LOCAL_DATA_DIR="/local-scratch/${SLURM_JOB_ID}"
+    mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; exit 1; }
+    
+    # Copy data to local scratch
+    echo "Copying data to local scratch..."
+    echo "  Source: ${dataset_path}"
+    echo "  Destination: $LOCAL_DATA_DIR"
+    cp -r "${dataset_path}" $LOCAL_DATA_DIR/ || { echo "Failed to copy data"; exit 1; }
+else
+    echo "Local scratch not available, using dataset directory directly..."
+    LOCAL_DATA_DIR=$(dirname "$dataset_path")
+fi
 
 # Launch training
 echo "Starting training..."
-# Get dataset path from curation results
-dataset_path=$(jq -r ".experiments[\"$experiment_name\"].results.curation.dataset_path" med-s1/results.json)
-
-if [ "$dataset_path" = "null" ]; then
-    echo "Error: Dataset path not found in results.json. Has curation been run for this experiment?"
-    exit 1
-fi
 
 # Clean experiment name same way as curation (remove all non-alphanumeric except hyphens)
 safe_experiment_name=$(echo "$experiment_name" | sed 's/[^a-zA-Z0-9-]//g')
@@ -122,10 +127,11 @@ echo "Outputting to: ${checkpoint_dir}"
 echo "Train file path: ${LOCAL_DATA_DIR}/med_s1k_formatted"
 
 if [ "$strategy" = "fsdp" ]; then
+        # --block_size=32768 \
     torchrun \
         --nproc_per_node=$gpu_count \
-        $(pwd)/train/sft.py \
-        --block_size=32768 \
+        "${MED_S1_DIR}/train/sft.py" \
+        --block_size=4096 \
         --per_device_train_batch_size=1 \
         --per_device_eval_batch_size=1 \
         --gradient_accumulation_steps=$grad_acc \
@@ -134,10 +140,11 @@ if [ "$strategy" = "fsdp" ]; then
         --model_name="${model}" \
         --warmup_ratio=0.05 \
         --report_to="none" \
-        --bf16=True \
+        --bf16=False \
+        --fp16=False \
         --eval_strategy="no" \
         --logging_steps=100 \
-        --save_strategy="epoch" \
+        --save_strategy="no" \
         --lr_scheduler_type="cosine" \
         --learning_rate=${learning_rate} \
         --weight_decay=${weight_decay} \
@@ -146,16 +153,17 @@ if [ "$strategy" = "fsdp" ]; then
         --output_dir="${checkpoint_dir}" \
         --push_to_hub=false \
         --save_only_model=True \
+        --save_safetensors=True \
         --ddp_find_unused_parameters=False \
         --ddp_timeout=3600 \
         --fsdp="full_shard auto_wrap" \
-        --fsdp_config="$(pwd)/train/fsdp_config_llama_cpu.json"
+        --fsdp_config="${MED_S1_DIR}/train/fsdp_config_llama_cpu.json"
 else
     # Non-FSDP training path
     torchrun \
         --nproc_per_node=$gpu_count \
-        $(pwd)/train/sft.py \
-        --block_size=32768 \
+        "${MED_S1_DIR}/train/sft.py" \
+        --block_size=4096 \
         --per_device_train_batch_size=1 \
         --per_device_eval_batch_size=1 \
         --gradient_accumulation_steps=$grad_acc \
@@ -177,13 +185,14 @@ else
         --push_to_hub=false \
         --save_only_model=True \
         --ddp_find_unused_parameters=False \
-        --ddp_timeout=3600 \
-        --is_debug=True
+        --ddp_timeout=3600
 fi
 
-# Cleanup local scratch
-echo "Cleaning up local scratch..."
-rm -rf $LOCAL_DATA_DIR
+# Cleanup local scratch if we created it
+if [ -d "/local-scratch" ]; then
+    echo "Cleaning up local scratch..."
+    rm -rf $LOCAL_DATA_DIR
+fi
 
 # Update results.json with model path and timestamp
 model_path="${checkpoint_dir}"
@@ -196,6 +205,6 @@ jq --arg path "$model_path" --arg time "$timestamp" \
     \"timestamp\": \$time,
     \"metrics\": null
   }" \
-  med-s1/results.json > med-s1/results.json.tmp && mv med-s1/results.json.tmp med-s1/results.json
+  "$RESULTS_JSON" > "${RESULTS_JSON}.tmp" && mv "${RESULTS_JSON}.tmp" "$RESULTS_JSON"
 
 echo "Training complete!"

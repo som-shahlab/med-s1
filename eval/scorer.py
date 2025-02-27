@@ -117,19 +117,51 @@ def score(data: List[Dict], ignore_miss: bool = False) -> Tuple[Dict, List[Dict]
 
 
 
+import numpy as np
+from scipy import stats
+from sklearn.utils import resample
+
+def calculate_confidence_interval(data: np.array, confidence_level=0.95):
+    """Calculate bootstrap confidence interval for accuracy."""
+    n_iterations = 1000
+    bootstrapped_means = []
+    for _ in range(n_iterations):
+        sample = resample(data, replace=True)
+        bootstrapped_means.append(sample.mean())
+    lower = np.percentile(bootstrapped_means, (1 - confidence_level) / 2 * 100)
+    upper = np.percentile(bootstrapped_means, (1 + confidence_level) / 2 * 100)
+    return lower, upper
+
 def get_results(res_path):
     with open(res_path) as f:
-        data: List[Dict] = json.load(f) 
+        data: List[Dict] = json.load(f)
 
-    res, wrong_data, cor_data =  score(data)
+    raw_metrics, wrong_data, cor_data = score(data)
+    
+    # Convert to structured format with confidence intervals
+    metrics = {}
+    for dataset, values in raw_metrics.items():
+        # Create binary array for bootstrap
+        results = np.zeros(values[2])  # total_examples
+        results[:values[1]] = 1  # num_correct ones
+        np.random.shuffle(results)  # Randomize for bootstrap
+        
+        # Calculate CI
+        lower, upper = calculate_confidence_interval(results)
+        
+        metrics[dataset] = {
+            "accuracy": values[0],
+            "accuracy_ci": [float(lower), float(upper)],
+            "num_correct": values[1],
+            "total_examples": values[2],
+            "num_answered": values[3]
+        }
     
     # Logging
     print(f"*{os.path.basename(res_path)}*")
-    print(json.dumps(res,indent=4))
+    print(json.dumps(metrics, indent=4))
 
-    # save results
-    with open('result_' + os.path.basename(res_path),'w') as fw:
-        json.dump(res,fw,ensure_ascii=False,indent=2)
+    return metrics
 
 # if __name__ == "__main__":
 #     get_results('output_file_path')

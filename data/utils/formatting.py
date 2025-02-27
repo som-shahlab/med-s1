@@ -6,6 +6,7 @@ from typing import Dict
 from datetime import datetime
 from datasets import Dataset
 from transformers import AutoTokenizer
+import json
 
 def preprocess_text(text: str) -> str:
     """Preprocess text by cleaning and standardizing format"""
@@ -82,13 +83,17 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_name: str) ->
     split.save_to_disk(formatted_path)
     
     # Update results.json with dataset path
-    with open("med-s1/results.json", "r") as f:
+    results_json = os.environ.get('RESULTS_JSON')
+    if not results_json:
+        raise ValueError("RESULTS_JSON environment variable not set")
+        
+    with open(results_json, "r") as f:
         results = json.load(f)
     results["experiments"][experiment_name]["results"]["curation"] = {
         "dataset_path": formatted_path,
         "timestamp": datetime.now().isoformat()
     }
-    with open("med-s1/results.json", "w") as f:
+    with open(results_json, "w") as f:
         json.dump(results, f, indent=2)
     
     logging.info(f"Split dataset into {len(split['train'])} train and {len(split['test'])} test examples")

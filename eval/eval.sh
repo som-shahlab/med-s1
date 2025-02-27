@@ -2,53 +2,79 @@
 #SBATCH --job-name=med-s1-eval
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.err
-#SBATCH --partition=nigam-h100
+#SBATCH --partition=nigam-a100
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=02:00:00
+#SBATCH --time=02:00:00  # Will be overridden if debug mode
 #SBATCH --account=nigam
 
-# Check if experiment name is provided
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <experiment_name>"
+# Parse arguments and set time limit
+debug=false
+experiment_name=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --debug)
+            debug=true
+            shift
+            ;;
+        *)
+            if [ -z "$experiment_name" ]; then
+                experiment_name="$1"
+            else
+                echo "Usage: $0 [--debug] <experiment_name>"
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$experiment_name" ]; then
+    echo "Usage: $0 [--debug] <experiment_name>"
     exit 1
 fi
 
-experiment_name=$1
+# Source configuration first to get environment variables
+echo "Sourcing config.sh..."
+source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
 # Get experiment config from results.json
-config=$(jq -r ".experiments[\"$experiment_name\"].config" med-s1/results.json)
+config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
 
 if [ "$config" = "null" ]; then
-    echo "Error: Experiment '$experiment_name' not found in results.json"
+    echo "Error: Experiment '$experiment_name' not found in $RESULTS_JSON"
     exit 1
 fi
 
 # Get model info based on experiment
-if [ "$experiment_name" = "base" ]; then
-    # For base experiment, get model path from config.json
-    model_key=$(jq -r ".experiments[\"$experiment_name\"].config.model_key" med-s1/results.json)
-    model_path=$(jq -r ".models[\"$model_key\"].hf_path" med-s1/config.json)
-    echo "Using base model: $model_path"
+model_key=$(jq -r ".experiments[\"$experiment_name\"].config.model_key" "$RESULTS_JSON")
+if [ "$model_key" != "null" ]; then
+    # For pre-trained models (base, huatuo), get path from config.json
+    model_path=$(jq -r ".models[\"$model_key\"].hf_path" "${MED_S1_DIR}/config.json")
+    echo "Using pre-trained model: $model_path"
 else
-    # For other experiments, get model path from training results
-    model_path=$(jq -r ".experiments[\"$experiment_name\"].results.training.model_path" med-s1/results.json)
+    # For fine-tuned models, get path from training results
+    model_path=$(jq -r ".experiments[\"$experiment_name\"].results.training.model_path" "$RESULTS_JSON")
     if [ "$model_path" = "null" ]; then
-        echo "Error: Model path not found in results.json. Has training been completed for this experiment?"
+        echo "Error: Neither model_key nor training model_path found in $RESULTS_JSON"
         exit 1
     fi
+    
+    # Verify model directory exists
+    if [ ! -d "$model_path" ]; then
+        echo "Error: Model directory not found: $model_path"
+        exit 1
+    fi
+    echo "Using fine-tuned model: $model_path"
 fi
 
 # Create logs directory
 echo "Creating logs directory..."
-mkdir -p /share/pi/nigam/users/calebwin/med-s1/logs
-
-# Source configuration
-echo "Sourcing config.sh..."
-source $(pwd)/config.sh || { echo "Failed to source config.sh"; exit 1; }
+mkdir -p "${MED_S1_DIR}/logs"
 
 # Setup environment
 echo "Setting up conda environment..."
@@ -72,13 +98,21 @@ echo "Starting evaluation..."
 echo "Model path: ${model_path}"
 echo "Output directory: ${output_dir}"
 
-python $(pwd)/eval/eval.py \
-    --experiment_name "${experiment_name}" \
-    --model_path "${model_path}" \
-    --path_to_eval_json "$(pwd)/eval/data/eval_data.json" \
-    --path_to_output_dir "${output_dir}" \
-    --use_vllm true \
-    --batch_size 1024
+# Build eval.py command
+cmd="python ${MED_S1_DIR}/eval/eval.py \
+    --experiment_name ${experiment_name} \
+    --model_path ${model_path} \
+    --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
+    --path_to_output_dir ${output_dir} \
+    --strict_prompt"
+
+# Add debug flags if in debug mode
+if [ "$debug" = true ]; then
+    cmd="$cmd --debug --debug_samples 100"
+fi
+
+# Run evaluation
+eval "$cmd"
 
 # Check if evaluation was successful
 if [ $? -ne 0 ]; then

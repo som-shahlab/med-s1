@@ -9,25 +9,77 @@
           "n_samples": 1000
         },
         "training_params": {
-          "learning_rate": 1e-5,
+          "learning_rate": 1e-05,
           "batch_size": 4,
           "num_epochs": 5
         }
       },
       "results": {
         "curation": {
-          "dataset_path": null,
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/plumbing_test_001_20250219_145607/med_s1k_formatted",
           "timestamp": null
         },
         "training": {
-          "model_path": null,
-          "timestamp": null,
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-1k",
+          "timestamp": "2025-02-27T01:48:10Z",
           "metrics": null
         },
         "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k/med-s1-1keval_data_strict-prompt.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k/med-s1-1keval_data_strict-prompt_metrics.json",
+          "timestamp": "2025-02-26T18:42:38.091401",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.4111881424814726,
+              "accuracy_ci": [
+                0.39444776476213245,
+                0.42457566339947406
+              ],
+              "num_correct": 1715,
+              "total_examples": 4183,
+              "num_answered": 1720
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.4783974862529458,
+              "accuracy_ci": [
+                0.44776119402985076,
+                0.5003927729772192
+              ],
+              "num_correct": 604,
+              "total_examples": 1273,
+              "num_answered": 609
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.645,
+              "accuracy_ci": [
+                0.615,
+                0.673025
+              ],
+              "num_correct": 645,
+              "total_examples": 1000,
+              "num_answered": 643
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.3758957654723127,
+              "accuracy_ci": [
+                0.34592833876221496,
+                0.3935016286644951
+              ],
+              "num_correct": 564,
+              "total_examples": 1535,
+              "num_answered": 577
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.35324675324675325,
+              "accuracy_ci": [
+                0.2935064935064935,
+                0.38701298701298703
+              ],
+              "num_correct": 131,
+              "total_examples": 385,
+              "num_answered": 136
+            }
+          }
         }
       }
     },
@@ -40,19 +92,20 @@
           "n_samples": 1000
         },
         "training_params": {
-          "learning_rate": 2e-5,
-          "batch_size": 8,
-          "num_epochs": 8
+          "learning_rate": 2e-06,
+          "batch_size": 16,
+          "num_epochs": 5,
+          "weight_decay": 0.001
         }
       },
       "results": {
         "curation": {
-          "dataset_path": null,
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/plumbing_test_001_20250219_145607/med_s1k_formatted",
           "timestamp": null
         },
         "training": {
-          "model_path": null,
-          "timestamp": null,
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-1k-tuned",
+          "timestamp": "2025-02-27T03:31:45Z",
           "metrics": null
         },
         "eval": {
@@ -76,7 +129,7 @@
           }
         },
         "training_params": {
-          "learning_rate": 2e-5,
+          "learning_rate": 2e-05,
           "batch_size": 8,
           "num_epochs": 8
         }
@@ -107,7 +160,7 @@
           "n_samples": 5000
         },
         "training_params": {
-          "learning_rate": 1e-5,
+          "learning_rate": 1e-05,
           "batch_size": 4,
           "num_epochs": 3
         }
@@ -138,7 +191,7 @@
           "n_samples": 25371
         },
         "training_params": {
-          "learning_rate": 1e-5,
+          "learning_rate": 1e-05,
           "batch_size": 2,
           "num_epochs": 2
         }
@@ -169,15 +222,15 @@
           "n_samples": 1000
         },
         "training_params": {
-          "learning_rate": 1e-5,
+          "learning_rate": 1e-05,
           "batch_size": 4,
           "num_epochs": 5
         }
       },
       "results": {
         "curation": {
-          "dataset_path": null,
-          "timestamp": null
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/random-1k/med_s1k_formatted",
+          "timestamp": "2025-02-26T22:22:46.308399"
         },
         "training": {
           "model_path": null,
@@ -200,7 +253,7 @@
           "n_samples": 5000
         },
         "training_params": {
-          "learning_rate": 1e-5,
+          "learning_rate": 1e-05,
           "batch_size": 4,
           "num_epochs": 3
         }
@@ -233,9 +286,130 @@
         "curation": null,
         "training": null,
         "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data_strict-prompt.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data_strict-prompt_metrics.json",
+          "timestamp": "2025-02-26T18:18:27.504904",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.5541477408558451,
+              "accuracy_ci": [
+                0.5378854888835763,
+                0.568497489839828
+              ],
+              "num_correct": 2318,
+              "total_examples": 4183,
+              "num_answered": 2318
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.6284367635506677,
+              "accuracy_ci": [
+                0.6017085624509034,
+                0.6520227808326786
+              ],
+              "num_correct": 799,
+              "total_examples": 1273,
+              "num_answered": 800
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.753,
+              "accuracy_ci": [
+                0.727,
+                0.781
+              ],
+              "num_correct": 753,
+              "total_examples": 1000,
+              "num_answered": 753
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.5954397394136808,
+              "accuracy_ci": [
+                0.5706840390879478,
+                0.6188925081433225
+              ],
+              "num_correct": 912,
+              "total_examples": 1535,
+              "num_answered": 914
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.42597402597402595,
+              "accuracy_ci": [
+                0.37662337662337664,
+                0.4753246753246753
+              ],
+              "num_correct": 164,
+              "total_examples": 385,
+              "num_answered": 163
+            }
+          }
+        }
+      }
+    },
+    "huatuo": {
+      "description": "Pre-trained HuatuoGPT medical model",
+      "config": {
+        "model_key": "huatuo:8b",
+        "curation": null,
+        "training_params": null
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_strict-prompt.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_strict-prompt_metrics.json",
+          "timestamp": "2025-02-26T19:25:08.802980",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.6323213005020321,
+              "accuracy_ci": [
+                0.6177384652163519,
+                0.6466650729141764
+              ],
+              "num_correct": 2645,
+              "total_examples": 4183,
+              "num_answered": 2645
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.7588373919874313,
+              "accuracy_ci": [
+                0.7329143754909663,
+                0.7831893165750197
+              ],
+              "num_correct": 966,
+              "total_examples": 1273,
+              "num_answered": 966
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.802,
+              "accuracy_ci": [
+                0.777,
+                0.826
+              ],
+              "num_correct": 802,
+              "total_examples": 1000,
+              "num_answered": 802
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.6488599348534202,
+              "accuracy_ci": [
+                0.6253908794788273,
+                0.6729804560260586
+              ],
+              "num_correct": 996,
+              "total_examples": 1535,
+              "num_answered": 995
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.5506493506493506,
+              "accuracy_ci": [
+                0.5012987012987012,
+                0.6025974025974026
+              ],
+              "num_correct": 212,
+              "total_examples": 385,
+              "num_answered": 212
+            }
+          }
         }
       }
     }

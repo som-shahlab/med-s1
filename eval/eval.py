@@ -22,6 +22,8 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=1024, help='Batch size')
     parser.add_argument('--temperature', type=float, default=0.5, help='Temperature')
     parser.add_argument('--tensor_parallel_size', type=int, default=1, help='Number of GPUs to use for tensor parallelism')
+    parser.add_argument('--debug', action='store_true', help='Run in debug mode with subset of data')
+    parser.add_argument('--debug_samples', type=int, default=100, help='Number of samples to use in debug mode')
     return parser.parse_args()
 
 def print_indented(text: str):
@@ -156,59 +158,87 @@ def main():
     print(f"Initializing vllm with model: {args.model_path}")
     print(f"Using tensor parallel size: {args.tensor_parallel_size}")
     
+    # Set PyTorch memory settings
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+    
+    # Configure vllm for stable memory usage
     llm = LLM(
         model=args.model_path,
         tensor_parallel_size=args.tensor_parallel_size,
-        trust_remote_code=True
+        trust_remote_code=True,
+        gpu_memory_utilization=0.90,  # Use more GPU memory
+        max_num_batched_tokens=8192,  # Balance between memory and speed
+        max_num_seqs=256,  # Balance parallel sequences
+        enforce_eager=False,  # Keep async for throughput
+        max_model_len=2048,  # Limit context size
+        max_parallel_loading_workers=2  # More loading workers
     )
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, padding_side='left')
     template = Template(tokenizer.chat_template) if args.use_chat_template else None
 
+    # Load and potentially subset data for debug
     input_data: List[Dict] = load_file(args.path_to_eval_json)
-
+    if args.debug:
+        print(f"\nRunning in debug mode with {args.debug_samples} samples")
+        # Take samples from each dataset to maintain distribution
+        debug_data = []
+        datasets = set(item['source'] for item in input_data)
+        samples_per_dataset = max(1, args.debug_samples // len(datasets))
+        
+        for dataset in datasets:
+            dataset_items = [item for item in input_data if item['source'] == dataset]
+            debug_data.extend(dataset_items[:samples_per_dataset])
+        
+        input_data = debug_data
+        print(f"Debug dataset sizes:")
+        for dataset in datasets:
+            count = sum(1 for item in debug_data if item['source'] == dataset)
+            print(f"  {dataset}: {count} samples")
+    
     final_results: List[Dict] = []
     if args.strict_prompt:
         query_prompt = "Please answer the following multiple-choice questionss, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
     else:
         query_prompt = "Please answer the following multiple-choice question:\n{question}\n{option_str}"        
 
-    for idx in tqdm(range(len(input_data) // args.batch_size + 1)):
-        batch: List[Dict] = input_data[idx*args.batch_size:(idx+1)*args.batch_size]
-        if len(batch) == 0:
-            break
-
-        # Format inputs to LLM
+    # Process in batches to manage memory
+    batch_size = 256  # Match vllm's max_num_seqs
+    final_results = []
+    
+    print(f"\nProcessing {len(input_data)} examples in batches of {batch_size}...")
+    for i in tqdm(range(0, len(input_data), batch_size)):
+        batch = input_data[i:i + batch_size]
+        
+        # Format batch
         for item in batch:
-            item['option_str'] = '\n'.join([ f'{op}. {ans}' for op,ans in item['options'].items()])
+            item['option_str'] = '\n'.join([f'{op}. {ans}' for op,ans in item['options'].items()])
             item["input_str"] = query_prompt.format_map(item)
-        processed_batch: List[str] = [ item["input_str"] for item in batch]
-
-        # Always print the first example for sanity checking
-        is_print_example: bool = idx == 0
-
+        
+        # Process batch
         preds, _ = call_model(
             llm=llm,
-            prompts=processed_batch,
+            prompts=[item["input_str"] for item in batch],
             tokenizer=tokenizer,
             template=template,
             max_new_tokens=args.max_new_tokens,
-            is_print_example=is_print_example,
+            is_print_example=(i == 0),  # Only print first batch's example
             temperature=args.temperature,
             is_use_chat_template=args.use_chat_template,
             max_tokens=args.max_tokens
         )
-
-        for j, item in enumerate(batch):
-            pred = preds[j]
-            if len(pred) == 0:
-                continue
-            item["output"] = pred
-            final_results.append(item)
+        
+        # Store results
+        for item, pred in zip(batch, preds):
+            if len(pred) > 0:
+                item["output"] = pred
+                final_results.append(item)
 
     # Save outputs
     model_name: str = os.path.split(args.model_path)[-1]
-    task_name: str = model_name + os.path.basename(args.path_to_eval_json).replace('.json','') + ('_strict-prompt' if args.strict_prompt else '')
+    task_name: str = model_name + os.path.basename(args.path_to_eval_json).replace('.json','') + \
+                     ('_strict-prompt' if args.strict_prompt else '') + \
+                     ('_debug' if args.debug else '')
     file_name: str = f'{task_name}.json'
     path_to_output: str = os.path.join(args.path_to_output_dir, file_name)
     with open(path_to_output,'w') as fw:
@@ -217,17 +247,68 @@ def main():
     # Score outputs and get metrics
     metrics = get_results(path_to_output)
     
+    # Save detailed metrics with schema
+    metrics_file = os.path.join(args.path_to_output_dir, f"{task_name}_metrics.json")
+    with open(metrics_file, 'w') as f:
+        json.dump({
+            "schema": {
+                "accuracy": "float: Best accuracy between first and last answer match",
+                "accuracy_ci": "array: [lower, upper] bounds of 95% confidence interval for accuracy",
+                "num_correct": "int: Number of correctly answered questions (first match)",
+                "total_examples": "int: Total number of examples in dataset",
+                "num_answered": "int: Number of questions with correct last answer"
+            },
+            "metrics": metrics
+        }, f, indent=2)
+    
+    # Print example failures for analysis
+    print("\nAnalyzing failures...")
+    with open(path_to_output, 'r') as f:
+        all_results = json.load(f)
+    
+    # Find examples where model output doesn't match answer
+    failures = []
+    for result in all_results:
+        answer = result['answer_idx']
+        output = result['output']
+        if answer not in output:  # Simple check for correct answer in output
+            failures.append(result)
+    
+    # Print 3 random failures
+    if failures:
+        import random
+        print(f"\nFound {len(failures)} failures. Here are 3 random examples:")
+        for failure in random.sample(failures, min(3, len(failures))):
+            print("\nInput:")
+            print_indented(failure['input_str'])
+            print("\nModel Output:")
+            print_indented(failure['output'])
+            print("\nCorrect Answer:")
+            print_indented(f"Option {failure['answer_idx']}: {failure['answer']}")
+            print("-" * 80)
+    else:
+        print("No failures found!")
+    
     # Update results.json with eval results and metrics
-    with open("med-s1/results.json", "r") as f:
+    results_json = os.environ.get('RESULTS_JSON')
+    if not results_json:
+        raise ValueError("RESULTS_JSON environment variable not set")
+        
+    with open(results_json, "r") as f:
         results = json.load(f)
     
-    results["experiments"][args.experiment_name]["results"]["eval"] = {
-        "results_path": os.path.abspath(path_to_output),
+    # Create eval results with paths to both files
+    eval_results = {
+        "outputs_path": os.path.abspath(path_to_output),  # Path to model outputs
+        "metrics_path": os.path.abspath(metrics_file),    # Path to detailed metrics
         "timestamp": datetime.now().isoformat(),
-        "metrics": metrics
+        "summary": metrics  # Keep metrics in results.json for quick reference
     }
     
-    with open("med-s1/results.json", "w") as f:
+    # Update results.json safely
+    results["experiments"][args.experiment_name]["results"]["eval"] = eval_results
+    
+    with open(results_json, "w") as f:
         json.dump(results, f, indent=2)
 
 

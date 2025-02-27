@@ -2,15 +2,14 @@
 #SBATCH --job-name=med-s1-curate
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.err
-#SBATCH --partition=cpu
 #SBATCH --cpus-per-task=28
 #SBATCH --mem=64GB
 #SBATCH --time=06:00:00
 #SBATCH --account=nigam
 
-# Source configuration
+# Source configuration first to get environment variables
 echo "Sourcing config.sh..."
-source $(pwd)/config.sh || { echo "Failed to source config.sh"; exit 1; }
+source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
 # Setup environment
 echo "Setting up conda environment..."
@@ -19,4 +18,4 @@ echo "Activating med-s1 environment..."
 conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Run curation script
-python med-s1/data/curate_med_s1k.py --experiment "$1"
+python "${MED_S1_DIR}/data/curate_med_s1k_new.py" --experiment "$1"

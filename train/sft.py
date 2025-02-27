@@ -18,7 +18,7 @@ def load_config() -> Dict:
 @dataclass
 class TrainingConfig:
     model_name: str = field(default=None)
-    block_size: int = field(default=32768)
+    block_size: int = field(default=4096)
     wandb_project: Optional[str] = field(default="s1")
     wandb_entity: Optional[str] = field(default="hashimoto-group")
     train_file_path: Optional[str] = field(default=None)
@@ -30,7 +30,7 @@ class TrainingConfig:
             config = load_config()
             model_key = config["model_choices"]["base"]
             self.model_name = config["models"][model_key]["hf_path"]
-            self.block_size = config["models"][model_key]["max_length"]
+            self.block_size = 4096
 
         # Use provided train_file_path if available
         if self.train_file_path is None:
@@ -71,7 +71,7 @@ def train():
     # loading model
     kwargs = {
         "device_map": {"": local_rank},
-        "torch_dtype": torch.bfloat16,
+        "torch_dtype": torch.float16,
         "use_cache": False,
         "low_cpu_mem_usage": True
     }
@@ -115,10 +115,6 @@ def train():
     else:
         raise ValueError(f"Model name {config.model_name} not supported")
     
-    if args.is_debug:
-        dataset['train'] = dataset['train'].select(range(100))
-        dataset['test'] = dataset['test'].select(range(1))
-
     # Only compute loss over assistant responses
     # Verified that it precisely starts where the thinking tokens start and ends with the first pad token
     # via labels being set to -100
@@ -135,6 +131,7 @@ def train():
     args.ddp_backend = 'nccl'  # Use NCCL for GPU communication
     args.distributed_state = None  # Let the Trainer handle distributed state
     
+    # Create trainer first
     trainer = trl.SFTTrainer(
         model,
         train_dataset=dataset['train'],
@@ -143,11 +140,23 @@ def train():
         data_collator=collator,
     )
 
+    logging.info(f"[Rank {local_rank}] After loading model: "
+             f"Allocated={torch.cuda.memory_allocated()/1e9:.2f}GB, "
+             f"Reserved={torch.cuda.memory_reserved()/1e9:.2f}GB")
+    if local_rank == 0:
+        for name, param in model.named_parameters():
+            logging.debug(f"{name} dtype = {param.dtype}")
+            break
+
     logging.critical(f'Outputting to: `{args.output_dir}`')
-    trainer.train()
-    trainer.save_model(output_dir=args.output_dir)
-    tokenizer.save_pretrained(args.output_dir)
+    
+    # Synchronize all processes before training
     trainer.accelerator.wait_for_everyone()
+    
+    trainer.train()
+    
+    # Save final model
+    trainer.save_model()
 
 
 if __name__ == "__main__":
