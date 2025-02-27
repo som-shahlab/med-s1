@@ -75,7 +75,6 @@ num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
 weight_decay=$(jq -r ".training_params.weight_decay // \"1e-4\"" <<< "$config")  # Default to 1e-4 if not set
 
 # Set strategy
-strategy="none"
 uid="$(date +%Y%m%d_%H%M%S)"
 echo "Starting job..."
 
@@ -99,7 +98,6 @@ echo "Setting environment variables..."
 
 # CUDA settings
 # export CUDA_DEVICE_ORDER=PCI_BUS_ID
-# export CUDA_VISIBLE_DEVICES=0,1,2,3
 # export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Calculate gradient accumulation steps based on batch size and GPU count
@@ -157,6 +155,8 @@ if [ "$debug" = true ]; then
     echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     model="meta-llama/Llama-3.2-1B"
     num_epochs=2
+    export CUDA_VISIBLE_DEVICES=0
+    strategy="none"
 fi
 
 # ! FSDP training path
@@ -193,7 +193,6 @@ if [ "$strategy" = "fsdp" ]; then
     eval "$cmd"
 else
     # Non-FSDP training path
-    export CUDA_VISIBLE_DEVICES=0
     gpu_count=1
     torchrun \
         --nproc_per_node=$gpu_count \
