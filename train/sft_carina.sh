@@ -50,7 +50,7 @@ fi
 
 # Source configuration first to get environment variables
 echo "Sourcing config.sh..."
-source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
+source "config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
 # Get experiment config from results.json
 config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
@@ -75,36 +75,32 @@ num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
 weight_decay=$(jq -r ".training_params.weight_decay // \"1e-4\"" <<< "$config")  # Default to 1e-4 if not set
 
 # Set strategy
-strategy="fsdp"
+strategy="none"
 uid="$(date +%Y%m%d_%H%M%S)"
 echo "Starting job..."
 
 # Setup environment
 echo "Setting up conda environment..."
-source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+# source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
 echo "Activating med-s1 environment..."
-conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+# conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Set environment variables
 echo "Setting environment variables..."
 
 # NCCL settings
-export NCCL_DEBUG=INFO
-export NCCL_P2P_DISABLE=0
-export NCCL_P2P_LEVEL=NVL
-export NCCL_SOCKET_IFNAME=eth0
-export NCCL_NVLS_ENABLE=0
-export NCCL_ASYNC_ERROR_HANDLING=1
-export NCCL_SOCKET_NTHREADS=8
+# export NCCL_DEBUG=INFO
+# export NCCL_P2P_DISABLE=0
+# export NCCL_P2P_LEVEL=NVL
+# export NCCL_SOCKET_IFNAME=eth0
+# export NCCL_NVLS_ENABLE=0
+# export NCCL_ASYNC_ERROR_HANDLING=1
+# export NCCL_SOCKET_NTHREADS=8
 
 # CUDA settings
-export CUDA_DEVICE_ORDER=PCI_BUS_ID
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-
-# Disable wandb
-export WANDB_DISABLED=true
-export WANDB_MODE=disabled
+# export CUDA_DEVICE_ORDER=PCI_BUS_ID
+# export CUDA_VISIBLE_DEVICES=0,1,2,3
+# export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Calculate gradient accumulation steps based on batch size and GPU count
 gpu_count=$(nvidia-smi -L | wc -l)
@@ -154,6 +150,16 @@ export MASTER_PORT=$master_port
 echo "Outputting to: ${checkpoint_dir}"
 echo "Train file path: ${LOCAL_DATA_DIR}/med_s1k_formatted"
 
+# ! Debug mode settings
+if [ "$debug" = true ]; then
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    echo ">>>>>> USING DEBUG MODE <<<<<<"
+    echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    model="meta-llama/Llama-3.2-1B"
+    num_epochs=2
+fi
+
+# ! FSDP training path
 if [ "$strategy" = "fsdp" ]; then
     # Base FSDP command
     cmd="torchrun \
@@ -182,26 +188,13 @@ if [ "$strategy" = "fsdp" ]; then
         --fsdp=\"full_shard auto_wrap\" \
         --fsdp_config=\"${MED_S1_DIR}/train/fsdp_config_llama_cpu.json\""
 
-    if [ "$debug" = true ]; then
-        echo "Using debug settings for training"
-        # Debug mode: 2 epochs, save every 25 steps, log every 5
-        cmd="$cmd \
-            --num_train_epochs=2 \
-            --save_strategy=no \
-            --logging_steps=1"
-    else
-        # Normal mode
-        cmd="$cmd \
-            --num_train_epochs=${num_epochs} \
-            --save_strategy=no \
-            --logging_steps=1"
-    fi
-
     # Execute command
     echo "Running command: $cmd"
     eval "$cmd"
 else
     # Non-FSDP training path
+    export CUDA_VISIBLE_DEVICES=0
+    gpu_count=1
     torchrun \
         --nproc_per_node=$gpu_count \
         "${MED_S1_DIR}/train/sft.py" \

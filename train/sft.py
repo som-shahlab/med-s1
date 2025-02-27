@@ -1,26 +1,38 @@
+import wandb
 import os
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Dict
 import warnings
-warnings.filterwarnings("ignore", category=FutureWarning)
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 import transformers
 import trl
 import json
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
     with open("config.json", "r") as f:
         return json.load(f)
 
+class CustomTrainer(trl.SFTTrainer):
+    def log(self, logs):
+        """
+        Intercept SFTTrainer log method and log to wandb
+        
+            ```
+            logs = {'loss': 2.1122, 'grad_norm': 11.75, 'learning_rate': 6.993006993006993e-08, 'epoch': 0.00070074015679061}
+            ```
+        """
+        super().log(logs)  # Call the original log method
+
 @dataclass
 class TrainingConfig:
     model_name: str = field(default=None)
     block_size: int = field(default=4096)
-    wandb_project: Optional[str] = field(default="s1")
-    wandb_entity: Optional[str] = field(default="hashimoto-group")
+    wandb_project: Optional[str] = "med-s1"
+    wandb_entity: Optional[str] = "ehr-fm"
     train_file_path: Optional[str] = field(default=None)
     dagger: bool = field(default=False)
 
@@ -40,6 +52,9 @@ class TrainingConfig:
         os.environ['WANDB_ENTITY'] = self.wandb_entity
 
 def train():
+    # wandb
+    wandb.init(entity="ehr-fm", project="med-s1")
+
     # parsing input
     parser = transformers.HfArgumentParser((TrainingConfig, trl.SFTConfig))
     config, args = parser.parse_args_into_dataclasses()
@@ -126,68 +141,27 @@ def train():
         tokenizer=tokenizer,
         mlm=False
     )
-    
-    # Debug collator to monitor token IDs and text
-    def debug_collator(features):
-        # # Debug what's in features
-        # logging.warning(f"\nFeatures type: {type(features)}")
-        # if features:
-        #     logging.warning(f"First feature type: {type(features[0])}")
-        #     if isinstance(features[0], dict):
-        #         logging.warning(f"Feature keys: {features[0].keys()}")
-        #         if 'text' in features[0]:
-        #             logging.warning(f"\nRaw text sample: {features[0]['text'][:200]}")
-        #         else:
-        #             logging.warning("No 'text' key found in features")
-        #     else:
-        #         logging.warning(f"Feature content: {features[0]}")
-
-        # Apply collation
-        batch = collator(features)
-
-        # Monitor token IDs and text
-        if "input_ids" in batch:
-            all_ids = batch["input_ids"].flatten().tolist()
-            min_id, max_id = min(all_ids), max(all_ids)
-            logging.warning(f"Token ID range: min={min_id}, max={max_id} out of {len(tokenizer)}")
-
-            # Show first example's text
-            logging.warning("\nFirst example decoded:")
-            # logging.warning(tokenizer.decode(batch["input_ids"][0][:150]))
-
-            # Log label stats and text
-            if "labels" in batch:
-                labels = batch["labels"].flatten().tolist()
-                mask_ratio = labels.count(-100) / len(labels)
-                logging.warning(f"Label masking ratio: {mask_ratio:.2f}")
-
-                # Show what we're actually training on (non -100 labels)
-                first_labels = batch["labels"][0].tolist()
-                training_tokens = [
-                    batch["input_ids"][0][i].item()
-                    for i, label in enumerate(first_labels)
-                    if label != -100
-                ]
-                # if training_tokens:
-                #     logging.warning("\nTraining on text:")
-                #     logging.warning(tokenizer.decode(training_tokens))
-
-        return batch
 
     args.dataset_text_field = 'text'
-    # args.max_grad_norm = 1.0  # Add gradient clipping
+    args.max_grad_norm = 1.0  # Add gradient clipping
     
     # Set distributed training configuration
     args.ddp_backend = 'nccl'
     args.distributed_state = None
     
+    # Logging
+    args.report_to = [ "wandb" ]
+    args.logging_dir = "./logs"
+    args.logging_strategy = "steps"
+    args.logging_steps = 1  # Log every 1 steps
+
     # Create trainer with debug collator
-    trainer = trl.SFTTrainer(
+    trainer = CustomTrainer(
         model,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'] if 'test' in dataset else dataset['train'],
         args=args,
-        data_collator=debug_collator,
+        data_collator=collator
     )
 
     logging.info(f"[Rank {local_rank}] After loading model: "
