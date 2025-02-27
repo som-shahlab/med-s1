@@ -12,13 +12,41 @@
 #SBATCH --time=06:00:00
 #SBATCH --account=nigam
 
-# Check if experiment name is provided
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <experiment_name>"
+# Parse arguments
+debug=false
+experiment_name=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --debug)
+            debug=true
+            shift
+            ;;
+        *)
+            if [ -z "$experiment_name" ]; then
+                experiment_name="$1"
+            else
+                echo "Usage: $0 [--debug] <experiment_name>"
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$experiment_name" ]; then
+    echo "Usage: $0 [--debug] <experiment_name>"
     exit 1
 fi
 
-experiment_name=$1
+# Debug mode settings
+if [ "$debug" = true ]; then
+    echo "Running in debug mode"
+    export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+    export NCCL_DEBUG=INFO
+    export TORCH_DISTRIBUTED_DEBUG=DETAIL
+    export TORCH_SHOW_CPP_STACKTRACES=1
+fi
 
 # Source configuration first to get environment variables
 echo "Sourcing config.sh..."
@@ -127,37 +155,51 @@ echo "Outputting to: ${checkpoint_dir}"
 echo "Train file path: ${LOCAL_DATA_DIR}/med_s1k_formatted"
 
 if [ "$strategy" = "fsdp" ]; then
-        # --block_size=32768 \
-    torchrun \
+    # Base FSDP command
+    cmd="torchrun \
         --nproc_per_node=$gpu_count \
-        "${MED_S1_DIR}/train/sft.py" \
+        \"${MED_S1_DIR}/train/sft.py\" \
         --block_size=4096 \
         --per_device_train_batch_size=1 \
         --per_device_eval_batch_size=1 \
         --gradient_accumulation_steps=$grad_acc \
-        --num_train_epochs=${num_epochs} \
-        --train_file_path="${LOCAL_DATA_DIR}/med_s1k_formatted" \
-        --model_name="${model}" \
+        --train_file_path=\"${LOCAL_DATA_DIR}/med_s1k_formatted\" \
+        --model_name=\"${model}\" \
         --warmup_ratio=0.05 \
-        --report_to="none" \
-        --bf16=False \
-        --fp16=False \
-        --eval_strategy="no" \
-        --logging_steps=100 \
-        --save_strategy="no" \
-        --lr_scheduler_type="cosine" \
+        --report_to=\"none\" \
+        --eval_strategy=\"no\" \
+        --lr_scheduler_type=\"cosine\" \
         --learning_rate=${learning_rate} \
         --weight_decay=${weight_decay} \
         --adam_beta1=0.9 \
         --adam_beta2=0.95 \
-        --output_dir="${checkpoint_dir}" \
+        --output_dir=\"${checkpoint_dir}\" \
         --push_to_hub=false \
         --save_only_model=True \
         --save_safetensors=True \
         --ddp_find_unused_parameters=False \
         --ddp_timeout=3600 \
-        --fsdp="full_shard auto_wrap" \
-        --fsdp_config="${MED_S1_DIR}/train/fsdp_config_llama_cpu.json"
+        --fsdp=\"full_shard auto_wrap\" \
+        --fsdp_config=\"${MED_S1_DIR}/train/fsdp_config_llama_cpu.json\""
+
+    if [ "$debug" = true ]; then
+        echo "Using debug settings for training"
+        # Debug mode: 2 epochs, save every 25 steps, log every 5
+        cmd="$cmd \
+            --num_train_epochs=2 \
+            --max_steps=50 \
+            --logging_steps=5"
+    else
+        # Normal mode
+        cmd="$cmd \
+            --num_train_epochs=${num_epochs} \
+            --save_strategy=no \
+            --logging_steps=1"
+    fi
+
+    # Execute command
+    echo "Running command: $cmd"
+    eval "$cmd"
 else
     # Non-FSDP training path
     torchrun \
@@ -172,9 +214,8 @@ else
         --model_name="${model}" \
         --warmup_ratio=0.05 \
         --report_to="none" \
-        --bf16=True \
         --eval_strategy="no" \
-        --logging_steps=100 \
+        --logging_steps=1 \
         --save_strategy="epoch" \
         --lr_scheduler_type="cosine" \
         --learning_rate=${learning_rate} \

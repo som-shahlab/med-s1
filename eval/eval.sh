@@ -2,7 +2,8 @@
 #SBATCH --job-name=med-s1-eval
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.err
-#SBATCH --partition=nigam-a100
+#SBATCH --partition=gpu-long
+#SBATCH --constraint="GPU_SKU:A100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
@@ -51,25 +52,26 @@ if [ "$config" = "null" ]; then
 fi
 
 # Get model info based on experiment
-model_key=$(jq -r ".experiments[\"$experiment_name\"].config.model_key" "$RESULTS_JSON")
-if [ "$model_key" != "null" ]; then
-    # For pre-trained models (base, huatuo), get path from config.json
+# First check if there's a trained model path
+model_path=$(jq -r ".experiments[\"$experiment_name\"].results.training.model_path" "$RESULTS_JSON")
+
+if [ "$model_path" != "null" ] && [ -d "$model_path" ]; then
+    echo "Using fine-tuned model: $model_path"
+else
+    # Fallback to pre-trained model path from config.json
+    model_key=$(jq -r ".experiments[\"$experiment_name\"].config.model_key" "$RESULTS_JSON")
+    if [ "$model_key" = "null" ]; then
+        echo "Error: Neither training model_path nor model_key found in $RESULTS_JSON"
+        exit 1
+    fi
     model_path=$(jq -r ".models[\"$model_key\"].hf_path" "${MED_S1_DIR}/config.json")
     echo "Using pre-trained model: $model_path"
-else
-    # For fine-tuned models, get path from training results
-    model_path=$(jq -r ".experiments[\"$experiment_name\"].results.training.model_path" "$RESULTS_JSON")
-    if [ "$model_path" = "null" ]; then
-        echo "Error: Neither model_key nor training model_path found in $RESULTS_JSON"
-        exit 1
-    fi
-    
-    # Verify model directory exists
-    if [ ! -d "$model_path" ]; then
-        echo "Error: Model directory not found: $model_path"
-        exit 1
-    fi
-    echo "Using fine-tuned model: $model_path"
+fi
+
+# Verify model directory exists
+if [ ! -d "$model_path" ]; then
+    echo "Error: Model directory not found: $model_path"
+    exit 1
 fi
 
 # Create logs directory

@@ -281,7 +281,8 @@ async def main():
             df = await process_s1_dataset(df, config, tokenizer, n_samples, specialty_weights, safe_experiment_name)
             df.to_parquet(filtered_path)  # Save processed dataset for future use
     
-    # Get paths for final outputs
+    # Get output directory and paths
+    output_dir = get_output_dir()
     paths = get_final_paths(output_dir, args.experiment)
     
     # Create experiment directory

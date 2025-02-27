@@ -155,35 +155,49 @@ def main():
     os.makedirs(args.path_to_output_dir, exist_ok=True)
 
     # Initialize vllm model
-    print(f"Initializing vllm with model: {args.model_path}")
+    print(f"\nInitializing vllm with model: {args.model_path}")
     print(f"Using tensor parallel size: {args.tensor_parallel_size}")
     
     # Set PyTorch memory settings
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
     
-    # Configure vllm for stable memory usage
+    print("Loading tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, padding_side='left')
+    print("Tokenizer loaded")
+    if "Llama" in args.model_path:
+        tokenizer.pad_token = "<|reserved_special_token_5|>"
+    elif "Qwen" in args.model_path:
+        tokenizer.pad_token = "<|fim_pad|>"
+
+    print("Loading model...")
+    # Initialize VLLM with minimal settings for now
+    # NOTE: For better performance with large-scale evaluation, we may need to tune:
+    # - tensor_parallel_size: For multi-GPU inference
+    # - max_num_batched_tokens: For efficient batching
+    # - max_num_seqs: For parallel sequence processing
+    # - gpu_memory_utilization: For KV cache optimization
     llm = LLM(
         model=args.model_path,
-        tensor_parallel_size=args.tensor_parallel_size,
-        trust_remote_code=True,
-        gpu_memory_utilization=0.90,  # Use more GPU memory
-        max_num_batched_tokens=8192,  # Balance between memory and speed
-        max_num_seqs=256,  # Balance parallel sequences
-        enforce_eager=False,  # Keep async for throughput
-        max_model_len=2048,  # Limit context size
-        max_parallel_loading_workers=2  # More loading workers
+        trust_remote_code=True  # Only needed for custom model code
     )
-    
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, padding_side='left')
+    print("Model loaded")
     template = Template(tokenizer.chat_template) if args.use_chat_template else None
 
-    # Load and potentially subset data for debug
+    print("\nLoading evaluation data...")
     input_data: List[Dict] = load_file(args.path_to_eval_json)
+    print(f"Loaded {len(input_data)} total examples")
+    
+    # Print dataset distribution
+    datasets = set(item['source'] for item in input_data)
+    print("\nDataset distribution:")
+    for dataset in datasets:
+        count = sum(1 for item in input_data if item['source'] == dataset)
+        print(f"  {dataset}: {count} examples")
+    
     if args.debug:
         print(f"\nRunning in debug mode with {args.debug_samples} samples")
         # Take samples from each dataset to maintain distribution
         debug_data = []
-        datasets = set(item['source'] for item in input_data)
         samples_per_dataset = max(1, args.debug_samples // len(datasets))
         
         for dataset in datasets:
@@ -191,7 +205,7 @@ def main():
             debug_data.extend(dataset_items[:samples_per_dataset])
         
         input_data = debug_data
-        print(f"Debug dataset sizes:")
+        print(f"\nDebug dataset sizes:")
         for dataset in datasets:
             count = sum(1 for item in debug_data if item['source'] == dataset)
             print(f"  {dataset}: {count} samples")
@@ -200,15 +214,18 @@ def main():
     if args.strict_prompt:
         query_prompt = "Please answer the following multiple-choice questionss, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
     else:
-        query_prompt = "Please answer the following multiple-choice question:\n{question}\n{option_str}"        
+        query_prompt = "Please answer the following multiple-choice question:\n{question}\n{option_str}"
 
     # Process in batches to manage memory
     batch_size = 256  # Match vllm's max_num_seqs
     final_results = []
+    total_batches = (len(input_data) + batch_size - 1) // batch_size
     
-    print(f"\nProcessing {len(input_data)} examples in batches of {batch_size}...")
-    for i in tqdm(range(0, len(input_data), batch_size)):
+    print(f"\nProcessing {len(input_data)} examples in {total_batches} batches (size {batch_size})...")
+    for i in tqdm(range(0, len(input_data), batch_size), desc="Processing batches"):
         batch = input_data[i:i + batch_size]
+        current_batch = i // batch_size + 1
+        print(f"\nBatch {current_batch}/{total_batches} ({len(batch)} examples)")
         
         # Format batch
         for item in batch:

@@ -71,7 +71,7 @@ def train():
     # loading model
     kwargs = {
         "device_map": {"": local_rank},
-        "torch_dtype": torch.float16,
+        "torch_dtype": torch.bfloat16,
         "use_cache": False,
         "low_cpu_mem_usage": True
     }
@@ -89,8 +89,12 @@ def train():
         dataset = load_from_disk(config.train_file_path)
         
         # Log basic dataset info
-        logging.info(f"Train split size: {len(dataset['train'])}")
-        logging.info(f"Test split size: {len(dataset['test'])}")
+        logging.warning(f"Train split size: {len(dataset['train'])}")
+        logging.warning(f"Test split size: {len(dataset['test'])}")
+        
+        # Check dataset format
+        logging.warning(f"Train features: {dataset['train'].features}")
+        logging.warning(f"First example: {dataset['train'][0]}")
         
         # Ensure dataset has the right structure
         if not isinstance(dataset, DatasetDict):
@@ -102,6 +106,7 @@ def train():
 
     # setting up trainer
     tokenizer = transformers.AutoTokenizer.from_pretrained(config.model_name, use_fast=True)
+    print("Tokenizer length:", len(tokenizer))
     if "Llama" in config.model_name:
         instruction_template = "<|start_header_id|>user<|end_header_id|>"
         response_template = "<|start_header_id|>assistant<|end_header_id|>\n\n"
@@ -114,30 +119,75 @@ def train():
         tokenizer.pad_token = "<|fim_pad|>"
     else:
         raise ValueError(f"Model name {config.model_name} not supported")
-    
-    # Only compute loss over assistant responses
-    # Verified that it precisely starts where the thinking tokens start and ends with the first pad token
-    # via labels being set to -100
+
     collator = trl.DataCollatorForCompletionOnlyLM(
         instruction_template=instruction_template,
         response_template=response_template,
         tokenizer=tokenizer,
         mlm=False
     )
+    
+    # Debug collator to monitor token IDs and text
+    def debug_collator(features):
+        # # Debug what's in features
+        # logging.warning(f"\nFeatures type: {type(features)}")
+        # if features:
+        #     logging.warning(f"First feature type: {type(features[0])}")
+        #     if isinstance(features[0], dict):
+        #         logging.warning(f"Feature keys: {features[0].keys()}")
+        #         if 'text' in features[0]:
+        #             logging.warning(f"\nRaw text sample: {features[0]['text'][:200]}")
+        #         else:
+        #             logging.warning("No 'text' key found in features")
+        #     else:
+        #         logging.warning(f"Feature content: {features[0]}")
+
+        # Apply collation
+        batch = collator(features)
+
+        # Monitor token IDs and text
+        if "input_ids" in batch:
+            all_ids = batch["input_ids"].flatten().tolist()
+            min_id, max_id = min(all_ids), max(all_ids)
+            logging.warning(f"Token ID range: min={min_id}, max={max_id} out of {len(tokenizer)}")
+
+            # Show first example's text
+            logging.warning("\nFirst example decoded:")
+            logging.warning(tokenizer.decode(batch["input_ids"][0][:150]))
+
+            # Log label stats and text
+            if "labels" in batch:
+                labels = batch["labels"].flatten().tolist()
+                mask_ratio = labels.count(-100) / len(labels)
+                logging.warning(f"Label masking ratio: {mask_ratio:.2f}")
+
+                # Show what we're actually training on (non -100 labels)
+                first_labels = batch["labels"][0].tolist()
+                training_tokens = [
+                    batch["input_ids"][0][i].item()
+                    for i, label in enumerate(first_labels)
+                    if label != -100
+                ]
+                # if training_tokens:
+                #     logging.warning("\nTraining on text:")
+                #     logging.warning(tokenizer.decode(training_tokens))
+
+        return batch
+
     args.dataset_text_field = 'text'
-    args.max_seq_length = config.block_size
+    # args.max_grad_norm = 1.0  # Add gradient clipping
     
     # Set distributed training configuration
-    args.ddp_backend = 'nccl'  # Use NCCL for GPU communication
-    args.distributed_state = None  # Let the Trainer handle distributed state
+    args.ddp_backend = 'nccl'
+    args.distributed_state = None
     
-    # Create trainer first
+    # Create trainer with debug collator
     trainer = trl.SFTTrainer(
         model,
         train_dataset=dataset['train'],
         eval_dataset=dataset['test'] if 'test' in dataset else dataset['train'],
         args=args,
-        data_collator=collator,
+        data_collator=debug_collator,
     )
 
     logging.info(f"[Rank {local_rank}] After loading model: "
@@ -156,6 +206,7 @@ def train():
     trainer.train()
     
     # Save final model
+    logging.info("Saving model...")
     trainer.save_model()
 
 
