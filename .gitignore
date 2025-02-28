@@ -12,3 +12,4 @@ carina.md
 eval/__pycache__/
 eval/__pycache__/scorer.cpython-310.pyc
 *.pyc
+example_test_time_scaling_output.txt

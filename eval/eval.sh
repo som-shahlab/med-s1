@@ -14,6 +14,7 @@
 
 # Parse arguments and set time limit
 debug=false
+test_time_scaling=false
 experiment_name=""
 
 while [[ $# -gt 0 ]]; do
@@ -22,11 +23,16 @@ while [[ $# -gt 0 ]]; do
             debug=true
             shift
             ;;
+        --test-time-scaling)
+            test_time_scaling=true
+            shift
+            ;;
         *)
             if [ -z "$experiment_name" ]; then
                 experiment_name="$1"
             else
-                echo "Usage: $0 [--debug] <experiment_name>"
+                echo "Usage: $0 [--debug] [--test-time-scaling] <experiment_name>"
+                echo "Note: test_time_scaling will be automatically enabled if specified in experiment config"
                 exit 1
             fi
             shift
@@ -35,7 +41,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$experiment_name" ]; then
-    echo "Usage: $0 [--debug] <experiment_name>"
+    echo "Usage: $0 [--debug] [--test-time-scaling] <experiment_name>"
+    echo "Note: test_time_scaling will be automatically enabled if specified in experiment config"
     exit 1
 fi
 
@@ -49,6 +56,13 @@ config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
 if [ "$config" = "null" ]; then
     echo "Error: Experiment '$experiment_name' not found in $RESULTS_JSON"
     exit 1
+fi
+
+# Check if test_time_scaling is enabled in config
+config_test_time_scaling=$(jq -r ".experiments[\"$experiment_name\"].config.test_time_scaling" "$RESULTS_JSON")
+if [ "$config_test_time_scaling" = "true" ]; then
+    echo "Enabling test time scaling from config"
+    test_time_scaling=true
 fi
 
 # Get model info based on experiment
@@ -68,9 +82,9 @@ else
     echo "Using pre-trained model: $model_path"
 fi
 
-# Verify model directory exists
-if [ ! -d "$model_path" ]; then
-    echo "Error: Model directory not found: $model_path"
+# Only verify directory exists for fine-tuned models
+if [[ "$model_path" == /* ]] && [ ! -d "$model_path" ]; then
+    echo "Error: Fine-tuned model directory not found: $model_path"
     exit 1
 fi
 
@@ -105,12 +119,16 @@ cmd="python ${MED_S1_DIR}/eval/eval.py \
     --experiment_name ${experiment_name} \
     --model_path ${model_path} \
     --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
-    --path_to_output_dir ${output_dir} \
-    --strict_prompt"
+    --path_to_output_dir ${output_dir}"
 
 # Add debug flags if in debug mode
 if [ "$debug" = true ]; then
-    cmd="$cmd --debug --debug_samples 100"
+    cmd="$cmd --debug --debug_samples 1"
+fi
+
+# Add test time scaling flag if enabled
+if [ "$test_time_scaling" = true ]; then
+    cmd="$cmd --test_time_scaling"
 fi
 
 # Run evaluation

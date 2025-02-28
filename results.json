@@ -1182,6 +1182,342 @@
           }
         }
       }
+    },
+    "med-s1-1k-tuned-tts": {
+      "description": "Test time scaling evaluation of med-s1-1k-tuned",
+      "config": {
+        "test_time_scaling": true,
+        "method": "med-s1-1k-tuned",
+        "eval_sample": 250
+      },
+      "results": {
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-1k-tuned"
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k-tuned-tts/med-s1-1k-tunedeval_data.json",
+          "timestamp": "2025-02-28T16:49:17.080727",
+          "test_time_scaling": true,
+          "summary": {
+            "immediate": {
+              "MedMCQA_validation": {
+                "accuracy": 0.375,
+                "accuracy_ci": [
+                  0.12187500000000284,
+                  0.75
+                ],
+                "num_correct": 3,
+                "total_examples": 8,
+                "num_answered": 3
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 1.0,
+                "accuracy_ci": [
+                  1.0,
+                  1.0
+                ],
+                "num_correct": 1,
+                "total_examples": 1,
+                "num_answered": 1
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            },
+            "reasoning": {
+              "MedMCQA_validation": {
+                "accuracy": 0.5,
+                "accuracy_ci": [
+                  0.125,
+                  0.875
+                ],
+                "num_correct": 4,
+                "total_examples": 8,
+                "num_answered": 4
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            },
+            "reasoning_2x": {
+              "MedMCQA_validation": {
+                "accuracy": 0.375,
+                "accuracy_ci": [
+                  0.125,
+                  0.75
+                ],
+                "num_correct": 3,
+                "total_examples": 8,
+                "num_answered": 3
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 1.0,
+                "accuracy_ci": [
+                  1.0,
+                  1.0
+                ],
+                "num_correct": 1,
+                "total_examples": 1,
+                "num_answered": 1
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            },
+            "reasoning_4x": {
+              "MedMCQA_validation": {
+                "accuracy": 0.625,
+                "accuracy_ci": [
+                  0.25,
+                  0.875
+                ],
+                "num_correct": 5,
+                "total_examples": 8,
+                "num_answered": 5
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 1.0,
+                "accuracy_ci": [
+                  1.0,
+                  1.0
+                ],
+                "num_correct": 1,
+                "total_examples": 1,
+                "num_answered": 1
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            }
+          },
+          "reasoning_tokens": {
+            "immediate": 6.0,
+            "reasoning": 424.3,
+            "reasoning_2x": 1611.7,
+            "reasoning_4x": 2518.0
+          },
+          "test_time_scaling_plot": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k-tuned-tts/med-s1-1k-tunedeval_data_plot.png"
+        }
+      }
+    },
+    "random-1k-tts": {
+      "description": "Test time scaling evaluation of random-1k",
+      "config": {
+        "test_time_scaling": true,
+        "method": "random-1k",
+        "eval_sample": 250
+      },
+      "results": {
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/random-1k"
+        },
+        "eval": null
+      }
+    },
+    "base-tts": {
+      "description": "Test time scaling evaluation of base model",
+      "config": {
+        "test_time_scaling": true,
+        "method": "base",
+        "eval_sample": 250,
+        "model_key": "llama3.1:8b"
+      },
+      "results": {
+        "training": {},
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-tts/Llama-3.1-8B-Instructeval_data.json",
+          "timestamp": "2025-02-28T16:41:14.029317",
+          "test_time_scaling": true,
+          "summary": {
+            "immediate": {
+              "MedMCQA_validation": {
+                "accuracy": 0.375,
+                "accuracy_ci": [
+                  0.12187500000000284,
+                  0.75
+                ],
+                "num_correct": 3,
+                "total_examples": 8,
+                "num_answered": 3
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            },
+            "reasoning": {
+              "MedMCQA_validation": {
+                "accuracy": 0.25,
+                "accuracy_ci": [
+                  0.0,
+                  0.625
+                ],
+                "num_correct": 2,
+                "total_examples": 8,
+                "num_answered": 2
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            },
+            "reasoning_2x": {
+              "MedMCQA_validation": {
+                "accuracy": 0.375,
+                "accuracy_ci": [
+                  0.125,
+                  0.75
+                ],
+                "num_correct": 3,
+                "total_examples": 8,
+                "num_answered": 3
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            },
+            "reasoning_4x": {
+              "MedMCQA_validation": {
+                "accuracy": 0.375,
+                "accuracy_ci": [
+                  0.12187500000000284,
+                  0.75
+                ],
+                "num_correct": 3,
+                "total_examples": 8,
+                "num_answered": 3
+              },
+              "MedQA_USLME_test": {
+                "accuracy": 1.0,
+                "accuracy_ci": [
+                  1.0,
+                  1.0
+                ],
+                "num_correct": 1,
+                "total_examples": 1,
+                "num_answered": 1
+              },
+              "MMLU-Pro_Medical_test": {
+                "accuracy": 0.0,
+                "accuracy_ci": [
+                  0.0,
+                  0.0
+                ],
+                "num_correct": 0,
+                "total_examples": 1,
+                "num_answered": 0
+              }
+            }
+          },
+          "reasoning_tokens": {
+            "immediate": 6.0,
+            "reasoning": 197.7,
+            "reasoning_2x": 345.1,
+            "reasoning_4x": 1172.6
+          },
+          "test_time_scaling_plot": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-tts/Llama-3.1-8B-Instructeval_data_plot.png"
+        }
+      }
+    },
+    "huatuo-tts": {
+      "description": "Test time scaling evaluation of HuatuoGPT",
+      "config": {
+        "test_time_scaling": true,
+        "method": "huatuo",
+        "eval_sample": 10,
+        "model_key": "huatuo:8b"
+      },
+      "results": {
+        "training": {},
+        "eval": null
+      }
     }
   }
 }

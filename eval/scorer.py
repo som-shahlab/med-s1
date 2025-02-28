@@ -32,7 +32,9 @@ def find_most_similar_index(str_list, target_str):
     return most_similar_index
 
 def match_choice(text,options):
-    # For HuatuoGPT-o1
+    # Split on special tokens if present
+    if '<|start_header_id|>answer<|end_header_id|>' in text:
+        text = text.split('<|start_header_id|>answer<|end_header_id|>')[-1]
     if '## Final Response\n\n' in text:
         text = text.split('## Final Response\n\n')[-1]
     

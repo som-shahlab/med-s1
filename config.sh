@@ -1,10 +1,18 @@
 #!/bin/bash
 
 # Set directory paths
-MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
+
+# # michael
+# MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
+# CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
+# DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
+# RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results.json"
+
+# caleb
+MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
 CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
 DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
-RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results.json"
+RESULTS_JSON="/share/pi/nigam/users/calebwin/med-s1/results.json"
 
 # Export paths for scripts
 export MED_S1_DIR
