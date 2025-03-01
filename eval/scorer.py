@@ -35,6 +35,8 @@ def match_choice(text,options):
     # Split on special tokens if present
     if '<|start_header_id|>answer<|end_header_id|>' in text:
         text = text.split('<|start_header_id|>answer<|end_header_id|>')[-1]
+    if 'Answer:' in text:
+        text = text.split('Answer:')[-1]
     if '## Final Response\n\n' in text:
         text = text.split('## Final Response\n\n')[-1]
     

@@ -2,8 +2,8 @@
 #SBATCH --job-name=med-s1-eval
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.err
-#SBATCH --partition=gpu-long
-#SBATCH --constraint="GPU_SKU:A100_PCIE"
+#SBATCH --partition=nigam-h100
+#SBATCH --constraint="GPU_SKU:H100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1

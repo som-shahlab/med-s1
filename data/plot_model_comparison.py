@@ -19,8 +19,26 @@ def get_model_metrics(model_data):
         metrics[dataset] = {
             'accuracy': data['accuracy'],
             'ci_lower': data['accuracy_ci'][0],
-            'ci_upper': data['accuracy_ci'][1]
+            'ci_upper': data['accuracy_ci'][1],
+            'total_examples': data['total_examples']  # Add total examples for weighting
         }
+    
+    # Calculate weighted average across datasets
+    total_examples = sum(data['total_examples'] for data in metrics.values())
+    weighted_acc = sum(data['accuracy'] * data['total_examples'] for data in metrics.values()) / total_examples
+    
+    # Calculate weighted CIs (weight each dataset's CI by its size)
+    weighted_lower = sum(data['ci_lower'] * data['total_examples'] for data in metrics.values()) / total_examples
+    weighted_upper = sum(data['ci_upper'] * data['total_examples'] for data in metrics.values()) / total_examples
+    
+    # Add overall metrics
+    metrics['Overall'] = {
+        'accuracy': weighted_acc,
+        'ci_lower': weighted_lower,
+        'ci_upper': weighted_upper,
+        'total_examples': total_examples
+    }
+    
     return metrics
 
 def calculate_improvements(tuned_metrics, base_metrics):
@@ -50,21 +68,23 @@ def plot_comparison(results_data, output_path):
         if model in results_data:
             metrics[model] = get_model_metrics(results_data[model])
     
-    # Datasets to plot
-    datasets = list(metrics['base'].keys())
+    # Datasets to plot (including Overall)
+    datasets = ['MedMCQA_validation', 'MedQA_USLME_test', 'PubMedQA_test', 
+                'MMLU-Pro_Medical_test', 'GPQA_Medical_test', 'Overall']
     dataset_display_names = {
         'MedMCQA_validation': 'MedMCQA',
         'MedQA_USLME_test': 'USMLE',
         'PubMedQA_test': 'PubMedQA',
         'MMLU-Pro_Medical_test': 'MMLU-Med',
-        'GPQA_Medical_test': 'GPQA'
+        'GPQA_Medical_test': 'GPQA',
+        'Overall': 'Overall'
     }
     
     # Calculate improvements over base model for med-s1-1k-tuned
     improvements = calculate_improvements(metrics['med-s1-1k-tuned'], metrics['base'])
     
     # Plotting
-    fig, ax = plt.subplots(figsize=(15, 8))
+    fig, ax = plt.subplots(figsize=(16, 8))  # Slightly wider to accommodate Overall
     
     # Set width of bars and positions of the bars
     bar_width = 0.15
@@ -104,6 +124,9 @@ def plot_comparison(results_data, output_path):
                        color='#2D5D7B',
                        fontweight='bold',
                        fontsize=10)
+    
+    # Add vertical line before Overall
+    ax.axvline(x=len(datasets)-1.5, color='gray', linestyle='--', alpha=0.3)
     
     # Customize the plot
     ax.set_xlabel('Dataset', fontsize=12, labelpad=10)
@@ -156,14 +179,17 @@ def main():
         'MedQA_USLME_test': 'USMLE',
         'PubMedQA_test': 'PubMedQA',
         'MMLU-Pro_Medical_test': 'MMLU-Med',
-        'GPQA_Medical_test': 'GPQA'
+        'GPQA_Medical_test': 'GPQA',
+        'Overall': 'Overall (Weighted)'
     }
     
     for dataset, improvement in improvements.items():
         display_name = dataset_display[dataset]
         base = base_metrics[dataset]['accuracy'] * 100
         tuned = tuned_metrics[dataset]['accuracy'] * 100
-        print(f"{display_name:10}: {base:.1f}% → {tuned:.1f}% ({improvement:+.1f}%)")
+        if dataset == 'Overall':
+            print("\nWeighted average across all datasets:")
+        print(f"{display_name:15}: {base:.1f}% → {tuned:.1f}% ({improvement:+.1f}%)")
 
 if __name__ == "__main__":
     main()

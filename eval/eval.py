@@ -1,4 +1,6 @@
 import argparse
+import asyncio
+import uvloop
 import sglang as sgl
 import os
 import json
@@ -88,10 +90,10 @@ def load_file(input_fp: str) -> List[Dict]:
 
 from test_time_scaling import evaluate_test_time_scaling
 
-def call_model(llm: LLM, prompts: List[str], tokenizer: AutoTokenizer, template: Template, max_new_tokens: int = 50, temperature: float = 0, is_print_example: bool = False, is_use_chat_template: bool = False, max_tokens: int = -1) -> Tuple[List[str], List[str]]:
-    """Call the model to get the predicted output using vllm.
+async def call_model(engine: sgl.Engine, prompts: List[str], tokenizer: AutoTokenizer, template: Template, max_new_tokens: int = 50, temperature: float = 0, is_print_example: bool = False, is_use_chat_template: bool = False, max_tokens: int = -1) -> Tuple[List[str], List[str]]:
+    """Call the model to get the predicted output using sglang.
     Args:
-        llm (LLM): The vllm LLM instance
+        engine (sgl.Engine): The sglang Engine instance
         prompts (List[str]): The prompts to call the model with
         tokenizer (AutoTokenizer): The tokenizer to use
         template (Template): The chat template to use
@@ -133,16 +135,21 @@ def call_model(llm: LLM, prompts: List[str], tokenizer: AutoTokenizer, template:
         print_indented(prompts[0])
         print("```")
 
-    # Set up vllm sampling parameters
-    sampling_params = SamplingParams(
-        temperature=temperature,
-        top_p=0.9,
-        max_tokens=max_new_tokens
-    )
+    # Generate completions using sglang
+    tasks = [
+        engine.async_generate(
+            prompt=prompt,
+            sampling_params={
+                "temperature": temperature,
+                "max_tokens": max_new_tokens,
+                "top_p": 0.9
+            }
+        )
+        for prompt in prompts
+    ]
+    outputs = await asyncio.gather(*tasks)
 
-    # Generate completions using vllm
-    outputs = llm.generate(prompts, sampling_params)
-    raw_preds = [output.outputs[0].text for output in outputs]
+    raw_preds = [output['text'] for output in outputs]
     preds = [postprocess_output(pred) for pred in raw_preds]
     
     if is_print_example:
@@ -173,20 +180,21 @@ def main():
         tokenizer.pad_token = "<|fim_pad|>"
 
     print("Loading model...")
-    # Initialize VLLM with minimal settings for now
-    # NOTE: For better performance with large-scale evaluation, we may need to tune:
-    # - tensor_parallel_size: For multi-GPU inference
-    # - max_num_batched_tokens: For efficient batching
-    # - max_num_seqs: For parallel sequence processing
-    # - gpu_memory_utilization: For KV cache optimization
-    llm = LLM(
-        model=args.model_path,
-        trust_remote_code=True,  # Only needed for custom model code
-        tensor_parallel_size=args.tensor_parallel_size,
-        max_num_seqs=args.batch_size,  # Maximum number of sequences to process in parallel
-        max_num_batched_tokens=4096,  # Maximum number of tokens across all batched sequences
-        enable_prefix_caching=True,  # Enable KV cache prefix optimization
-        gpu_memory_utilization=0.9  # Use more GPU memory for KV cache
+
+    # Initialize sglang engine with vllm backend
+    # vllm_engine_args = VllmEngineArgs(
+    #     tensor_parallel_size=args.tensor_parallel_size,
+    #     gpu_memory_utilization=0.9,
+    #     max_num_seqs=args.batch_size,
+    #     max_num_batched_tokens=4096,
+    # )
+    
+    #     engine_args=vllm_engine_args,
+    #     enable_prefix_caching=True,
+    #     trust_remote_code=True,
+
+    engine = sgl.Engine(
+        model_path=args.model_path,
     )
     print("Model loaded")
     template = Template(tokenizer.chat_template) if args.use_chat_template else None
@@ -261,52 +269,67 @@ def main():
         # Use a larger batch size for test time scaling since we're doing multiple passes
         test_time_batch_size = min(args.batch_size // 4, 32)  # Smaller batches since we do multiple passes
         print(f"\nUsing batch size of {test_time_batch_size} for test time scaling evaluation")
+        # Install uvloop as event loop policy
+        uvloop.install()
         
-        final_results = evaluate_test_time_scaling(
-            llm=llm,
-            tokenizer=tokenizer,
-            input_data=input_data,
-            template=template,
-            temperature=args.temperature,
-            debug=args.debug,
-            debug_samples=args.debug_samples,
-            batch_size=test_time_batch_size
+        # Run evaluation asynchronously
+        final_results = asyncio.run(
+            evaluate_test_time_scaling(
+                engine=engine,
+                tokenizer=tokenizer,
+                input_data=input_data,
+                template=template,
+                temperature=args.temperature,
+                debug=args.debug,
+                debug_samples=args.debug_samples,
+                batch_size=test_time_batch_size
+            )
         )
     else:
+        # Install uvloop as event loop policy
+        uvloop.install()
+        
         # Original batched evaluation
         batch_size = 256  # Match vllm's max_num_seqs
         final_results = []
         total_batches = (len(input_data) + batch_size - 1) // batch_size
         
         print(f"\nProcessing {len(input_data)} examples in {total_batches} batches (size {batch_size})...")
-        for i in tqdm(range(0, len(input_data), batch_size), desc="Processing batches"):
-            batch = input_data[i:i + batch_size]
-            current_batch = i // batch_size + 1
-            print(f"\nBatch {current_batch}/{total_batches} ({len(batch)} examples)")
+        
+        async def process_batches():
+            for i in tqdm(range(0, len(input_data), batch_size), desc="Processing batches"):
+                batch = input_data[i:i + batch_size]
+                current_batch = i // batch_size + 1
+                print(f"\nBatch {current_batch}/{total_batches} ({len(batch)} examples)")
+                
+                # Format batch
+                for item in batch:
+                    item['option_str'] = '\n'.join([f'{op}. {ans}' for op,ans in item['options'].items()])
+                    item["input_str"] = query_prompt.format_map(item)
+                
+                # Process batch
+                preds, _ = await call_model(
+                    engine=engine,
+                    prompts=[item["input_str"] for item in batch],
+                    tokenizer=tokenizer,
+                    template=template,
+                    max_new_tokens=args.max_new_tokens,
+                    is_print_example=(i == 0),
+                    temperature=args.temperature,
+                    is_use_chat_template=args.use_chat_template,
+                    max_tokens=args.max_tokens
+                )
+                
+                # Store results
+                for item, pred in zip(batch, preds):
+                    if len(pred) > 0:
+                        item["output"] = pred
+                        final_results.append(item)
             
-            # Format batch
-            for item in batch:
-                item['option_str'] = '\n'.join([f'{op}. {ans}' for op,ans in item['options'].items()])
-                item["input_str"] = query_prompt.format_map(item)
-            
-            # Process batch
-            preds, _ = call_model(
-                llm=llm,
-                prompts=[item["input_str"] for item in batch],
-                tokenizer=tokenizer,
-                template=template,
-                max_new_tokens=args.max_new_tokens,
-                is_print_example=(i == 0),
-                temperature=args.temperature,
-                is_use_chat_template=args.use_chat_template,
-                max_tokens=args.max_tokens
-            )
-            
-            # Store results
-            for item, pred in zip(batch, preds):
-                if len(pred) > 0:
-                    item["output"] = pred
-                    final_results.append(item)
+            return final_results
+        
+        # Run batches asynchronously
+        final_results = asyncio.run(process_batches())
 
     # Save outputs
     model_name: str = os.path.split(args.model_path)[-1]
