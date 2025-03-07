@@ -12,16 +12,29 @@ def get_model_metrics(model_data):
     """Extract accuracies and confidence intervals from model results"""
     if not model_data.get('results', {}).get('eval', {}).get('summary'):
         return None
-    
-    summary = model_data['results']['eval']['summary']
+
+    eval_data = model_data.get('results', {}).get('eval', {})
+    if not eval_data or 'summary' not in eval_data:
+        return None
+
+    summary = eval_data['summary']
     metrics = {}
     for dataset, data in summary.items():
-        metrics[dataset] = {
-            'accuracy': data['accuracy'],
-            'ci_lower': data['accuracy_ci'][0],
-            'ci_upper': data['accuracy_ci'][1],
-            'total_examples': data['total_examples']  # Add total examples for weighting
-        }
+        if 'total_examples' not in data:
+            return None
+        dataset_metrics = {}
+        if 'accuracy' in data:
+            dataset_metrics['accuracy'] = data['accuracy']
+        else:
+            dataset_metrics['accuracy'] = 0  # Default value if accuracy is missing
+        if 'accuracy_ci' in data:
+            dataset_metrics['ci_lower'] = data['accuracy_ci'][0]
+            dataset_metrics['ci_upper'] = data['accuracy_ci'][1]
+        else:
+            dataset_metrics['ci_lower'] = 0
+            dataset_metrics['ci_upper'] = 0
+        dataset_metrics['total_examples'] = data['total_examples']  # Add total examples for weighting
+        metrics[dataset] = dataset_metrics
     
     # Calculate weighted average across datasets
     total_examples = sum(data['total_examples'] for data in metrics.values())
@@ -199,5 +212,18 @@ def main():
             print("\nWeighted average across all datasets:")
         print(f"{display_name:15}: {base:.1f}% → {tuned:.1f}% ({improvement:+.1f}%)")
 
+    # Print average accuracy and CI for all models
+    print("\nAverage accuracy and CI for all models:")
+    for model, model_data in results.items():
+        metrics = get_model_metrics(model_data)
+        if metrics:
+            overall_metrics = metrics['Overall']
+            if 'accuracy' in overall_metrics:
+                accuracy = overall_metrics['accuracy'] * 100
+                ci_lower = overall_metrics['ci_lower'] * 100
+                ci_upper = overall_metrics['ci_upper'] * 100
+                print(f"{model:15}: Accuracy = {accuracy:.1f}%, CI = [{ci_lower:.1f}%, {ci_upper:.1f}%]")
+            else:
+                print(f"{model:15}: Overall accuracy not available")
 if __name__ == "__main__":
     main()
