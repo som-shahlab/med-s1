@@ -23,6 +23,9 @@ fi
 # Create logs directory if it doesn't exist
 mkdir -p "${MED_S1_DIR}/logs"
 
+# Export experiment name for Python script
+export EXPERIMENT_NAME="$experiment_name"
+
 # Check if base dataset exists in hf_cache
 if [ -d "$DATA_DIR/plumbing_test_001_20250219_145607" ] && [ -f "$DATA_DIR/plumbing_test_001_20250219_145607/med_s1k_filtered.parquet" ]; then
     echo "Base dataset already exists at $DATA_DIR/plumbing_test_001_20250219_145607"

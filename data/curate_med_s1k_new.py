@@ -297,7 +297,7 @@ async def main():
     logging.info(f"Saved curated dataset to {paths['curated']}")
     
     # Save formatted dataset for training
-    dataset = format_for_training(df[df['selected_for_training']], config, args.experiment)
+    dataset = format_for_training(df[df['selected_for_training']], config, experiment_config, args.experiment)
     dataset.save_to_disk(paths['formatted'])
     logging.info(f"Saved formatted dataset to {paths['formatted']}")
     # Update results.json with paths and stats

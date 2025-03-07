@@ -4,6 +4,7 @@ import uvloop
 import sglang as sgl
 import os
 import json
+import time
 from tqdm import tqdm
 from jinja2 import Template
 from transformers import AutoTokenizer
@@ -141,7 +142,7 @@ async def call_model(engine: sgl.Engine, prompts: List[str], tokenizer: AutoToke
             prompt=prompt,
             sampling_params={
                 "temperature": temperature,
-                "max_tokens": max_new_tokens,
+                "max_new_tokens": max_new_tokens,
                 "top_p": 0.9
             }
         )
@@ -242,10 +243,11 @@ def main():
         # Sort datasets for consistent ordering
         sorted_datasets = sorted(list(datasets))
         for dataset in sorted_datasets:
-            dataset_items = [item for item in input_data if item['source'] == dataset]
-            # Shuffle with same seed for reproducibility
-            random.shuffle(dataset_items)
-            debug_data.extend(dataset_items[:samples_per_dataset])
+            dataset_items = [item for item in input_data if item['source'] == dataset and "probable diagnosis" in item["question"]]
+            if len(dataset_items) > 0:
+                # Shuffle with same seed for reproducibility
+                random.shuffle(dataset_items)
+                debug_data.extend(dataset_items[:samples_per_dataset])
         
         input_data = debug_data
         print(f"\nDebug dataset sizes:")
@@ -267,10 +269,19 @@ def main():
     if args.test_time_scaling:
         print("\nRunning test time scaling evaluation...")
         # Use a larger batch size for test time scaling since we're doing multiple passes
-        test_time_batch_size = min(args.batch_size // 4, 32)  # Smaller batches since we do multiple passes
+        test_time_batch_size = 48  # Smaller batches since we do multiple passes
         print(f"\nUsing batch size of {test_time_batch_size} for test time scaling evaluation")
         # Install uvloop as event loop policy
         uvloop.install()
+        
+        # Get reasoning approaches from config if specified
+        reasoning_approaches = None
+        if "reasoning_approaches" in config:
+            reasoning_approaches = config["reasoning_approaches"]
+            print(f"\nUsing reasoning approaches from config: {reasoning_approaches}")
+        
+        # Set environment variable for test_time_scaling.py to access
+        os.environ['EXPERIMENT_NAME'] = args.experiment_name
         
         # Run evaluation asynchronously
         final_results = asyncio.run(
@@ -282,7 +293,8 @@ def main():
                 temperature=args.temperature,
                 debug=args.debug,
                 debug_samples=args.debug_samples,
-                batch_size=test_time_batch_size
+                batch_size=test_time_batch_size,
+                reasoning_approaches=reasoning_approaches
             )
         )
     else:
@@ -345,7 +357,14 @@ def main():
     if args.test_time_scaling:
         # For test time scaling, score each approach separately
         metrics = {}
-        for approach in ['immediate', 'reasoning', 'reasoning_2x', 'reasoning_4x']:
+        # Get approaches from the results
+        approaches = set()
+        for item in final_results:
+            for result in item['scaling_results']:
+                approaches.add(result['approach'])
+        
+        # Score each approach
+        for approach in approaches:
             # Create temporary results with just this approach's outputs
             # Use scorer.py's match_choice to properly parse answers
             from scorer import match_choice
@@ -416,7 +435,7 @@ def main():
     
     if args.test_time_scaling:
         print("\nAnalyzing failures for each approach...")
-        for approach in ['immediate', 'reasoning', 'reasoning_2x', 'reasoning_4x']:
+        for approach in approaches:
             failures = []
             for result in all_results:
                 answer = result['answer_idx']
@@ -478,9 +497,6 @@ def main():
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
         
-    with open(results_json, "r") as f:
-        results = json.load(f)
-    
     # Create eval results
     if args.test_time_scaling:
         # For test time scaling, include paths, metrics, and token counts for each approach
@@ -493,7 +509,7 @@ def main():
         }
         
         # Calculate average reasoning tokens for each approach
-        for approach in ['immediate', 'reasoning', 'reasoning_2x', 'reasoning_4x']:
+        for approach in approaches:
             tokens = []
             for result in final_results:
                 for scaling_result in result['scaling_results']:
@@ -514,11 +530,32 @@ def main():
             "summary": metrics
         }
     
-    # Update results.json safely
-    results["experiments"][args.experiment_name]["results"]["eval"] = eval_results
+    # Update results.json safely by reading latest version before writing
+    max_retries = 5
+    retry_delay = 1  # seconds
     
-    with open(results_json, "w") as f:
-        json.dump(results, f, indent=2)
+    for attempt in range(max_retries):
+        try:
+            # Read the latest version of results.json
+            with open(results_json, "r") as f:
+                results = json.load(f)
+            
+            # Update the eval results
+            results["experiments"][args.experiment_name]["results"]["eval"] = eval_results
+            
+            # Write back to results.json
+            with open(results_json, "w") as f:
+                json.dump(results, f, indent=2)
+                
+            break  # Success - exit retry loop
+            
+        except Exception as e:
+            if attempt == max_retries - 1:  # Last attempt
+                print(f"Failed to update results.json after {max_retries} attempts: {e}")
+                raise
+            else:
+                print(f"Attempt {attempt + 1} failed, retrying in {retry_delay}s: {e}")
+                time.sleep(retry_delay)
 
 
 if __name__ == "__main__":

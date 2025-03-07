@@ -55,12 +55,18 @@ def plot_comparison(results_data, output_path):
         '#4B88A2',  # Muted blue
         '#BB4430',  # Rust red
         '#2D5D7B',  # Deep blue
+        '#2D5D7B',  # Deep blue
+        '#2D5D7B',  # Deep blue
+        '#D68C45',   # Warm orange
         '#D68C45'   # Warm orange
     ]
     
     # Models to compare
-    models = ['base', 'random-1k', 'med-s1-1k-tuned', 'huatuo']
-    model_names = ['Base', 'Random-1k', 'Med-S1-1k', 'HuatuoGPT']
+    # models = ['base', 'random-1k', 'med-s1-1k-tuned', 'med-s1-5k', 'med-s1-25k', 'huatuo', 'huatuo-eval-250']
+    # model_names = ['Base', 'Random-1k', 'Med-S1-1k', 'Med-S1-5k', 'Med-S1-25k', 'huatuo-eval-250']
+    # Temporarily:
+    models = ['base', 'random-1k', 'med-s1-1k-tuned']  # Only showing base, random-1k, med-s1-1k
+    model_names = ['Base', 'Random-1k', 'Med-S1-1k']
     
     # Get metrics for each model
     metrics = {}
@@ -131,7 +137,9 @@ def plot_comparison(results_data, output_path):
     # Customize the plot
     ax.set_xlabel('Dataset', fontsize=12, labelpad=10)
     ax.set_ylabel('Accuracy (%)', fontsize=12, labelpad=10)
-    ax.set_title('MedQA Accuracy By Reasoning LLM Construction Method', 
+    # ax.set_title('MedQA Accuracy By Reasoning LLM Construction Method', 
+    #             fontsize=14, pad=20, fontweight='bold')
+    ax.set_title('Existing approach to reasoning data curation underperforms on medical reasoning traces', 
                 fontsize=14, pad=20, fontweight='bold')
     
     # Customize ticks

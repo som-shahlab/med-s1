@@ -9,7 +9,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=02:00:00  # Will be overridden if debug mode
+#SBATCH --time=04:00:00  # Will be overridden if debug mode
 #SBATCH --account=nigam
 
 # Parse arguments and set time limit

@@ -1,0 +1,195 @@
+Traceback (most recent call last):
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+    train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+    train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+    train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+    train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+    trainer.train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+    trainer.train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+    trainer.train()
+  File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+    trainer.train()
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+    return inner_training_loop(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+    return inner_training_loop(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+    return inner_training_loop(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+    return inner_training_loop(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+    self.accelerator.backward(loss, **kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+    loss.backward(**kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+    loss.backward(**kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+    loss.backward(**kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+    loss.backward(**kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 0 has a total capacity of 79.11 GiB of which 12.98 GiB is free. Process 339671 has 66.11 GiB memory in use. Of the allocated memory 49.68 GiB is allocated by PyTorch, and 13.49 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 3 has a total capacity of 79.11 GiB of which 13.48 GiB is free. Process 339674 has 65.62 GiB memory in use. Of the allocated memory 48.68 GiB is allocated by PyTorch, and 14.19 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 1 has a total capacity of 79.11 GiB of which 13.33 GiB is free. Process 339672 has 65.77 GiB memory in use. Of the allocated memory 48.68 GiB is allocated by PyTorch, and 14.10 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 2 has a total capacity of 79.11 GiB of which 13.32 GiB is free. Process 339673 has 65.78 GiB memory in use. Of the allocated memory 48.69 GiB is allocated by PyTorch, and 14.10 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+[rank0]:     train()
+[rank0]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+[rank0]:     trainer.train()
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+[rank0]:     return inner_training_loop(
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+[rank0]:     tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+[rank0]:     self.accelerator.backward(loss, **kwargs)
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+[rank0]:     loss.backward(**kwargs)
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+[rank0]:     torch.autograd.backward(
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+[rank0]:     _engine_run_backward(
+[rank0]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+[rank0]:     return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[rank0]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 0 has a total capacity of 79.11 GiB of which 12.98 GiB is free. Process 339671 has 66.11 GiB memory in use. Of the allocated memory 49.68 GiB is allocated by PyTorch, and 13.49 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[rank3]: Traceback (most recent call last):
+[rank3]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+[rank3]:     train()
+[rank3]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+[rank3]:     trainer.train()
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+[rank3]:     return inner_training_loop(
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+[rank3]:     tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+[rank3]:     self.accelerator.backward(loss, **kwargs)
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+[rank3]:     loss.backward(**kwargs)
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+[rank3]:     torch.autograd.backward(
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+[rank3]:     _engine_run_backward(
+[rank3]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+[rank3]:     return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[rank3]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 3 has a total capacity of 79.11 GiB of which 13.48 GiB is free. Process 339674 has 65.62 GiB memory in use. Of the allocated memory 48.68 GiB is allocated by PyTorch, and 14.19 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+[rank1]:     train()
+[rank1]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+[rank1]:     trainer.train()
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+[rank1]:     return inner_training_loop(
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+[rank1]:     tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+[rank1]:     self.accelerator.backward(loss, **kwargs)
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+[rank1]:     loss.backward(**kwargs)
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+[rank1]:     torch.autograd.backward(
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+[rank1]:     _engine_run_backward(
+[rank1]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+[rank1]:     return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[rank1]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 1 has a total capacity of 79.11 GiB of which 13.33 GiB is free. Process 339672 has 65.77 GiB memory in use. Of the allocated memory 48.68 GiB is allocated by PyTorch, and 14.10 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+[rank2]: Traceback (most recent call last):
+[rank2]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 325, in <module>
+[rank2]:     train()
+[rank2]:   File "/share/pi/nigam/users/calebwin/med-s1/train/sft.py", line 288, in train
+[rank2]:     trainer.train()
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2122, in train
+[rank2]:     return inner_training_loop(
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 2474, in _inner_training_loop
+[rank2]:     tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/transformers/trainer.py", line 3606, in training_step
+[rank2]:     self.accelerator.backward(loss, **kwargs)
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/accelerate/accelerator.py", line 2246, in backward
+[rank2]:     loss.backward(**kwargs)
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/_tensor.py", line 581, in backward
+[rank2]:     torch.autograd.backward(
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/__init__.py", line 347, in backward
+[rank2]:     _engine_run_backward(
+[rank2]:   File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+[rank2]:     return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+[rank2]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 14.96 GiB. GPU 2 has a total capacity of 79.11 GiB of which 13.32 GiB is free. Process 339673 has 65.78 GiB memory in use. Of the allocated memory 48.69 GiB is allocated by PyTorch, and 14.10 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+wandb: 🚀 View run quiet-snowball-122 at: https://wandb.ai/ehr-fm/med-s1/runs/ibmdr4ln
+wandb: ⭐️ View project at: https://wandb.ai/ehr-fm/med-s1
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250305_013426-ibmdr4ln/logs
+wandb: WARNING The new W&B backend becomes opt-out in version 0.18.0; try it out with `wandb.require("core")`! See https://wandb.me/wandb-core for more information.
+wandb: 🚀 View run /share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-25k at: https://wandb.ai/ehr-fm/med-s1/runs/erc6m4d5
+wandb: ⭐️ View project at: https://wandb.ai/ehr-fm/med-s1
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250305_013516-erc6m4d5/logs
+wandb: WARNING The new W&B backend becomes opt-out in version 0.18.0; try it out with `wandb.require("core")`! See https://wandb.me/wandb-core for more information.
+wandb: 🚀 View run /share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-25k at: https://wandb.ai/ehr-fm/med-s1/runs/8q86m8bb
+wandb: ⭐️ View project at: https://wandb.ai/ehr-fm/med-s1
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: 🚀 View run /share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-25k at: https://wandb.ai/ehr-fm/med-s1/runs/nmfrhkj7
+wandb: ⭐️ View project at: https://wandb.ai/ehr-fm/med-s1
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250305_013516-8q86m8bb/logs
+wandb: Find logs at: ./wandb/run-20250305_013516-nmfrhkj7/logs
+wandb: WARNING The new W&B backend becomes opt-out in version 0.18.0; try it out with `wandb.require("core")`! See https://wandb.me/wandb-core for more information.
+wandb: WARNING The new W&B backend becomes opt-out in version 0.18.0; try it out with `wandb.require("core")`! See https://wandb.me/wandb-core for more information.
+W0305 01:35:30.779000 924446 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 924488 closing signal SIGTERM
+W0305 01:35:30.789000 924446 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 924489 closing signal SIGTERM
+W0305 01:35:30.799000 924446 site-packages/torch/distributed/elastic/multiprocessing/api.py:897] Sending process 924490 closing signal SIGTERM
+E0305 01:35:31.571000 924446 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 924487) of binary: /share/pi/nigam/users/calebwin/conda/envs/med-s1/bin/python
+Traceback (most recent call last):
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/distributed/run.py", line 919, in main
+    run(args)
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/distributed/run.py", line 910, in run
+    elastic_launch(
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/share/pi/nigam/users/calebwin/conda/envs/med-s1/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError:

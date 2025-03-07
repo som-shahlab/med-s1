@@ -31,9 +31,10 @@ export HF_CACHE_DIR="$CACHE_DIR"
 # Set med-s1k output directory
 export MED_S1K_OUTPUT="$DATA_DIR"
 
-# HF and Gemini credentials
+# HF, Gemini, and Wandb credentials
 
 # Debug: Print environment variables
+echo "Wandb Key: ${WANDB_API_KEY:0:10}..."
 echo "Cache directory: $CACHE_DIR"
 echo "Data directory: $DATA_DIR"
 echo "HF Token: ${HUGGING_FACE_HUB_TOKEN:0:10}..."
