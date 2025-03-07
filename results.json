@@ -186,7 +186,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-25k",
-          "timestamp": "2025-03-07T18:49:23Z",
+          "timestamp": "2025-03-07T21:38:40Z",
           "metrics": null
         },
         "eval": {

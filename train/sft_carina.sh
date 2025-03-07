@@ -12,20 +12,42 @@
 #SBATCH --time=06:00:00
 #SBATCH --account=nigam
 
+# Script for running distributed training on 4 H100 GPUs using DeepSpeed
+# Usage: sbatch sft_carina.sh [--debug] <experiment_name>
+# The experiment configuration is read from results.json
+#
+# Training configuration matches HuatuoGPT paper:
+# - Total batch size: 128
+#   * Per-GPU batch size: 2
+#   * Number of GPUs: 4
+#   * Gradient accumulation steps: 16
+#   * 2 * 4 * 16 = 128 total batch size
+# - Learning rate: 5e-6
+# - Number of epochs: 3
+# - Sequence length: 8192
+
+set -e  # Exit on any error
+
 # Parse arguments
 debug=false
 experiment_name=""
+
+# Print all arguments for debugging
+echo "Arguments received: $@"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --debug)
             debug=true
+            echo "Debug mode enabled"
             shift
             ;;
         *)
             if [ -z "$experiment_name" ]; then
                 experiment_name="$1"
+                echo "Experiment name set to: $experiment_name"
             else
+                echo "Error: Unexpected argument: $1"
                 echo "Usage: $0 [--debug] <experiment_name>"
                 exit 1
             fi
@@ -35,24 +57,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$experiment_name" ]; then
+    echo "Error: No experiment name provided"
     echo "Usage: $0 [--debug] <experiment_name>"
     exit 1
-fi
-
-# Debug mode settings
-if [ "$debug" = true ]; then
-    echo "Running in debug mode"
-    export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
-    export NCCL_DEBUG=INFO
-    export TORCH_DISTRIBUTED_DEBUG=DETAIL
-    export TORCH_SHOW_CPP_STACKTRACES=1
 fi
 
 # Source configuration
 echo "Sourcing config.sh..."
 source "config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
-# Get experiment config
+# Get experiment config from results.json
+echo "Reading experiment configuration..."
 config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
 
 if [ "$config" = "null" ]; then
@@ -69,17 +84,61 @@ echo "Creating logs directory..."
 mkdir -p "${MED_S1_DIR}/logs"
 
 # Get training params with defaults
-learning_rate=$(jq -r ".training_params.learning_rate // \"5e-6\"" <<< "$config")
-batch_size=$(jq -r ".training_params.batch_size // \"4\"" <<< "$config")
-num_epochs=$(jq -r ".training_params.num_epochs // \"3\"" <<< "$config")
+echo "Extracting training parameters..."
+
+# Required parameters (no defaults)
+learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
+batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
+num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
+grad_acc=$(jq -r ".training_params.gradient_accumulation_steps" <<< "$config")
+
+# Validate required parameters
+if [ "$learning_rate" = "null" ] || [ "$batch_size" = "null" ] || [ "$num_epochs" = "null" ] || [ "$grad_acc" = "null" ]; then
+    echo "Error: Missing required training parameters in results.json"
+    echo "Required parameters:"
+    echo "  learning_rate: $learning_rate"
+    echo "  batch_size: $batch_size"
+    echo "  num_epochs: $num_epochs"
+    echo "  gradient_accumulation_steps: $grad_acc"
+    exit 1
+fi
+
+# Verify batch size configuration matches paper
+total_batch_size=$((batch_size * 4 * grad_acc))
+if [ "$total_batch_size" -ne 128 ]; then
+    echo "Warning: Total batch size ($total_batch_size) does not match paper (128)"
+    echo "Check batch_size ($batch_size) and gradient_accumulation_steps ($grad_acc)"
+fi
+
+# Optional parameters with defaults
 weight_decay=$(jq -r ".training_params.weight_decay // \"0.1\"" <<< "$config")
 warmup_ratio=$(jq -r ".training_params.warmup_ratio // \"0.05\"" <<< "$config")
-grad_acc=$(jq -r ".training_params.gradient_accumulation_steps // \"4\"" <<< "$config")
 
 # Get optimizer params
 adam_beta1=$(jq -r ".training_params.optimizer.adam_beta1 // \"0.9\"" <<< "$config")
 adam_beta2=$(jq -r ".training_params.optimizer.adam_beta2 // \"0.95\"" <<< "$config")
 adam_epsilon=$(jq -r ".training_params.optimizer.adam_epsilon // \"1e-8\"" <<< "$config")
+
+# Print training configuration
+echo -e "\nTraining Configuration:"
+echo "Debug mode: $debug"
+echo "Model:"
+echo "  Key: $model_key"
+echo "  Path: $model"
+echo "Training Parameters:"
+echo "  Learning Rate: $learning_rate"
+echo "  Batch Size per GPU: $batch_size"
+echo "  Number of GPUs: 4"
+echo "  Gradient Accumulation Steps: $grad_acc"
+echo "  Total Batch Size: $total_batch_size"
+echo "  Number of Epochs: $num_epochs"
+echo "  Weight Decay: $weight_decay"
+echo "  Warmup Ratio: $warmup_ratio"
+echo "  Sequence Length: 8192"
+echo "Optimizer Parameters:"
+echo "  Adam Beta1: $adam_beta1"
+echo "  Adam Beta2: $adam_beta2"
+echo "  Adam Epsilon: $adam_epsilon"
 
 # Setup environment
 echo "Setting up conda environment..."
@@ -91,7 +150,8 @@ conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1;
 export NCCL_SOCKET_IFNAME=$(ip route show default | awk '/default/ {print $5}')
 echo "Using network interface: $NCCL_SOCKET_IFNAME"
 
-# Set NCCL environment variables
+# Set NCCL environment variables for optimal multi-GPU performance
+echo "Configuring NCCL..."
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=0
@@ -113,6 +173,7 @@ export NCCL_SOCKET_NTHREADS=4
 export NCCL_NSOCKS_PERTHREAD=4
 
 # DeepSpeed specific settings
+echo "Configuring DeepSpeed..."
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 export NCCL_MIN_NCHANNELS=4
 export DS_ACCELERATOR=cuda
@@ -125,7 +186,8 @@ echo "  Socket family: $NCCL_SOCKET_FAMILY"
 echo "  IB HCA: $NCCL_IB_HCA"
 echo "  Debug level: $NCCL_DEBUG"
 
-# Get dataset path
+# Get dataset path from results.json
+echo "Getting dataset path..."
 dataset_path=$(jq -r ".experiments[\"$experiment_name\"].results.curation.dataset_path" "$RESULTS_JSON")
 
 if [ "$dataset_path" = "null" ]; then
@@ -149,13 +211,13 @@ else
     LOCAL_DATA_DIR=$(dirname "$dataset_path")
 fi
 
-# Set output directory
+# Set output directory and clean it
 safe_experiment_name=$(echo "$experiment_name" | sed 's/[^a-zA-Z0-9-]//g')
 checkpoint_dir="${CACHE_DIR}/ckpts/${safe_experiment_name}"
 
-# Clean up existing checkpoint directory
+echo "Setting up checkpoint directory: $checkpoint_dir"
 if [ -d "$checkpoint_dir" ]; then
-    echo "Cleaning up existing checkpoint directory: $checkpoint_dir"
+    echo "Cleaning up existing checkpoint directory"
     rm -rf "$checkpoint_dir"
 fi
 mkdir -p "$checkpoint_dir"
@@ -190,18 +252,29 @@ fi
 # Get a random port in a safer range (avoid common ports)
 MASTER_PORT=$(shuf -i 40000-45000 -n 1)
 
+# Change to med-s1 directory and add to Python path
+cd "${MED_S1_DIR}"
+export PYTHONPATH="${MED_S1_DIR}:${PYTHONPATH}"
+
+# Build accelerate command
+# Note: Only add --debug flag if debug mode is enabled
+debug_flag=""
+if [ "$debug" = true ]; then
+    debug_flag="--debug"
+fi
+
 # Launch training command with Accelerate
-cmd="PYTHONPATH=/share/pi/nigam/users/calebwin/med-s1 \
-    accelerate launch \
-    --config_file \"$accelerate_config\" \
+echo "Launching training with accelerate..."
+cmd="accelerate launch \
+    --config_file \"${accelerate_config}\" \
     --main_process_port $MASTER_PORT \
-    \"${MED_S1_DIR}/train/sft.py\" \
+    train/sft.py \
     --experiment_name=\"${experiment_name}\" \
     --results_json=\"${RESULTS_JSON}\" \
     --model_name=\"${model}\" \
     --train_file_path=\"${LOCAL_DATA_DIR}/med_s1k_formatted\" \
     --output_dir=\"${checkpoint_dir}\" \
-    --block_size=4096 \
+    --block_size=8192 \
     --per_device_train_batch_size=${batch_size} \
     --gradient_accumulation_steps=${grad_acc} \
     --learning_rate=${learning_rate} \
@@ -211,7 +284,7 @@ cmd="PYTHONPATH=/share/pi/nigam/users/calebwin/med-s1 \
     --adam_beta2=${adam_beta2} \
     --adam_epsilon=${adam_epsilon} \
     --num_train_epochs=${num_epochs} \
-    ${debug:+--debug}"
+    $debug_flag"
 
 # Print launch configuration
 echo -e "\nAccelerate Launch Configuration:"
