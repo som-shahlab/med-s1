@@ -1,5 +1,6 @@
 import wandb
 import os
+import signal
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Dict
 import warnings
@@ -9,8 +10,11 @@ import transformers
 import trl
 import json
 import torch
+import torch.distributed as dist
+
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 warnings.filterwarnings("ignore", category=FutureWarning)
+transformers.logging.set_verbosity_warning()
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
@@ -20,13 +24,14 @@ def load_config() -> Dict:
 class CustomTrainer(trl.SFTTrainer):
     def log(self, logs):
         """
-        Intercept SFTTrainer log method and log to wandb
-        
-            ```
-            logs = {'loss': 2.1122, 'grad_norm': 11.75, 'learning_rate': 6.993006993006993e-08, 'epoch': 0.00070074015679061}
-            ```
+        Intercept SFTTrainer log method and log to wandb only on rank 0
         """
         super().log(logs)  # Call the original log method
+        
+        # Only log to wandb on rank 0
+        local_rank = dist.get_rank()
+        if local_rank == 0:
+            wandb.log(logs)
 
 @dataclass
 class TrainingConfig:
@@ -52,16 +57,28 @@ class TrainingConfig:
         os.environ['WANDB_PROJECT'] = self.wandb_project
         os.environ['WANDB_ENTITY'] = self.wandb_entity
 
+def signal_handler(signum, frame):
+    """Handle shutdown signals gracefully"""
+    logging.warning(f"Received signal {signum}. Performing cleanup...")
+    wandb.finish()
+    exit(0)
+
 def train():
-    
-    # wandb
-    wandb.init(entity="ehr-fm", project="med-s1")
+    # Set up signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # parsing input
     parser = transformers.HfArgumentParser((TrainingConfig, trl.SFTConfig))
     config, args = parser.parse_args_into_dataclasses()
-    log_config = {**asdict(config), **asdict(args)}
-    logging.info(f"Training config: {log_config}")
+    
+    # Only log config on rank 0
+    world_size = dist.get_world_size()  # Total number of processes across all nodes
+    local_rank = dist.get_rank()  # Global rank of the process
+
+    if local_rank == 0:
+        log_config = {**asdict(config), **asdict(args)}
+        logging.info(f"Training config: {log_config}")
 
     # Clear GPU memory
     if torch.cuda.is_available():
@@ -156,8 +173,10 @@ def train():
     args.logging_strategy = "steps"
     args.logging_steps = 1  # Log every 1 steps
     
-    # Log config
-    wandb.config.update(log_config)
+    # wandb logging only on rank 0
+    if local_rank == 0:
+        wandb.init(entity="ehr-fm", project="med-s1")
+        wandb.config.update(log_config)
 
     # Create trainer with debug collator
     trainer = CustomTrainer(
@@ -182,16 +201,16 @@ def train():
     # Synchronize all processes before training
     trainer.accelerator.wait_for_everyone()
     
-    trainer.train()
-    
+    try:
+        trainer.train()
+    except Exception as e:
+        logging.error(f"Error during training: {e}")
+
     # # Ensure all processes are ready to save
     trainer.accelerator.wait_for_everyone()
     
     # Save final model (all ranks need to save their shards)
-    local_rank = trainer.args.local_rank
     logging.info(f"[Rank {local_rank}] Saving model...")
-    
-    # Log existing files
     if os.path.exists(args.output_dir):
         logging.info(f"[Rank {local_rank}] Existing files: {os.listdir(args.output_dir)}")
         
@@ -217,6 +236,9 @@ def train():
     # Final sync point
     trainer.accelerator.wait_for_everyone()
 
+    # Ensure wandb logging is properly finished (only on rank 0)
+    if local_rank == 0:
+        wandb.finish()
 
 if __name__ == "__main__":
     train()

@@ -48,6 +48,9 @@ Train models using FSDP (Fully Sharded Data Parallel) and TRL (Transformer Reinf
 ```bash
 # Train model for an experiment
 sbatch train/sft_carina.sh <experiment_name>
+
+# Example:
+bash train/sft_carina.sh med-s1-25k
 ```
 
 Models are saved in `$CACHE_DIR/ckpts/<experiment_name>/`. The training uses:

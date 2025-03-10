@@ -1,14 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=med-s1-train
-#SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
-#SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
-#SBATCH --partition=gpu
-#SBATCH --constraint="GPU_SKU:A100_PCIE"
+#SBATCH --output=/share/pi/nigam/mwornow/med-s1-train-%j.out
+#SBATCH --error=/share/pi/nigam/mwornow/med-s1-train-%j.err
+#SBATCH --partition=nigam-h100
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=28
-#SBATCH --mem=224G
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=200G
 #SBATCH --time=06:00:00
 #SBATCH --account=nigam
 
@@ -75,6 +73,7 @@ num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
 weight_decay=$(jq -r ".training_params.weight_decay // \"1e-4\"" <<< "$config")  # Default to 1e-4 if not set
 
 # Set strategy
+strategy="fsdp"
 uid="$(date +%Y%m%d_%H%M%S)"
 echo "Starting job..."
 
@@ -154,13 +153,17 @@ if [ "$debug" = true ]; then
     echo ">>>>>> USING DEBUG MODE <<<<<<"
     echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     model="meta-llama/Llama-3.2-1B"
-    num_epochs=2
     export CUDA_VISIBLE_DEVICES=0
+    num_epochs=2
+    gpu_count=1
     strategy="none"
 fi
 
 # ! FSDP training path
 if [ "$strategy" = "fsdp" ]; then
+    echo "-----------------------------"
+    echo "|      Strategy: FSDP       |"
+    echo "-----------------------------"
     # Base FSDP command
     cmd="torchrun \
         --nproc_per_node=$gpu_count \
@@ -193,7 +196,9 @@ if [ "$strategy" = "fsdp" ]; then
     eval "$cmd"
 else
     # Non-FSDP training path
-    gpu_count=1
+    echo "-----------------------------"
+    echo "|      Strategy: DDP       |"
+    echo "-----------------------------"
     torchrun \
         --nproc_per_node=$gpu_count \
         "${MED_S1_DIR}/train/sft.py" \

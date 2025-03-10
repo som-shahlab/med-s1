@@ -560,8 +560,8 @@
           }
         },
         "training": {
-          "model_path": null,
-          "timestamp": null,
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-25k",
+          "timestamp": "2025-02-28T00:02:23Z",
           "metrics": null
         },
         "eval": {
