@@ -5,7 +5,9 @@ This script handles:
 2. Setting up the training environment
 3. Running the training process
 
-The training uses DeepSpeed ZeRO-2 optimization and is configured for 4 H100 GPUs.
+The training uses DeepSpeed ZeRO-2 optimization and is configurable to work with
+different numbers of H100 GPUs (typically 2 or 4). The gradient accumulation steps
+are automatically scaled based on the number of GPUs to maintain the same total batch size.
 Checkpoints are saved after each epoch, with the final model saved directly in
 the output directory (not in a 'final' subdirectory).
 

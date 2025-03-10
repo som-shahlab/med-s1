@@ -2,26 +2,29 @@
 #SBATCH --job-name=med-s1-train
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
-#SBATCH --partition=nigam-h100
-#SBATCH --constraint="GPU_SKU:H100_PCIE"
+#SBATCH --partition=gpu-long
+#SBATCH --constraint="GPU_SKU:A100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=28
-#SBATCH --mem=224G
+#SBATCH --mem=150G
 #SBATCH --time=06:00:00
 #SBATCH --account=nigam
 
-# Script for running distributed training on 4 H100 GPUs using DeepSpeed
+SCALE_DOWN_MEM_USAGE=2 # Default: No scale down
+NUM_GPUS=4
+
+# Script for running distributed training on H100 GPUs using DeepSpeed
 # Usage: sbatch sft_carina.sh [--debug] <experiment_name>
 # The experiment configuration is read from results.json
 #
 # Training configuration matches HuatuoGPT paper:
 # - Total batch size: 128
 #   * Per-GPU batch size: 2
-#   * Number of GPUs: 4
-#   * Gradient accumulation steps: 16
-#   * 2 * 4 * 16 = 128 total batch size
+#   * Number of GPUs: Configurable (2 or 4)
+#   * Gradient accumulation steps: Scaled based on GPU count to maintain total batch size
+#   * 2 * NUM_GPUS * gradient_accumulation_steps = 128 total batch size
 # - Learning rate: 5e-6
 # - Number of epochs: 3
 # - Sequence length: 8192
@@ -88,26 +91,33 @@ echo "Extracting training parameters..."
 
 # Required parameters (no defaults)
 learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
-batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
+base_batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
+batch_size=$(( base_batch_size / $SCALE_DOWN_MEM_USAGE )) # Scale down batch_size
 num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
-grad_acc=$(jq -r ".training_params.gradient_accumulation_steps" <<< "$config")
+
+# Scale gradient accumulation steps to maintain the same total batch size
+# Original config assumes 4 GPUs, so we scale by 4/NUM_GPUS
+base_grad_acc=$(jq -r ".training_params.gradient_accumulation_steps" <<< "$config")
+grad_acc=$(( base_grad_acc * SCALE_DOWN_MEM_USAGE * 4 / $NUM_GPUS )) # Scale up grad_acc, also considering SCALE_DOWN_MEM_USAGE
+echo "Scaling gradient accumulation steps: $base_grad_acc (base) * $SCALE_DOWN_MEM_USAGE * 4 / $NUM_GPUS = $grad_acc"
 
 # Validate required parameters
-if [ "$learning_rate" = "null" ] || [ "$batch_size" = "null" ] || [ "$num_epochs" = "null" ] || [ "$grad_acc" = "null" ]; then
+if [ "$learning_rate" = "null" ] || [ "$batch_size" = "null" ] || [ "$num_epochs" = "null" ] || [ "$base_grad_acc" = "null" ]; then
     echo "Error: Missing required training parameters in results.json"
     echo "Required parameters:"
     echo "  learning_rate: $learning_rate"
     echo "  batch_size: $batch_size"
     echo "  num_epochs: $num_epochs"
-    echo "  gradient_accumulation_steps: $grad_acc"
+    echo "  gradient_accumulation_steps (base): $base_grad_acc"
+    echo "  gradient_accumulation_steps (scaled): $grad_acc"
     exit 1
 fi
 
 # Verify batch size configuration matches paper
-total_batch_size=$((batch_size * 4 * grad_acc))
+total_batch_size=$((batch_size * NUM_GPUS * grad_acc))
 if [ "$total_batch_size" -ne 128 ]; then
     echo "Warning: Total batch size ($total_batch_size) does not match paper (128)"
-    echo "Check batch_size ($batch_size) and gradient_accumulation_steps ($grad_acc)"
+    echo "Check batch_size ($batch_size), NUM_GPUS ($NUM_GPUS), and gradient_accumulation_steps ($grad_acc)"
 fi
 
 # Optional parameters with defaults
@@ -128,8 +138,9 @@ echo "  Path: $model"
 echo "Training Parameters:"
 echo "  Learning Rate: $learning_rate"
 echo "  Batch Size per GPU: $batch_size"
-echo "  Number of GPUs: 4"
-echo "  Gradient Accumulation Steps: $grad_acc"
+echo "  Number of GPUs: $NUM_GPUS"
+echo "  Gradient Accumulation Steps (base): $base_grad_acc"
+echo "  Gradient Accumulation Steps (scaled): $grad_acc"
 echo "  Total Batch Size: $total_batch_size"
 echo "  Number of Epochs: $num_epochs"
 echo "  Weight Decay: $weight_decay"
@@ -152,7 +163,16 @@ echo "Using network interface: $NCCL_SOCKET_IFNAME"
 
 # Set NCCL environment variables for optimal multi-GPU performance
 echo "Configuring NCCL..."
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+# Set CUDA_VISIBLE_DEVICES based on NUM_GPUS
+if [ "$NUM_GPUS" -eq 2 ]; then
+    export CUDA_VISIBLE_DEVICES=0,1
+elif [ "$NUM_GPUS" -eq 4 ]; then
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
+else
+    echo "Warning: Unsupported NUM_GPUS value: $NUM_GPUS. Using first $NUM_GPUS GPUs."
+    devices=$(seq -s, 0 $((NUM_GPUS-1)))
+    export CUDA_VISIBLE_DEVICES=$devices
+fi
 export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=0
 export NCCL_NET_GDR_LEVEL=2
@@ -229,7 +249,11 @@ if [ "$debug" = true ]; then
     echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     model="meta-llama/Llama-3.2-1B"
     num_epochs=2
+    # In debug mode, use only one GPU
     export CUDA_VISIBLE_DEVICES=0
+    # Update NUM_GPUS to match debug setting
+    NUM_GPUS=1
+    echo "Debug mode: Using 1 GPU only"
 fi
 
 # Launch training
@@ -242,12 +266,23 @@ if [ -z "$WANDB_API_KEY" ]; then
     exit 1
 fi
 
+# Select the appropriate accelerate config based on NUM_GPUS
+if [ "$NUM_GPUS" -eq 2 ]; then
+    accelerate_config="${MED_S1_DIR}/train/accelerate_config_2gpu.yaml"
+elif [ "$NUM_GPUS" -eq 4 ]; then
+    accelerate_config="${MED_S1_DIR}/train/accelerate_config_4gpu.yaml"
+else
+    echo "Error: Unsupported NUM_GPUS value: $NUM_GPUS. Only 2 or 4 GPUs are supported."
+    exit 1
+fi
+
 # Check accelerate config exists
-accelerate_config="${MED_S1_DIR}/train/accelerate_config.yaml"
 if [ ! -f "$accelerate_config" ]; then
     echo "Error: Accelerate config not found at $accelerate_config"
     exit 1
 fi
+
+echo "Using accelerate config for $NUM_GPUS GPUs: $accelerate_config"
 
 # Get a random port in a safer range (avoid common ports)
 MASTER_PORT=$(shuf -i 40000-45000 -n 1)
@@ -274,7 +309,7 @@ cmd="accelerate launch \
     --model_name=\"${model}\" \
     --train_file_path=\"${LOCAL_DATA_DIR}/med_s1k_formatted\" \
     --output_dir=\"${checkpoint_dir}\" \
-    --block_size=8192 \
+    --block_size=4096 \
     --per_device_train_batch_size=${batch_size} \
     --gradient_accumulation_steps=${grad_acc} \
     --learning_rate=${learning_rate} \
