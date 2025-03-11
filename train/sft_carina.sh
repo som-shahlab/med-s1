@@ -27,6 +27,7 @@ set -e  # Exit on any error
 # Parse arguments
 debug=false
 experiment_name=""
+NUM_GPUS=4
 
 # Print all arguments for debugging
 echo "Arguments received: $@"
@@ -83,10 +84,14 @@ mkdir -p "${MED_S1_DIR}/logs"
 echo "Extracting training parameters..."
 
 # Required parameters (no defaults)
+SCALE_DOWN_MEM_USAGE=1
 learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
 base_batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
 batch_size=$(( base_batch_size / $SCALE_DOWN_MEM_USAGE )) # Scale down batch_size
 num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
+echo "Batch size: $batch_size"
+echo "Base batch size: $base_batch_size"
+echo "Scale down mem usage: $SCALE_DOWN_MEM_USAGE"
 
 # Scale gradient accumulation steps to maintain the same total batch size
 # Original config assumes 4 GPUs, so we scale by 4/NUM_GPUS
@@ -145,10 +150,10 @@ echo "  Adam Beta2: $adam_beta2"
 echo "  Adam Epsilon: $adam_epsilon"
 
 # Setup environment
-echo "Setting up conda environment..."
-source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
-echo "Activating med-s1 environment..."
-conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+# echo "Setting up conda environment..."
+# source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+# echo "Activating med-s1 environment..."
+# conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Get network interface for NCCL
 export NCCL_SOCKET_IFNAME=$(ip route show default | awk '/default/ {print $5}')
@@ -166,7 +171,7 @@ else
     devices=$(seq -s, 0 $((NUM_GPUS-1)))
     export CUDA_VISIBLE_DEVICES=$devices
 fi
-export NCCL_DEBUG=INFO
+# export NCCL_DEBUG=INFO
 export NCCL_IB_DISABLE=0
 export NCCL_NET_GDR_LEVEL=2
 export NCCL_IB_GID_INDEX=3
@@ -211,7 +216,8 @@ fi
 # Set up data directory
 if [ -d "/local-scratch" ]; then
     echo "Using local scratch directory..."
-    LOCAL_DATA_DIR="/local-scratch/${SLURM_JOB_ID}"
+    mkdir -p /local-scratch/nigam/meds1
+    LOCAL_DATA_DIR="/local-scratch/nigam/meds1/${SLURM_JOB_ID}"
     mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; exit 1; }
     
     # Copy data to local scratch
