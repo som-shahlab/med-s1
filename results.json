@@ -1,411 +1,36 @@
 {
   "experiments": {
-    "med-s1-1k": {
+    "huatuo-25k": {
       "description": "Current configuration with existing hyperparameters",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
-          "method": "s1",
-          "n_samples": 1000
-        },
-        "training_params": {
-          "learning_rate": 1e-05,
-          "batch_size": 4,
-          "num_epochs": 5
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/plumbing_test_001_20250219_145607/med_s1k_formatted",
-          "timestamp": null
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-1k",
-          "timestamp": "2025-02-27T01:48:10Z",
-          "metrics": null
-        },
-        "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k/med-s1-1keval_data_strict-prompt.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k/med-s1-1keval_data_strict-prompt_metrics.json",
-          "timestamp": "2025-02-26T18:42:38.091401",
-          "summary": {
-            "MedMCQA_validation": {
-              "accuracy": 0.4111881424814726,
-              "accuracy_ci": [
-                0.39444776476213245,
-                0.42457566339947406
-              ],
-              "num_correct": 1715,
-              "total_examples": 4183,
-              "num_answered": 1720
-            },
-            "MedQA_USLME_test": {
-              "accuracy": 0.4783974862529458,
-              "accuracy_ci": [
-                0.44776119402985076,
-                0.5003927729772192
-              ],
-              "num_correct": 604,
-              "total_examples": 1273,
-              "num_answered": 609
-            },
-            "PubMedQA_test": {
-              "accuracy": 0.645,
-              "accuracy_ci": [
-                0.615,
-                0.673025
-              ],
-              "num_correct": 645,
-              "total_examples": 1000,
-              "num_answered": 643
-            },
-            "MMLU-Pro_Medical_test": {
-              "accuracy": 0.3758957654723127,
-              "accuracy_ci": [
-                0.34592833876221496,
-                0.3935016286644951
-              ],
-              "num_correct": 564,
-              "total_examples": 1535,
-              "num_answered": 577
-            },
-            "GPQA_Medical_test": {
-              "accuracy": 0.35324675324675325,
-              "accuracy_ci": [
-                0.2935064935064935,
-                0.38701298701298703
-              ],
-              "num_correct": 131,
-              "total_examples": 385,
-              "num_answered": 136
-            }
-          }
-        }
-      }
-    },
-    "med-s1-1k-tuned": {
-      "description": "Tuned version with adjusted hyperparameters",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "s1",
-          "n_samples": 1000
-        },
-        "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 16,
-          "num_epochs": 5,
-          "weight_decay": 0.001
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/plumbing_test_001_20250219_145607/med_s1k_formatted",
-          "timestamp": null
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-1k-tuned",
-          "timestamp": "2025-02-27T18:43:27Z",
-          "metrics": null
-        },
-        "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k-tuned/med-s1-1k-tunedeval_data_strict-prompt_debug.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/med-s1-1k-tuned/med-s1-1k-tunedeval_data_strict-prompt_debug_metrics.json",
-          "timestamp": "2025-02-27T19:01:31.576157",
-          "summary": {
-            "MedMCQA_validation": {
-              "accuracy": 0.7,
-              "accuracy_ci": [
-                0.5,
-                0.9
-              ],
-              "num_correct": 14,
-              "total_examples": 20,
-              "num_answered": 13
-            },
-            "MedQA_USLME_test": {
-              "accuracy": 0.55,
-              "accuracy_ci": [
-                0.3,
-                0.7
-              ],
-              "num_correct": 10,
-              "total_examples": 20,
-              "num_answered": 11
-            },
-            "PubMedQA_test": {
-              "accuracy": 0.7,
-              "accuracy_ci": [
-                0.5,
-                0.9
-              ],
-              "num_correct": 14,
-              "total_examples": 20,
-              "num_answered": 14
-            },
-            "GPQA_Medical_test": {
-              "accuracy": 0.45,
-              "accuracy_ci": [
-                0.25,
-                0.65
-              ],
-              "num_correct": 9,
-              "total_examples": 20,
-              "num_answered": 9
-            },
-            "MMLU-Pro_Medical_test": {
-              "accuracy": 0.65,
-              "accuracy_ci": [
-                0.45,
-                0.85
-              ],
-              "num_correct": 13,
-              "total_examples": 20,
-              "num_answered": 12
-            }
-          }
-        }
-      }
-    },
-    "med-s1-1k-curated": {
-      "description": "Iteration on curation methodology",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "s1",
-          "n_samples": 1000,
-          "specialty_weights": {
-            "Internal Medicine": 1.5,
-            "Emergency Medicine": 1.5,
-            "Critical Care": 1.2
-          }
-        },
-        "training_params": {
-          "learning_rate": 2e-05,
-          "batch_size": 8,
-          "num_epochs": 8
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": null,
-          "timestamp": null
-        },
-        "training": {
-          "model_path": null,
-          "timestamp": null,
-          "metrics": null
-        },
-        "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
-        }
-      }
-    },
-    "med-s1-5k": {
-      "description": "Larger curated dataset with 5k samples",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "s1",
-          "n_samples": 5000
-        },
-        "training_params": {
-          "learning_rate": 5e-06,
-          "batch_size": 32,
-          "num_epochs": 3,
-          "weight_decay": 0.001
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/med-s1-5k_20250227_140603/med_s1k_formatted",
-          "timestamp": "2025-02-27T14:06:05.330212",
-          "stats": {
-            "total_examples": 25371,
-            "selected_examples": 1000,
-            "filtered_examples": 24371,
-            "filter_reasons": {
-              "not_selected_in_sampling": 17407,
-              "base_model_correct": 6964
-            },
-            "specialty_distribution": {
-              "Medical Physics (Diagnostic, Nuclear, Therapeutic)": 13,
-              "Clinical Biochemical Genetics": 13,
-              "Physics": 13,
-              "Pain Medicine": 12,
-              "Pulmonary Disease": 12,
-              "Pediatric Critical Care Medicine": 12,
-              "Neurotology": 12,
-              "Statistics": 12,
-              "Obstetrics and Gynecology": 12,
-              "Adult Congenital Heart Disease": 12,
-              "Hospice and Palliative Medicine": 12,
-              "Forensic Psychiatry": 11,
-              "Orthopaedic Surgery": 11,
-              "Emergency Medicine": 11,
-              "Pediatrics": 11,
-              "Maternal-Fetal Medicine": 11,
-              "Adult Cardiac Anesthesiology": 11,
-              "General Knowledge": 11,
-              "Clinical Genetics and Genomics (MD)": 11,
-              "Neonatal-Perinatal Medicine": 11,
-              "Aerospace Medicine": 11,
-              "Nephrology": 10,
-              "Pathology - Anatomic": 10,
-              "Complex Pediatric Otolaryngology": 10,
-              "Pediatric Gastroenterology": 10,
-              "Health Care Administration, Leadership, and Management": 10,
-              "Infectious Disease": 10,
-              "Medical Toxicology": 10,
-              "Laboratory Genetics and Genomics": 10,
-              "Endocrinology, Diabetes and Metabolism": 10,
-              "Pathology - Clinical": 10,
-              "General Surgery": 9,
-              "Psychiatry": 9,
-              "Pathology - Medical Microbiology": 9,
-              "Occupational and Environmental Medicine": 9,
-              "Pediatric Pulmonology": 9,
-              "Pathology - Chemical": 9,
-              "Public Health and General Preventive Medicine": 9,
-              "Neurocritical Care": 9,
-              "Dermatopathology": 9,
-              "Molecular Genetic Pathology": 9,
-              "Interventional Cardiology": 9,
-              "Neurology with Special Qualification in Child Neurology": 9,
-              "Child Abuse Pediatrics": 9,
-              "Sleep Medicine": 9,
-              "Computer Science": 8,
-              "Ophthalmology": 8,
-              "Gynecologic Oncology": 8,
-              "Clinical Informatics": 8,
-              "Addiction Medicine": 8,
-              "Math": 8,
-              "Cardiovascular Disease": 8,
-              "Pediatric Endocrinology": 8,
-              "Neuroradiology": 8,
-              "Transplant Hepatology": 8,
-              "Economics": 8,
-              "Complex General Surgical Oncology": 8,
-              "Surgical Critical Care": 8,
-              "Reproductive Endocrinology and Infertility": 8,
-              "Dermatology": 8,
-              "Critical Care Medicine": 8,
-              "Pediatric Infectious Diseases": 8,
-              "Developmental-Behavioral Pediatrics": 8,
-              "Geriatric Medicine": 7,
-              "Physical Medicine and Rehabilitation": 7,
-              "Medical Oncology": 7,
-              "Diagnostic Radiology": 7,
-              "Hematology": 7,
-              "Pediatric Urology": 7,
-              "Dentistry": 7,
-              "Adolescent Medicine": 7,
-              "Pediatric Hematology-Oncology": 7,
-              "Pathology - Pediatric": 7,
-              "Anesthesiology": 7,
-              "Rheumatology": 7,
-              "Pathology - Anatomic/Pathology - Clinical": 7,
-              "Thoracic and Cardiac Surgery": 6,
-              "Education": 6,
-              "Plastic Surgery Within the Head and Neck*": 6,
-              "Pathology - Forensic": 6,
-              "Cytopathology": 6,
-              "Pediatric Rheumatology": 6,
-              "Advanced Heart Failure and Transplant Cardiology": 6,
-              "Child and Adolescent Psychiatry": 6,
-              "Neurology": 6,
-              "Politics": 6,
-              "Law": 6,
-              "Radiation Oncology": 6,
-              "Medical Biochemical Genetics": 6,
-              "Blood Banking/Transfusion Medicine": 6,
-              "Nuclear Medicine": 6,
-              "Orthopaedic Sports Medicine": 6,
-              "Allergy and Immunology": 6,
-              "Clinical Cardiac Electrophysiology": 6,
-              "Podiatry": 6,
-              "Pediatric Cardiology": 6,
-              "Family Medicine": 5,
-              "Gastroenterology": 5,
-              "Urology": 5,
-              "Surgery of the Hand": 5,
-              "Colon and Rectal Surgery": 5,
-              "Undersea and Hyperbaric Medicine": 5,
-              "Chemistry": 5,
-              "Pediatric Emergency Medicine": 5,
-              "History": 5,
-              "Complex Family Planning": 5,
-              "Neurological Surgery": 5,
-              "Internal Medicine": 5,
-              "Geography": 5,
-              "Urogynecology and Reconstructive Pelvic Surgery": 5,
-              "Neuromuscular Medicine": 5,
-              "Otolaryngology - Head and Neck Surgery": 5,
-              "Pediatric Dermatology": 5,
-              "Internal Medicine-Critical Care Medicine": 5,
-              "Vascular Neurology": 5,
-              "Neuropathology": 4,
-              "Plastic Surgery": 4,
-              "Pediatric Radiology": 4,
-              "Clinical Neurophysiology": 4,
-              "Pediatric Surgery": 4,
-              "Religion": 4,
-              "Geriatric Psychiatry": 4,
-              "Astronomy": 4,
-              "Vascular Surgery": 4,
-              "Interventional Radiology and Diagnostic Radiology": 4,
-              "Pediatric Nephrology": 4,
-              "Hematopathology": 3,
-              "Pediatric Anesthesiology": 3,
-              "Sports Medicine": 3,
-              "Optometry": 3,
-              "Consultation-Liaison Psychiatry": 3,
-              "Spinal Cord Injury Medicine": 3,
-              "Emergency Medical Services": 3,
-              "Addiction Psychiatry": 3,
-              "Pediatric Rehabilitation Medicine": 2,
-              "Pathology - Molecular Genetic": 2,
-              "Epilepsy": 2,
-              "Neurodevelopmental Disabilities": 2,
-              "Nuclear Radiology": 1,
-              "Biology": 1,
-              "Congenital Cardiac Surgery": 1
-            }
-          }
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-5k",
-          "timestamp": "2025-02-27T18:22:54Z",
-          "metrics": null
-        },
-        "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
-        }
-      }
-    },
-    "med-s1-25k": {
-      "description": "Full dataset without curation",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
           "method": "all",
+          "huatuo_format": true,
           "n_samples": 25371
         },
         "training_params": {
-          "learning_rate": 1e-05,
-          "batch_size": 64,
-          "num_epochs": 2,
-          "weight_decay": 0.001
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 3,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
         }
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/med-s1-25k_20250227_140738/med_s1k_formatted",
-          "timestamp": "2025-02-27T14:07:45.576891",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-25k_20250304_173206/med_s1k_formatted",
+          "timestamp": "2025-03-04T17:32:13.385452",
           "stats": {
             "total_examples": 25371,
             "selected_examples": 25371,
@@ -560,36 +185,100 @@
           }
         },
         "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/med-s1-25k",
-          "timestamp": "2025-02-28T00:02:23Z",
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-25k",
+          "timestamp": "2025-03-07T21:38:40Z",
           "metrics": null
         },
         "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-25k/huatuo-25keval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-25k/huatuo-25keval_data_metrics.json",
+          "timestamp": "2025-03-07T22:55:15.075314",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.5778149653358834,
+              "accuracy_ci": [
+                0.562514941429596,
+                0.5933600286875449
+              ],
+              "num_correct": 2417,
+              "total_examples": 4183,
+              "num_answered": 2410
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.6944226237234878,
+              "accuracy_ci": [
+                0.6661233307148469,
+                0.7172230950510604
+              ],
+              "num_correct": 882,
+              "total_examples": 1273,
+              "num_answered": 884
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.755,
+              "accuracy_ci": [
+                0.727,
+                0.781
+              ],
+              "num_correct": 754,
+              "total_examples": 1000,
+              "num_answered": 755
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.6039087947882736,
+              "accuracy_ci": [
+                0.5726384364820847,
+                0.6241042345276873
+              ],
+              "num_correct": 918,
+              "total_examples": 1535,
+              "num_answered": 927
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.5051282051282051,
+              "accuracy_ci": [
+                0.44358974358974357,
+                0.5358974358974359
+              ],
+              "num_correct": 191,
+              "total_examples": 390,
+              "num_answered": 197
+            }
+          }
         }
       }
     },
-    "random-1k": {
-      "description": "Random sampling with 1k samples",
+    "huatuo-1k-random": {
+      "description": "1k uniform random sample",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
+          "huatuo_format": true,
           "n_samples": 1000
         },
         "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 16,
-          "num_epochs": 5,
-          "weight_decay": 0.001
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 10,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
         }
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/random-1k_20250227_045807/med_s1k_formatted",
-          "timestamp": "2025-02-27T04:58:09.174433",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-random_20250310_172443/med_s1k_formatted",
+          "timestamp": "2025-03-10T17:24:45.149596",
           "stats": {
             "total_examples": 25371,
             "selected_examples": 1000,
@@ -706,38 +395,40 @@
               "Consultation-Liaison Psychiatry": 1
             }
           }
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/random-1k",
-          "timestamp": "2025-02-27T18:42:32Z",
-          "metrics": null
-        },
-        "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
         }
       }
     },
-    "random-5k": {
-      "description": "Random sampling with 5k samples",
+    "huatuo-5k-random": {
+      "description": "5k uniform random sample",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
+          "huatuo_format": true,
           "n_samples": 5000
         },
         "training_params": {
           "learning_rate": 5e-06,
-          "batch_size": 32,
-          "num_epochs": 3,
-          "weight_decay": 0.001
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
         }
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/random-5k_20250227_134720/med_s1k_formatted",
-          "timestamp": "2025-02-27T13:47:22.752129",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-5k-random_20250310_172443/med_s1k_formatted",
+          "timestamp": "2025-03-10T17:24:47.086996",
           "stats": {
             "total_examples": 25371,
             "selected_examples": 5000,
@@ -874,154 +565,6 @@
               "Neuromuscular Medicine": 1,
               "Epilepsy": 1,
               "Consultation-Liaison Psychiatry": 1
-            }
-          }
-        },
-        "training": {
-          "model_path": null,
-          "timestamp": null,
-          "metrics": null
-        },
-        "eval": {
-          "results_path": null,
-          "timestamp": null,
-          "metrics": null
-        }
-      }
-    },
-    "base": {
-      "description": "Base LLaMA model without fine-tuning",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": null,
-        "training_params": null
-      },
-      "results": {
-        "curation": null,
-        "training": null,
-        "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data_strict-prompt.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data_strict-prompt_metrics.json",
-          "timestamp": "2025-02-26T18:18:27.504904",
-          "summary": {
-            "MedMCQA_validation": {
-              "accuracy": 0.5541477408558451,
-              "accuracy_ci": [
-                0.5378854888835763,
-                0.568497489839828
-              ],
-              "num_correct": 2318,
-              "total_examples": 4183,
-              "num_answered": 2318
-            },
-            "MedQA_USLME_test": {
-              "accuracy": 0.6284367635506677,
-              "accuracy_ci": [
-                0.6017085624509034,
-                0.6520227808326786
-              ],
-              "num_correct": 799,
-              "total_examples": 1273,
-              "num_answered": 800
-            },
-            "PubMedQA_test": {
-              "accuracy": 0.753,
-              "accuracy_ci": [
-                0.727,
-                0.781
-              ],
-              "num_correct": 753,
-              "total_examples": 1000,
-              "num_answered": 753
-            },
-            "MMLU-Pro_Medical_test": {
-              "accuracy": 0.5954397394136808,
-              "accuracy_ci": [
-                0.5706840390879478,
-                0.6188925081433225
-              ],
-              "num_correct": 912,
-              "total_examples": 1535,
-              "num_answered": 914
-            },
-            "GPQA_Medical_test": {
-              "accuracy": 0.42597402597402595,
-              "accuracy_ci": [
-                0.37662337662337664,
-                0.4753246753246753
-              ],
-              "num_correct": 164,
-              "total_examples": 385,
-              "num_answered": 163
-            }
-          }
-        }
-      }
-    },
-    "huatuo": {
-      "description": "Pre-trained HuatuoGPT medical model",
-      "config": {
-        "model_key": "huatuo:8b",
-        "curation": null,
-        "training_params": null
-      },
-      "results": {
-        "curation": null,
-        "training": null,
-        "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_strict-prompt.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_strict-prompt_metrics.json",
-          "timestamp": "2025-02-26T19:25:08.802980",
-          "summary": {
-            "MedMCQA_validation": {
-              "accuracy": 0.6323213005020321,
-              "accuracy_ci": [
-                0.6177384652163519,
-                0.6466650729141764
-              ],
-              "num_correct": 2645,
-              "total_examples": 4183,
-              "num_answered": 2645
-            },
-            "MedQA_USLME_test": {
-              "accuracy": 0.7588373919874313,
-              "accuracy_ci": [
-                0.7329143754909663,
-                0.7831893165750197
-              ],
-              "num_correct": 966,
-              "total_examples": 1273,
-              "num_answered": 966
-            },
-            "PubMedQA_test": {
-              "accuracy": 0.802,
-              "accuracy_ci": [
-                0.777,
-                0.826
-              ],
-              "num_correct": 802,
-              "total_examples": 1000,
-              "num_answered": 802
-            },
-            "MMLU-Pro_Medical_test": {
-              "accuracy": 0.6488599348534202,
-              "accuracy_ci": [
-                0.6253908794788273,
-                0.6729804560260586
-              ],
-              "num_correct": 996,
-              "total_examples": 1535,
-              "num_answered": 995
-            },
-            "GPQA_Medical_test": {
-              "accuracy": 0.5506493506493506,
-              "accuracy_ci": [
-                0.5012987012987012,
-                0.6025974025974026
-              ],
-              "num_correct": 212,
-              "total_examples": 385,
-              "num_answered": 212
             }
           }
         }

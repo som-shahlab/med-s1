@@ -1,10 +1,18 @@
 #!/bin/bash
 
 # Set directory paths
-MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
+
+# # michael
+# MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
+# CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
+# DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
+# RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results.json"
+
+# caleb
+MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
 CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
 DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
-RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results.json"
+RESULTS_JSON="/share/pi/nigam/users/calebwin/med-s1/results.json"
 
 # Export paths for scripts
 export MED_S1_DIR
@@ -23,9 +31,10 @@ export HF_CACHE_DIR="$CACHE_DIR"
 # Set med-s1k output directory
 export MED_S1K_OUTPUT="$DATA_DIR"
 
-# HF and Gemini credentials
+# HF, Gemini, and Wandb credentials
 
 # Debug: Print environment variables
+echo "Wandb Key: ${WANDB_API_KEY:0:10}..."
 echo "Cache directory: $CACHE_DIR"
 echo "Data directory: $DATA_DIR"
 echo "HF Token: ${HUGGING_FACE_HUB_TOKEN:0:10}..."

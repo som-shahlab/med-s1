@@ -424,12 +424,24 @@ def format_for_training(df: pd.DataFrame, config: Dict) -> Dataset:
     """Format data for training with sft.py"""
     logging.info("Formatting for training...")
     
+    # Check formatting mode from config
+    huatuo_format = config["curation"].get("huatuo_format", False)
+    logging.info(f"Formatting mode: {'HuatuoGPT-style' if huatuo_format else 'default'}")
+    if huatuo_format:
+        logging.info("Using '## Thinking' and '## Final Response' markers")
+    else:
+        logging.info("Using model-specific markers with Answer: prefix")
+    
     # Get model info from config
     model_name = config["models"][config["model_choices"]["base"]]["hf_path"]
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     
     # Only format selected examples
     df_selected = df[df['selected_for_training']].copy()
+    
+    # Check if HuatuoGPT formatting is enabled
+    huatuo_format = config["curation"].get("huatuo_format", False)
+    logging.info(f"Using {'HuatuoGPT' if huatuo_format else 'default'} formatting")
     
     # Format each example
     formatted_data = []
@@ -439,27 +451,27 @@ def format_for_training(df: pd.DataFrame, config: Dict) -> Dataset:
         thinking = preprocess(row['Complex_CoT'])
         answer = preprocess(row['Response'])
         
-        # Add "Answer:" prefix if needed
-        answer = "Answer: " + answer if "Answer:" not in answer else answer
+        if huatuo_format:
+            # HuatuoGPT format with ## markers
+            assistant_content = f"## Thinking\n\n{thinking}\n\n## Final Response\n\n{answer}"
+        else:
+            # Default format with model-specific markers
+            if "Llama" in model_name:
+                assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
+                                   f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
+                if "Answer:" not in answer:
+                    answer = "Answer: " + answer
+            else:  # Qwen
+                assistant_content = f"<|im_start|>think\n{thinking}\n" + \
+                                   f"<|im_start|>answer\n{answer}"
+                if "Answer:" not in answer:
+                    answer = "Answer: " + answer
         
-        # Format as chat with think/answer markers
-        if "Llama" in model_name:
-            assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
-                               f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
-            
-            text = tokenizer.apply_chat_template([
-                {"role": "user", "content": question},
-                {"role": "assistant", "content": assistant_content}
-            ], tokenize=False)
-        else:  # Qwen
-            text = tokenizer.apply_chat_template([
-                {"role": "user", "content": question},
-                {
-                    "role": "assistant", 
-                    "content": f"<|im_start|>think\n{thinking}\n" + 
-                              f"<|im_start|>answer\n{answer}"
-                }
-            ], tokenize=False)
+        # Apply chat template consistently
+        text = tokenizer.apply_chat_template([
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": assistant_content}
+        ], tokenize=False)
         formatted_data.append({"text": text})
     
     # Convert to HF dataset and create train/test split
@@ -472,10 +484,58 @@ def format_for_training(df: pd.DataFrame, config: Dict) -> Dataset:
     
     return split
 
+def update_results_json(formatted_path: str, timestamp: str, stats: Dict) -> None:
+    """Update results.json with curation results using retries for thread safety"""
+    results_json = os.environ.get('RESULTS_JSON')
+    if not results_json:
+        raise ValueError("RESULTS_JSON environment variable not set")
+        
+    experiment_name = os.environ.get('EXPERIMENT_NAME')
+    if not experiment_name:
+        raise ValueError("EXPERIMENT_NAME environment variable not set")
+    
+    max_retries = 5
+    retry_delay = 1  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # Read the latest version of results.json
+            with open(results_json, "r") as f:
+                results = json.load(f)
+            
+            # Update the curation results
+            results["experiments"][experiment_name]["results"]["curation"] = {
+                "dataset_path": os.path.abspath(formatted_path),
+                "timestamp": timestamp,
+                "stats": stats
+            }
+            
+            # Write back to results.json
+            with open(results_json, "w") as f:
+                json.dump(results, f, indent=2)
+                
+            logging.info("Successfully updated results.json with curation results")
+            break  # Success - exit retry loop
+            
+        except Exception as e:
+            if attempt == max_retries - 1:  # Last attempt
+                logging.error(f"Failed to update results.json after {max_retries} attempts: {e}")
+                raise
+            else:
+                logging.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay}s: {e}")
+                time.sleep(retry_delay)
+
 def main():
     # Load config
     config = load_config()
     curation_config = config["curation"]
+    
+    # Log curation configuration
+    logging.info("=== Curation Configuration ===")
+    logging.info(f"Method: {curation_config['method']}")
+    logging.info(f"Sample size: {curation_config['n_samples']}")
+    logging.info(f"Format: {'HuatuoGPT' if curation_config.get('huatuo_format', False) else 'default'}")
+    logging.info("============================\n")
     
     # Set random seed for reproducibility
     random.seed(42)
@@ -847,7 +907,31 @@ def main():
     loaded = load_from_disk(formatted_path)
     logging.info(f"Successfully verified and saved formatted dataset to {formatted_path}")
     
-    # Save metadata
+    # Prepare stats for results.json
+    stats = {
+        "total_examples": len(df),
+        "selected_examples": len(df[df['selected_for_training']]),
+        "filtered_examples": len(df[df['filter_status'] == 'removed']),
+        "filter_reasons": {
+            stage: {
+                "count": int(stage_df['filter_status'].value_counts()['removed']),
+                "reasons": {k: int(v) for k, v in stage_df['filter_reason'].value_counts().to_dict().items()}
+            }
+            for stage, stage_df in df[df['filter_status'] == 'removed'].groupby('filter_stage')
+        },
+        "specialty_distribution": {k: int(v) for k, v in df[df['selected_for_training']]['specialty'].value_counts().to_dict().items()},
+        "cot_length_stats": {
+            "mean": float(df[df['selected_for_training']]['cot_length'].mean()) if len(df[df['selected_for_training']]) > 0 else 0.0,
+            "median": float(df[df['selected_for_training']]['cot_length'].median()) if len(df[df['selected_for_training']]) > 0 else 0.0,
+            "min": int(df[df['selected_for_training']]['cot_length'].min()) if len(df[df['selected_for_training']]) > 0 else 0,
+            "max": int(df[df['selected_for_training']]['cot_length'].max()) if len(df[df['selected_for_training']]) > 0 else 0
+        }
+    }
+    
+    # Update results.json with curation results
+    update_results_json(formatted_path, timestamp, stats)
+    
+    # Save local metadata for reference
     metadata = {
         "version": version,
         "timestamp": timestamp,
@@ -857,48 +941,17 @@ def main():
             "config": curation_config
         },
         "outputs": {
-            "filtered": {
-                "path": "med_s1k_filtered.parquet",
-                "description": "Full dataset with all examples and their filtering status"
-            },
-            "curated": {
-                "path": "med_s1k_curated.parquet",
-                "description": "Selected examples only (training data)"
-            },
-            "formatted": {
-                "path": "med_s1k_formatted",
-                "description": "HuggingFace dataset formatted for train/sft.py"
-            }
+            "filtered": filtered_path,
+            "curated": curated_path,
+            "formatted": formatted_path
         },
-        "filtering_stats": {
-            "overall": {
-                "total": len(df),
-                "kept": len(df[df['filter_status'] == 'kept']),
-                "removed": len(df[df['filter_status'] == 'removed']),
-                "selected": len(df[df['selected_for_training']])
-            },
-            "by_stage": {
-                stage: {
-                    "count": int(stage_df['filter_status'].value_counts()['removed']),
-                    "reasons": {k: int(v) for k, v in stage_df['filter_reason'].value_counts().to_dict().items()}
-                }
-                for stage, stage_df in df[df['filter_status'] == 'removed'].groupby('filter_stage')
-            },
-            "quality_score_distribution": {k: int(v) for k, v in df['quality_score'].value_counts().to_dict().items()},
-            "specialty_distribution": {k: int(v) for k, v in df[df['selected_for_training']]['specialty'].value_counts().to_dict().items()},
-            "cot_length_stats": {
-                "mean": float(df[df['selected_for_training']]['cot_length'].mean()) if len(df[df['selected_for_training']]) > 0 else 0.0,
-                "median": float(df[df['selected_for_training']]['cot_length'].median()) if len(df[df['selected_for_training']]) > 0 else 0.0,
-                "min": int(df[df['selected_for_training']]['cot_length'].min()) if len(df[df['selected_for_training']]) > 0 else 0,
-                "max": int(df[df['selected_for_training']]['cot_length'].max()) if len(df[df['selected_for_training']]) > 0 else 0
-            }
-        }
+        "stats": stats
     }
     
     metadata_path = os.path.join(version_dir, "metadata.json")
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
-    logging.info(f"Saved metadata to {metadata_path}")
+    logging.info(f"Saved local metadata to {metadata_path}")
 
 if __name__ == "__main__":
     main()
