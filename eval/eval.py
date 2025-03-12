@@ -5,11 +5,12 @@ import sglang as sgl
 import os
 import json
 import time
+import numpy as np
 from tqdm import tqdm
 from jinja2 import Template
 from transformers import AutoTokenizer
-from scorer import get_results, score, match_choice
-from typing import List, Dict, Tuple
+from scorer import get_results, score, match_choice, calculate_confidence_interval
+from typing import List, Dict, Tuple, Optional
 from datetime import datetime
 
 def parse_args():
@@ -29,6 +30,7 @@ def parse_args():
     parser.add_argument('--debug_samples', type=int, default=100, help='Number of samples to use in debug mode')
     parser.add_argument('--test_time_scaling', action='store_true', help='Run test time scaling evaluation')
     parser.add_argument('--config_path', type=str, default=None, help='Path to config.json for model lookup')
+    parser.add_argument('--gpqa_runs', type=int, default=5, help='Number of times to run GPQA_Medical_test for averaging')
     return parser.parse_args()
 
 def print_indented(text: str):
@@ -48,34 +50,35 @@ def postprocess_output(pred: str) -> str:
         pred = pred[1:]
     return pred
 
-def load_file(input_fp: str) -> List[Dict]:
+def load_file(input_fp: str, gpqa_runs: int = 5) -> List[Dict]:
     """Load the evaluation data from a JSON file.
     Args:
         input_fp (str): The path to the JSON file containing the evaluation data.
+        gpqa_runs (int): Number of times to duplicate GPQA_Medical_test examples for averaging.
 
     Returns:
         list: A list of dictionaries containing the evaluation data.
 
     Each example in the returned list looks like this:
         {
-            'question': 'Which of the following is not true for myelinated nerve fibers:', 
+            'question': 'Which of the following is not true for myelinated nerve fibers:',
             'options': {
-                'A': 'Impulse through myelinated fibers is slower than non-myelinated fibers', 
-                'B': 'Membrane currents are generated at nodes of Ranvier', 
-                'C': 'Saltatory conduction of impulses is seen', 
+                'A': 'Impulse through myelinated fibers is slower than non-myelinated fibers',
+                'B': 'Membrane currents are generated at nodes of Ranvier',
+                'C': 'Saltatory conduction of impulses is seen',
                 'D': 'Local anesthesia is effective only when the nerve is not covered by myelin sheath'
-            }, 
-            'answer_idx': 'A', 
-            'answer': 'Impulse through myelinated fibers is slower than non-myelinated fibers', 
+            },
+            'answer_idx': 'A',
+            'answer': 'Impulse through myelinated fibers is slower than non-myelinated fibers',
             'source': 'MedMCQA_validation'
         }
         
     Count of each example in the HuatuoGPT-O1 evaluation dataset:
         Counter({
-            'MedMCQA_validation': 4183, 
-            'MMLU-Pro_Medical_test': 1535, 
-            'MedQA_USLME_test': 1273, 
-            'PubMedQA_test': 1000, 
+            'MedMCQA_validation': 4183,
+            'MMLU-Pro_Medical_test': 1535,
+            'MedQA_USLME_test': 1273,
+            'PubMedQA_test': 1000,
             'GPQA_Medical_test': 390
         })
     """
@@ -84,13 +87,135 @@ def load_file(input_fp: str) -> List[Dict]:
     input_data = []
     if isinstance(data, list):
         data = {'normal': data}
-    for k,v in data.items():
+    
+    # Process each dataset
+    for k, v in data.items():
+        # Set source for each example
         for da in v:
             da['source'] = k
-        input_data.extend(v)
+        
+        # For GPQA_Medical_test, duplicate examples for multiple runs
+        if k == 'GPQA_Medical_test':
+            print(f"Duplicating GPQA_Medical_test examples {gpqa_runs} times for averaging...")
+            # Add run_id to each example to track which run it belongs to
+            gpqa_examples = []
+            for run_id in range(gpqa_runs):
+                for da in v:
+                    # Create a deep copy of the example
+                    example_copy = json.loads(json.dumps(da))
+                    example_copy['run_id'] = run_id
+                    example_copy['original_id'] = id(da)  # Store original example ID for grouping later
+                    gpqa_examples.append(example_copy)
+            input_data.extend(gpqa_examples)
+        else:
+            # For other datasets, add them as is
+            input_data.extend(v)
+    
     return input_data
 
 from test_time_scaling import evaluate_test_time_scaling
+
+def process_gpqa_results(results: List[Dict]) -> Tuple[Dict, List[Dict]]:
+    """
+    Process GPQA_Medical_test results from multiple runs.
+    
+    Args:
+        results: List of result dictionaries with run_id and original_id fields
+        
+    Returns:
+        Tuple of (metrics, processed_results)
+        - metrics: Dictionary with accuracy and confidence interval
+        - processed_results: List of processed results (non-GPQA and one run of GPQA)
+    """
+    # First, separate GPQA results from other results
+    gpqa_results = [r for r in results if r['source'] == 'GPQA_Medical_test' and 'run_id' in r]
+    other_results = [r for r in results if r['source'] != 'GPQA_Medical_test' or 'run_id' not in r]
+    
+    if not gpqa_results:
+        print("No GPQA_Medical_test results with multiple runs found.")
+        return {}, results
+    
+    # Group results by run_id
+    runs_by_id = {}
+    for result in gpqa_results:
+        run_id = result['run_id']
+        if run_id not in runs_by_id:
+            runs_by_id[run_id] = []
+        runs_by_id[run_id].append(result)
+    
+    # Calculate accuracy for each run
+    run_accuracies = []
+    for run_id, run_results in runs_by_id.items():
+        correct = 0
+        total = len(run_results)
+        
+        for item in run_results:
+            # Check if the answer is correct
+            if 'ans' in item and item['ans'][-1].lower() == item['answer_idx'].lower():
+                correct += 1
+        
+        accuracy = correct / total if total > 0 else 0
+        run_accuracies.append(accuracy)
+        print(f"Run {run_id}: Accuracy = {accuracy:.4f} ({correct}/{total})")
+    
+    # Calculate average accuracy and confidence interval
+    avg_accuracy = np.mean(run_accuracies)
+    lower_ci, upper_ci = calculate_confidence_interval(np.array(run_accuracies))
+    
+    # Calculate total correct answers and answered questions across all runs
+    total_correct = 0
+    total_answered = 0
+    examples_per_run = len(runs_by_id[0]) if 0 in runs_by_id else 0
+    
+    for run_id, run_results in runs_by_id.items():
+        run_correct = 0
+        run_answered = 0
+        for item in run_results:
+            if 'ans' in item and item['ans'][-1].lower() == item['answer_idx'].lower():
+                run_correct += 1
+            if 'ans' in item and item['ans'][-1].lower() in [opt.lower() for opt in item['options'].keys()]:
+                run_answered += 1
+        total_correct += run_correct
+        total_answered += run_answered
+    
+    # Calculate averages
+    avg_correct = total_correct / len(run_accuracies) if run_accuracies else 0
+    avg_answered = total_answered / len(run_accuracies) if run_accuracies else 0
+    
+    metrics = {
+        "GPQA_Medical_test": {
+            "accuracy": float(avg_accuracy),
+            "accuracy_ci": [float(lower_ci), float(upper_ci)],
+            "num_correct": int(avg_correct),
+            "total_examples": examples_per_run,
+            "num_answered": int(avg_answered),
+            # Include additional metrics for debugging/analysis
+            "run_accuracies": [float(acc) for acc in run_accuracies],
+            "num_runs": len(run_accuracies)
+        }
+    }
+    
+    print(f"\nGPQA_Medical_test averaged over {len(run_accuracies)} runs:")
+    print(f"  Accuracy: {avg_accuracy:.4f}")
+    print(f"  95% CI: [{lower_ci:.4f}, {upper_ci:.4f}]")
+    print(f"  Num correct: {int(avg_correct)}/{examples_per_run}")
+    print(f"  Num answered: {int(avg_answered)}/{examples_per_run}")
+    print(f"  Individual run accuracies: {[f'{acc:.4f}' for acc in run_accuracies]}")
+    
+    # Return metrics and only include one run of GPQA results (run_id=0) plus other results
+    processed_results = other_results
+    if 0 in runs_by_id:
+        # Add just the first run's results for GPQA
+        for item in runs_by_id[0]:
+            # Create a copy without run-specific fields
+            processed_item = item.copy()
+            if 'run_id' in processed_item:
+                del processed_item['run_id']
+            if 'original_id' in processed_item:
+                del processed_item['original_id']
+            processed_results.append(processed_item)
+    
+    return metrics, processed_results
 
 async def call_model(engine: sgl.Engine, prompts: List[str], tokenizer: AutoTokenizer, template: Template, max_new_tokens: int = 50, temperature: float = 0, is_print_example: bool = False, is_use_chat_template: bool = False, max_tokens: int = -1) -> Tuple[List[str], List[str]]:
     """Call the model to get the predicted output using sglang.
@@ -236,7 +361,7 @@ def main():
     template = Template(tokenizer.chat_template) if args.use_chat_template else None
 
     print("\nLoading evaluation data...")
-    input_data: List[Dict] = load_file(args.path_to_eval_json)
+    input_data: List[Dict] = load_file(args.path_to_eval_json, args.gpqa_runs)
     print(f"Loaded {len(input_data)} total examples")
     
     # Get eval_sample from config if test_time_scaling
@@ -447,6 +572,32 @@ def main():
     else:
         # Original scoring
         metrics = get_results(path_to_output)
+        
+        # Add parsed answers to results for GPQA processing
+        with open(path_to_output, 'r') as f:
+            scored_results = json.load(f)
+        
+        # Parse answers for each result
+        for result in scored_results:
+            if 'output' in result:
+                ans, ans_type = match_choice(result['output'], result['options'])
+                result['ans'] = ans
+                result['ans_type'] = ans_type
+        
+        # Process GPQA results if we have multiple runs
+        if any(r.get('source') == 'GPQA_Medical_test' and 'run_id' in r for r in scored_results):
+            print("\nProcessing GPQA_Medical_test results from multiple runs...")
+            gpqa_metrics, processed_results = process_gpqa_results(scored_results)
+            
+            # Update metrics with GPQA averaged results
+            metrics.update(gpqa_metrics)
+            
+            # Save processed results (with only one run of GPQA)
+            processed_output_path = os.path.join(args.path_to_output_dir, f'{task_name}_processed.json')
+            with open(processed_output_path, 'w') as fw:
+                json.dump(processed_results, fw, ensure_ascii=False, indent=2)
+            
+            print(f"Saved processed results to: {processed_output_path}")
     
     # Save detailed metrics with schema
     metrics_file = os.path.join(args.path_to_output_dir, f"{task_name}_metrics.json")
@@ -569,8 +720,14 @@ def main():
             "metrics_path": os.path.abspath(metrics_file),
             "timestamp": datetime.now().isoformat(),
             "summary": metrics,
-            "model_name": model_display_name  # Add model name for reference
+            "model_name": model_display_name,  # Add model name for reference
+            "gpqa_runs": args.gpqa_runs if "GPQA_Medical_test" in metrics else 1
         }
+        
+        # If we have processed results, add the path
+        if "GPQA_Medical_test" in metrics:
+            processed_output_path = os.path.join(args.path_to_output_dir, f'{task_name}_processed.json')
+            eval_results["processed_outputs_path"] = os.path.abspath(processed_output_path)
     
     # Update results.json safely by reading latest version before writing
     max_retries = 5

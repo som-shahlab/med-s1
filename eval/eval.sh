@@ -16,6 +16,7 @@
 debug=false
 test_time_scaling=false
 experiment_name=""
+gpqa_runs=5  # Default to 5 runs for GPQA_Medical_test
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -27,12 +28,17 @@ while [[ $# -gt 0 ]]; do
             test_time_scaling=true
             shift
             ;;
+        --gpqa-runs)
+            gpqa_runs="$2"
+            shift 2
+            ;;
         *)
             if [ -z "$experiment_name" ]; then
                 experiment_name="$1"
             else
-                echo "Usage: $0 [--debug] [--test-time-scaling] <experiment_name>"
+                echo "Usage: $0 [--debug] [--test-time-scaling] [--gpqa-runs N] <experiment_name>"
                 echo "Note: test_time_scaling will be automatically enabled if specified in experiment config"
+                echo "      --gpqa-runs N: Run GPQA_Medical_test N times and average results (default: 5)"
                 exit 1
             fi
             shift
@@ -41,8 +47,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$experiment_name" ]; then
-    echo "Usage: $0 [--debug] [--test-time-scaling] <experiment_name>"
+    echo "Usage: $0 [--debug] [--test-time-scaling] [--gpqa-runs N] <experiment_name>"
     echo "Note: test_time_scaling will be automatically enabled if specified in experiment config"
+    echo "      --gpqa-runs N: Run GPQA_Medical_test N times and average results (default: 5)"
     exit 1
 fi
 
@@ -119,7 +126,8 @@ cmd="python ${MED_S1_DIR}/eval/eval.py \
     --experiment_name ${experiment_name} \
     --model_path ${model_path} \
     --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
-    --path_to_output_dir ${output_dir}"
+    --path_to_output_dir ${output_dir} \
+    --gpqa_runs ${gpqa_runs}"
 
 # Add debug flags if in debug mode
 if [ "$debug" = true ]; then
@@ -130,6 +138,8 @@ fi
 if [ "$test_time_scaling" = true ]; then
     cmd="$cmd --test_time_scaling"
 fi
+
+echo "Running with GPQA_Medical_test repeated ${gpqa_runs} times for averaging"
 
 # Run evaluation
 eval "$cmd"
