@@ -192,59 +192,60 @@
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-25k/huatuo-25keval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-25k/huatuo-25keval_data_metrics.json",
-          "timestamp": "2025-03-07T22:55:15.075314",
+          "timestamp": "2025-03-11T07:21:35.568353",
           "summary": {
             "MedMCQA_validation": {
-              "accuracy": 0.5778149653358834,
+              "accuracy": 0.5849868515419555,
               "accuracy_ci": [
-                0.562514941429596,
-                0.5933600286875449
+                0.5672902223284724,
+                0.5971790580922782
               ],
-              "num_correct": 2417,
+              "num_correct": 2436,
               "total_examples": 4183,
-              "num_answered": 2410
+              "num_answered": 2447
             },
             "MedQA_USLME_test": {
-              "accuracy": 0.6944226237234878,
+              "accuracy": 0.6873527101335428,
               "accuracy_ci": [
-                0.6661233307148469,
-                0.7172230950510604
+                0.6614296936370778,
+                0.7124901806755696
               ],
-              "num_correct": 882,
+              "num_correct": 875,
               "total_examples": 1273,
-              "num_answered": 884
+              "num_answered": 869
             },
             "PubMedQA_test": {
-              "accuracy": 0.755,
+              "accuracy": 0.75,
               "accuracy_ci": [
-                0.727,
-                0.781
+                0.722,
+                0.777025
               ],
-              "num_correct": 754,
+              "num_correct": 750,
               "total_examples": 1000,
-              "num_answered": 755
+              "num_answered": 748
             },
             "MMLU-Pro_Medical_test": {
-              "accuracy": 0.6039087947882736,
+              "accuracy": 0.5960912052117264,
               "accuracy_ci": [
-                0.5726384364820847,
-                0.6241042345276873
+                0.5713355048859935,
+                0.6208469055374592
               ],
-              "num_correct": 918,
+              "num_correct": 915,
               "total_examples": 1535,
-              "num_answered": 927
+              "num_answered": 913
             },
             "GPQA_Medical_test": {
-              "accuracy": 0.5051282051282051,
+              "accuracy": 0.47435897435897434,
               "accuracy_ci": [
-                0.44358974358974357,
-                0.5358974358974359
+                0.4153205128205129,
+                0.5153846153846153
               ],
-              "num_correct": 191,
+              "num_correct": 181,
               "total_examples": 390,
-              "num_answered": 197
+              "num_answered": 185
             }
-          }
+          },
+          "model_name": "huatuo-25k"
         }
       }
     },
@@ -258,11 +259,11 @@
           "n_samples": 1000
         },
         "training_params": {
-          "learning_rate": 5e-06,
+          "learning_rate": 3e-06,
           "batch_size": 2,
-          "num_epochs": 10,
+          "num_epochs": 12,
           "weight_decay": 0.1,
-          "warmup_ratio": 0.1,
+          "warmup_ratio": 0.15,
           "optimizer": {
             "no_decay_params": [
               "bias",
@@ -395,6 +396,68 @@
               "Consultation-Liaison Psychiatry": 1
             }
           }
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-random",
+          "timestamp": "2025-03-11T07:37:09Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-1k-random/huatuo-1k-randomeval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-1k-random/huatuo-1k-randomeval_data_metrics.json",
+          "timestamp": "2025-03-11T04:26:36.278698",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.5900071718862061,
+              "accuracy_ci": [
+                0.5708761654315084,
+                0.6002928520200813
+              ],
+              "num_correct": 2453,
+              "total_examples": 4183,
+              "num_answered": 2468
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.6669285153181461,
+              "accuracy_ci": [
+                0.6394344069128044,
+                0.6920659858601729
+              ],
+              "num_correct": 849,
+              "total_examples": 1273,
+              "num_answered": 843
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.751,
+              "accuracy_ci": [
+                0.723,
+                0.775025
+              ],
+              "num_correct": 749,
+              "total_examples": 1000,
+              "num_answered": 751
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.5928338762214984,
+              "accuracy_ci": [
+                0.5667752442996743,
+                0.61628664495114
+              ],
+              "num_correct": 910,
+              "total_examples": 1535,
+              "num_answered": 906
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.4794871794871795,
+              "accuracy_ci": [
+                0.4230769230769231,
+                0.5256410256410257
+              ],
+              "num_correct": 185,
+              "total_examples": 390,
+              "num_answered": 187
+            }
+          }
         }
       }
     },
@@ -408,9 +471,9 @@
           "n_samples": 5000
         },
         "training_params": {
-          "learning_rate": 5e-06,
+          "learning_rate": 4e-06,
           "batch_size": 2,
-          "num_epochs": 5,
+          "num_epochs": 8,
           "weight_decay": 0.1,
           "warmup_ratio": 0.1,
           "optimizer": {
@@ -567,6 +630,209 @@
               "Consultation-Liaison Psychiatry": 1
             }
           }
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-5k-random",
+          "timestamp": "2025-03-11T05:16:56Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-5k-random/huatuo-5k-randomeval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-5k-random/huatuo-5k-randomeval_data_metrics.json",
+          "timestamp": "2025-03-11T07:12:09.043811",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.5811618455653838,
+              "accuracy_ci": [
+                0.5629930671766674,
+                0.5940772173081521
+              ],
+              "num_correct": 2419,
+              "total_examples": 4183,
+              "num_answered": 2431
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.6700706991358995,
+              "accuracy_ci": [
+                0.6441280439905736,
+                0.6952081696779262
+              ],
+              "num_correct": 853,
+              "total_examples": 1273,
+              "num_answered": 846
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.773,
+              "accuracy_ci": [
+                0.745,
+                0.798025
+              ],
+              "num_correct": 773,
+              "total_examples": 1000,
+              "num_answered": 770
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.5986970684039088,
+              "accuracy_ci": [
+                0.5745928338762215,
+                0.6241368078175895
+              ],
+              "num_correct": 919,
+              "total_examples": 1535,
+              "num_answered": 908
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.5205128205128206,
+              "accuracy_ci": [
+                0.4717948717948718,
+                0.5717948717948718
+              ],
+              "num_correct": 203,
+              "total_examples": 390,
+              "num_answered": 201
+            }
+          },
+          "model_name": "huatuo-5k-random"
+        }
+      }
+    },
+    "base": {
+      "description": "Base LLaMA model without fine-tuning",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": null,
+        "training_params": null
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data_metrics.json",
+          "timestamp": "2025-03-11T07:17:01.001373",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.5586899354530241,
+              "accuracy_ci": [
+                0.5450573750896486,
+                0.5742290222328472
+              ],
+              "num_correct": 2337,
+              "total_examples": 4183,
+              "num_answered": 2323
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.6111547525530243,
+              "accuracy_ci": [
+                0.584446190102121,
+                0.6402199528672428
+              ],
+              "num_correct": 778,
+              "total_examples": 1273,
+              "num_answered": 740
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.763,
+              "accuracy_ci": [
+                0.737,
+                0.79
+              ],
+              "num_correct": 763,
+              "total_examples": 1000,
+              "num_answered": 758
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.5778501628664495,
+              "accuracy_ci": [
+                0.552442996742671,
+                0.6032736156351791
+              ],
+              "num_correct": 887,
+              "total_examples": 1535,
+              "num_answered": 870
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.4128205128205128,
+              "accuracy_ci": [
+                0.3487179487179487,
+                0.44871794871794873
+              ],
+              "num_correct": 155,
+              "total_examples": 390,
+              "num_answered": 161
+            }
+          },
+          "model_name": "Llama-3.1-8B-Instruct"
+        }
+      }
+    },
+    "huatuo": {
+      "description": "Pre-trained HuatuoGPT medical model",
+      "config": {
+        "model_key": "huatuo:8b",
+        "curation": null,
+        "training_params": null
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_metrics.json",
+          "timestamp": "2025-03-11T07:19:22.547541",
+          "summary": {
+            "MedMCQA_validation": {
+              "accuracy": 0.6371025579727468,
+              "accuracy_ci": [
+                0.622280659813531,
+                0.6514463303848912
+              ],
+              "num_correct": 2665,
+              "total_examples": 4183,
+              "num_answered": 2660
+            },
+            "MedQA_USLME_test": {
+              "accuracy": 0.7525530243519246,
+              "accuracy_ci": [
+                0.7289670070699137,
+                0.776904948939513
+              ],
+              "num_correct": 958,
+              "total_examples": 1273,
+              "num_answered": 952
+            },
+            "PubMedQA_test": {
+              "accuracy": 0.792,
+              "accuracy_ci": [
+                0.7659750000000001,
+                0.819
+              ],
+              "num_correct": 792,
+              "total_examples": 1000,
+              "num_answered": 791
+            },
+            "MMLU-Pro_Medical_test": {
+              "accuracy": 0.657328990228013,
+              "accuracy_ci": [
+                0.634527687296417,
+                0.6807817589576547
+              ],
+              "num_correct": 1009,
+              "total_examples": 1535,
+              "num_answered": 1007
+            },
+            "GPQA_Medical_test": {
+              "accuracy": 0.5871794871794872,
+              "accuracy_ci": [
+                0.5435897435897435,
+                0.6333333333333333
+              ],
+              "num_correct": 229,
+              "total_examples": 390,
+              "num_answered": 227
+            }
+          },
+          "model_name": "HuatuoGPT-o1-8B"
         }
       }
     }

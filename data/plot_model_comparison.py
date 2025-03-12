@@ -36,22 +36,21 @@ def get_model_metrics(model_data):
         dataset_metrics['total_examples'] = data['total_examples']  # Add total examples for weighting
         metrics[dataset] = dataset_metrics
     
-    # Calculate weighted average across datasets
-    total_examples = sum(data['total_examples'] for data in metrics.values())
-    weighted_acc = sum(data['accuracy'] * data['total_examples'] for data in metrics.values()) / total_examples
+    # Calculate simple average across datasets
+    num_datasets = len(metrics)
+    average_acc = sum(data['accuracy'] for data in metrics.values()) / num_datasets
     
-    # Calculate weighted CIs (weight each dataset's CI by its size)
-    weighted_lower = sum(data['ci_lower'] * data['total_examples'] for data in metrics.values()) / total_examples
-    weighted_upper = sum(data['ci_upper'] * data['total_examples'] for data in metrics.values()) / total_examples
+    # Calculate average CIs (simple average of lower and upper bounds)
+    average_lower = sum(data['ci_lower'] for data in metrics.values()) / num_datasets
+    average_upper = sum(data['ci_upper'] for data in metrics.values()) / num_datasets
     
     # Add overall metrics
     metrics['Overall'] = {
-        'accuracy': weighted_acc,
-        'ci_lower': weighted_lower,
-        'ci_upper': weighted_upper,
-        'total_examples': total_examples
+        'accuracy': average_acc,
+        'ci_lower': average_lower,
+        'ci_upper': average_upper,
+        'total_examples': sum(data['total_examples'] for data in metrics.values()) # Keep total examples sum for consistency
     }
-    
     return metrics
 
 def calculate_improvements(tuned_metrics, base_metrics):
@@ -60,6 +59,14 @@ def calculate_improvements(tuned_metrics, base_metrics):
         dataset: ((tuned_metrics[dataset]['accuracy'] - base_metrics[dataset]['accuracy']) * 100)
         for dataset in tuned_metrics.keys()
     }
+
+# Models to compare
+# models = ['base', 'random-1k', 'med-s1-1k-tuned', 'med-s1-5k', 'med-s1-25k', 'huatuo', 'huatuo-eval-250']
+# model_names = ['Base', 'Random-1k', 'Med-S1-1k', 'Med-S1-5k', 'Med-S1-25k', 'huatuo-eval-250']
+# Temporarily:
+models = ['base', 'huatuo-1k-random']  # Only showing base, random-1k, med-s1-1k
+model_names = ['Base', 'Random-1k']
+improvement_model = 'huatuo-1k-random'
 
 def plot_comparison(results_data, output_path):
     """Create bar plot comparing model performances with confidence intervals"""
@@ -73,13 +80,6 @@ def plot_comparison(results_data, output_path):
         '#D68C45',   # Warm orange
         '#D68C45'   # Warm orange
     ]
-    
-    # Models to compare
-    # models = ['base', 'random-1k', 'med-s1-1k-tuned', 'med-s1-5k', 'med-s1-25k', 'huatuo', 'huatuo-eval-250']
-    # model_names = ['Base', 'Random-1k', 'Med-S1-1k', 'Med-S1-5k', 'Med-S1-25k', 'huatuo-eval-250']
-    # Temporarily:
-    models = ['base', 'random-1k', 'med-s1-1k-tuned']  # Only showing base, random-1k, med-s1-1k
-    model_names = ['Base', 'Random-1k', 'Med-S1-1k']
     
     # Get metrics for each model
     metrics = {}
@@ -100,7 +100,7 @@ def plot_comparison(results_data, output_path):
     }
     
     # Calculate improvements over base model for med-s1-1k-tuned
-    improvements = calculate_improvements(metrics['med-s1-1k-tuned'], metrics['base'])
+    improvements = calculate_improvements(metrics[improvement_model], metrics['base'])
     
     # Plotting
     fig, ax = plt.subplots(figsize=(16, 8))  # Slightly wider to accommodate Overall
@@ -133,7 +133,7 @@ def plot_comparison(results_data, output_path):
                    capthick=1, linewidth=1, alpha=0.5)
         
         # Add improvement percentages above med-s1-1k-tuned bars
-        if model == 'med-s1-1k-tuned':
+        if model == improvement_model:
             for idx, rect in enumerate(bars):
                 height = rect.get_height()
                 improvement = improvements[datasets[idx]]
@@ -192,7 +192,7 @@ def main():
     # Print detailed improvements
     print("\nDetailed improvements of Med-S1-1k over base model:")
     base_metrics = get_model_metrics(results['base'])
-    tuned_metrics = get_model_metrics(results['med-s1-1k-tuned'])
+    tuned_metrics = get_model_metrics(results[improvement_model])
     improvements = calculate_improvements(tuned_metrics, base_metrics)
     
     dataset_display = {

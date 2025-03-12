@@ -15,7 +15,7 @@ from datetime import datetime
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', type=str, required=True, help='Name of experiment from results.json')
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model checkpoint')
+    parser.add_argument('--model_path', type=str, required=True, help='Path to the model checkpoint or model key from config.json')
     parser.add_argument('--path_to_eval_json', type=str, required=True, help='Path to the evaluation data')
     parser.add_argument('--path_to_output_dir', type=str, default='./results', help='Path to the output directory')
     parser.add_argument('--max_new_tokens', type=int, default=2000, help='Maximum number of new tokens to generate')
@@ -28,6 +28,7 @@ def parse_args():
     parser.add_argument('--debug', action='store_true', help='Run in debug mode with subset of data')
     parser.add_argument('--debug_samples', type=int, default=100, help='Number of samples to use in debug mode')
     parser.add_argument('--test_time_scaling', action='store_true', help='Run test time scaling evaluation')
+    parser.add_argument('--config_path', type=str, default=None, help='Path to config.json for model lookup')
     return parser.parse_args()
 
 def print_indented(text: str):
@@ -165,19 +166,53 @@ def main():
     args = parse_args()
     os.makedirs(args.path_to_output_dir, exist_ok=True)
 
+    # Get the actual model path, handling both local paths and model keys from config.json
+    actual_model_path = args.model_path
+    
+    # Check if we need to look up the model path from config.json
+    if ":" in args.model_path:  # This suggests it's a model key like "llama3.1:8b" or "huatuo:8b"
+        # Determine config path
+        config_path = args.config_path
+        if not config_path:
+            # Try to find config.json in the same directory as results.json
+            results_json = os.environ.get('RESULTS_JSON')
+            if results_json:
+                config_path = os.path.join(os.path.dirname(results_json), 'config.json')
+            else:
+                # Default to looking in the current directory
+                config_path = 'config.json'
+        
+        # Load config.json to get the actual HF path
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+            
+            # Look up the model key in the config
+            if args.model_path in config.get('models', {}):
+                model_config = config['models'][args.model_path]
+                if 'hf_path' in model_config:
+                    actual_model_path = model_config['hf_path']
+                    print(f"Resolved model key '{args.model_path}' to HuggingFace path: {actual_model_path}")
+                else:
+                    print(f"Warning: Model key '{args.model_path}' found in config but has no 'hf_path'")
+            else:
+                print(f"Warning: Model key '{args.model_path}' not found in config.json")
+        else:
+            print(f"Warning: Config file not found at {config_path}")
+    
     # Initialize vllm model
-    print(f"\nInitializing vllm with model: {args.model_path}")
+    print(f"\nInitializing vllm with model: {actual_model_path}")
     print(f"Using tensor parallel size: {args.tensor_parallel_size}")
     
     # Set PyTorch memory settings
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
     
     print("Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, padding_side='left')
+    tokenizer = AutoTokenizer.from_pretrained(actual_model_path, trust_remote_code=True, padding_side='left')
     print("Tokenizer loaded")
-    if "Llama" in args.model_path:
+    if "Llama" in actual_model_path:
         tokenizer.pad_token = "<|reserved_special_token_5|>"
-    elif "Qwen" in args.model_path:
+    elif "Qwen" in actual_model_path:
         tokenizer.pad_token = "<|fim_pad|>"
 
     print("Loading model...")
@@ -195,7 +230,7 @@ def main():
     #     trust_remote_code=True,
 
     engine = sgl.Engine(
-        model_path=args.model_path,
+        model_path=actual_model_path,
     )
     print("Model loaded")
     template = Template(tokenizer.chat_template) if args.use_chat_template else None
@@ -261,7 +296,7 @@ def main():
         query_prompt = "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
     else:
         if args.strict_prompt:
-            query_prompt = "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
+            query_prompt = "Please answer the following multiple-choice questions. Please answer the following multiple-choice questions, ensuring your response concludes with the correct option in the format: 'The answer is A.'.\n{question}\n{option_str}"
         else:
             query_prompt = "Please answer the following multiple-choice question:\n{question}\n{option_str}"
 
@@ -496,6 +531,11 @@ def main():
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
+    
+    # Get the model name for display in results
+    # If the original argument was a model key, use that
+    # Otherwise, use the basename of the model path
+    model_display_name = args.model_path if ":" in args.model_path else os.path.basename(args.model_path)
         
     # Create eval results
     if args.test_time_scaling:
@@ -505,7 +545,8 @@ def main():
             "timestamp": datetime.now().isoformat(),
             "test_time_scaling": True,
             "summary": metrics,  # Contains metrics for each approach
-            "reasoning_tokens": {}  # Will store average reasoning tokens per approach
+            "reasoning_tokens": {},  # Will store average reasoning tokens per approach
+            "model_name": model_display_name  # Add model name for reference
         }
         
         # Calculate average reasoning tokens for each approach
@@ -527,7 +568,8 @@ def main():
             "outputs_path": os.path.abspath(path_to_output),
             "metrics_path": os.path.abspath(metrics_file),
             "timestamp": datetime.now().isoformat(),
-            "summary": metrics
+            "summary": metrics,
+            "model_name": model_display_name  # Add model name for reference
         }
     
     # Update results.json safely by reading latest version before writing
