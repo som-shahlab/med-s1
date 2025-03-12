@@ -79,6 +79,9 @@ def main():
                       help='Maximum number of checkpoints to keep')
     
     args = parser.parse_args()
+
+    import os
+    print("TORCH_NCCL_ENABLE_MONITORING =", os.environ.get("TORCH_NCCL_ENABLE_MONITORING"))
     
     # Set random seed
     set_seed(args.seed)

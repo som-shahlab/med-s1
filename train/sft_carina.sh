@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=med-s1-train
-#SBATCH --output=/share/pi/nigam/mwornow/med-s1-train-%j.out
-#SBATCH --error=/share/pi/nigam/mwornow/med-s1-train-%j.err
-#SBATCH --partition=nigam-h100
+#SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
+#SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
+#SBATCH --partition=nigam-a100
+#SBATCH --constraint="GPU_SKU:A100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=28
@@ -151,9 +152,9 @@ echo "  Adam Epsilon: $adam_epsilon"
 
 # Setup environment
 # echo "Setting up conda environment..."
-# source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
 # echo "Activating med-s1 environment..."
-# conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Get network interface for NCCL
 export NCCL_SOCKET_IFNAME=$(ip route show default | awk '/default/ {print $5}')
@@ -180,15 +181,39 @@ export NCCL_IB_HCA=mlx5_0:1
 export NCCL_BUFFSIZE=2097152
 export NCCL_P2P_DISABLE=0
 export NCCL_P2P_LEVEL=5
+# export NCCL_P2P_LEVEL=NVL
 export NCCL_SHM_DISABLE=0
 export NCCL_ASYNC_ERROR_HANDLING=1
+export TORCH_NCCL_ENABLE_MONITORING=0
+
+# # Force IPv4 for all Python processes
+# export PYTHONIOENCODING=utf-8
+# export PYTHONUNBUFFERED=1
+# # Force Python to use IPv4
+# export PYTHONFAULTHANDLER=1
+# export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256
+
+# # Disable NCCL watchdog monitoring as suggested in error message
+# export TORCH_NCCL_ENABLE_MONITORING=0
+# # Increase heartbeat timeout (in case monitoring is still enabled)
+# export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=900
 
 # Additional NCCL optimizations
 export NCCL_IB_TC=106
 export NCCL_IB_SL=3
-export NCCL_IB_TIMEOUT=22
+export NCCL_IB_TIMEOUT=22  # Increased from 60 for better stability
+# export NCCL_IB_TIMEOUT=120  # Increased from 60 for better stability
 export NCCL_SOCKET_NTHREADS=4
 export NCCL_NSOCKS_PERTHREAD=4
+# export NCCL_BLOCKING_WAIT=1  # Use blocking wait to avoid busy polling
+# export NCCL_DEBUG=WARN  # Enable some debug info without being too verbose
+export NCCL_DEBUG=INFO
+
+echo "=== NCCL and CUDA Environment Variables ==="
+env | grep NCCL
+env | grep CUDA
+echo "==========================================="
+
 
 # DeepSpeed specific settings
 echo "Configuring DeepSpeed..."
@@ -296,6 +321,11 @@ debug_flag=""
 if [ "$debug" = true ]; then
     debug_flag="--debug"
 fi
+
+echo "Using NCCL network interface: $NCCL_SOCKET_IFNAME"
+
+echo "GPU status before training:"
+nvidia-smi
 
 # Launch training command with Accelerate
 echo "Launching training with accelerate..."

@@ -2,18 +2,34 @@ Let's implement a few new methods for curation. We want to create experiments fo
 
 HuaTuo-25k
 HuaTuo-{1k | 5k}-random
+HuaTuo-{100}-random
 HuaTuo-{1k | 5k}-embedding-similarity-{question | cot}
-HuaTuo-{1k | 5k}-embedding-diversity-{question | cot} <-- first thing to try
-HuaTuo-{1k | 5k}-difficulty-substring (e.g. contains "diagnosis")
+HuaTuo-{1k | 5k}-embedding-diversity-{question | cot}-cluster-{10}-outlier-{5}
+HuaTuo-{1k | 5k}-difficulty-substring
 HuaTuo-{1k | 5k}-novelty-answer (minimal EmbedSim(base answer, true answer))
 
-We should have experiments for all of these in @/med-s1/results.json .  We already have huatuo-25k, huatuo-1k-random, huatuo-5k-random defined. We should define all the others - names should be lowercase, description should be short, training params should match either 1k random or 5k random depending on 1k or 5k, results should be empty dict, curation.n_samples set to either 1000 or 5000, huatuo_format should be true, and curation.method should be set to either embedding-similarity, embedding-diversity, difficulty-substring, novelty-answer.
+We should have experiments for all of these in @/med-s1/results.json.
+We already have huatuo-25k, huatuo-1k-random, huatuo-5k-random defined.
+We should define all the others - names should be lowercase, description should be short,
+training params should match either 1k random or 5k random depending on 1k or 5k,
+results should be empty dict, curation.n_samples set to either 1000 or 5000,
+huatuo_format should be true,
+and curation.method should be set to either
+embedding-similarity, embedding-diversity, difficulty-substring, novelty-answer.
+Parameters can be added under curation for column (question|cot), cluster percentage, outlier percentage.
 
-The difficulty substring is the simplest one. It does not require CPU (so we should route appropriately to not require slurm GPU resources but run the curate cpu script) and simply runs WHERE contains(Complex_CoT, 'confus') OR contains(Complex_CoT, 'mislead') OR contains(Complex_CoT, 'overlook') OR contains(Complex_CoT, 'double-check') OR contains(Complex_CoT, 'confirm') and then randomly samples n_samples.
+The difficulty substring is the simplest one.
+It does not require CPU (curate_med_s1k.sh should check for this and dispatch the _cpu not the _gpu curation slurm job)
+and simply runs WHERE contains(Complex_CoT, 'confus') OR contains(Complex_CoT, 'mislead') OR contains(Complex_CoT, 'overlook') OR contains(Complex_CoT, 'double-check') OR contains(Complex_CoT, 'confirm') and then randomly samples n_samples.
 
-The other methods require embeddings of the Complex_CoT, Question, and Response to answer, ideally each in a file that compactly contains 
+The other methods require embeddings of the Complex_CoT, Question, and Response to generate.
+Look at $DATA_DIR/embeddings-25k/ and if the directory exists, then we can use CPU otherwise GPU
+, ideally each in a file that compactly contains 
 
 TODO: Explain where embedding file gets created
 TODO: Explain the control flow of CPU vs GPU and what to run
 TODO: Determine if we want a couple more variants that have 5% outliers
 TODO: Describe the embedding similarity properly
+
+Also notice how we generate so much... let's put it in a file in... and then add the path here...
+update the files that read these in... TODO
