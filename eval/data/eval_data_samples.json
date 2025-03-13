@@ -1,0 +1,1259 @@
+[
+  {
+    "question": "Drug causing toxic optic neuropathy is:March 2009",
+    "options": {
+      "A": "Pyrazinamide",
+      "B": "Chloroquine",
+      "C": "Ethambutol",
+      "D": "Tetracycile"
+    },
+    "answer_idx": "C",
+    "answer": "Ethambutol",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "True about LDL receptor:",
+    "options": {
+      "A": "It recognizes apo B100 and apo E",
+      "B": "Involved in endocytosis process",
+      "C": "Present in both hepatic and extrahepatic cells",
+      "D": "All of the above"
+    },
+    "answer_idx": "D",
+    "answer": "All of the above",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 16-month-old boy is brought to the physician by his mother for a regular check-up. His mother says that he has not yet begun to walk. He is exclusively breastfed. He is at the 20th percentile for length, 10th percentile for weight, and 50th percentile for head circumference. Physical examination shows erosion of the enamel on the lingual surface of the incisors and carious molars. He has frontal bossing. His wrists are widened, his legs appear bowed, and there is beading of the ribs. Which of the following is the most likely underlying cause of this patient's condition?",
+    "answer": "Impaired growth plate mineralization",
+    "options": {
+      "A": "Deficiency of cofactor for prolyl and lysyl hydroxylase",
+      "B": "Defect in type I collagen",
+      "C": "Impaired growth plate mineralization",
+      "D": "Mutation of fibroblast growth factor receptor 3"
+    },
+    "answer_idx": "C",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "Long face syndrome patient with increased lower facial height, the palatal plane will be:",
+    "options": {
+      "A": "Posteriorly downward",
+      "B": "Upward posteriorly",
+      "C": "Downward anteriorly",
+      "D": "No change"
+    },
+    "answer_idx": "A",
+    "answer": "Posteriorly downward",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Embalming without issuing death ceificate is punishable under section:",
+    "options": {
+      "A": "IPC 201",
+      "B": "IPC 297",
+      "C": "IPC 299",
+      "D": "IPC 498"
+    },
+    "answer_idx": "A",
+    "answer": "IPC 201",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "I.V. diazepam causes following in a patient on dental chair:",
+    "options": {
+      "A": "Tinel's sign",
+      "B": "Virrel's sign",
+      "C": "Batters sign",
+      "D": "Bell's sign"
+    },
+    "answer_idx": "B",
+    "answer": "Virrel's sign",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Complete denture teeth are in edge to edge contact in centric occlusion. What should be done?",
+    "options": {
+      "A": "Grind the centric holding cusp",
+      "B": "Grind the lingual fossa of upper and lower incisors",
+      "C": "Grind the cusp in such a way that the incline of the upper cusp slides buccally and lower cusp slides lingually",
+      "D": "Grind the cusp in such a way that the incline of the upper cusp slides lingually and lower cusp slides buccally"
+    },
+    "answer_idx": "C",
+    "answer": "Grind the cusp in such a way that the incline of the upper cusp slides buccally and lower cusp slides lingually",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Process shown in color plate is:",
+    "options": {
+      "A": "Bleeding on probing.",
+      "B": "Bone sounding.",
+      "C": "Pocket measurement",
+      "D": "Attached ginigiva measurement"
+    },
+    "answer_idx": "B",
+    "answer": "Bone sounding.",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Short sequence by promoter that assists transcription by interacting with regulatory proteins.",
+    "options": {
+      "A": "Promoter",
+      "B": "Inducer",
+      "C": "Repressor",
+      "D": "Operator",
+      "E": "Inhibitor",
+      "F": "Enhancer",
+      "G": "Terminator",
+      "H": "Activator",
+      "I": "Silencer",
+      "J": "Transducer"
+    },
+    "answer": "Operator",
+    "answer_idx": "D",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "An un-immunized 13 months old child comes to you in OPD, according to the latest immunizations schedule, what vaccines will you advise??",
+    "options": {
+      "A": "OPV 3 doses, I IPV 3 Pentavalent and I measles",
+      "B": "BCG, OPV 3 doses, 3 lPV, 3 Pentavalent and I measles",
+      "C": "OPV 3 doses, I IPV 3 Pentavalent and 2 measles",
+      "D": "OPV 3 doses, 3 IPV 3 DPI : Hep-B"
+    },
+    "answer_idx": "D",
+    "answer": "OPV 3 doses, 3 IPV 3 DPI : Hep-B",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 42 years old male patient presented with jaundice. His AST was 48 U, ALT was 51 U, ALP, GGTP were normal. Ultrasound of liver was suggestive of cirrhosis. Viral markers were done and the following results were obtained.TestResultAnti-HAVNegativeAnti-HBsAgNegativeAnti-HBeAgNegativeAnti-HBcAg IgGPositiveAnti-HBcAg IgMNegativeHBsAgNegativeAnti-HCVPositiveAnti-HEVNegativeWhat is the next best step in management of this patient?",
+    "options": {
+      "A": "Sta interferon therapy",
+      "B": "Liver biopsy",
+      "C": "-PCR for hepatitis C virus",
+      "D": "PCR for HBV-DNA"
+    },
+    "answer_idx": "C",
+    "answer": "-PCR for hepatitis C virus",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "HDL is synthesised in",
+    "options": {
+      "A": "Liver and GIT",
+      "B": "Liver",
+      "C": "GIT",
+      "D": "None of the above"
+    },
+    "answer_idx": "A",
+    "answer": "Liver and GIT",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Finger with two dorsal interossei attached?",
+    "options": {
+      "A": "Little",
+      "B": "Index",
+      "C": "Middle",
+      "D": "Ring"
+    },
+    "answer_idx": "C",
+    "answer": "Middle",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Anti D is required in all cases except",
+    "options": {
+      "A": "Aboion at 63 days",
+      "B": "Manual removal of placenta",
+      "C": "Amniocentesis of 16 Weeks",
+      "D": "Intrauterine transfusion at 28 weeks"
+    },
+    "answer_idx": "D",
+    "answer": "Intrauterine transfusion at 28 weeks",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "The procedure of the development of therapeutic drugs against the protein targets to combat diseases requires the large amounts of support data and trails to get approved. Which of the following is the most cost effective and basic approach to get initiated with the generation the related preliminary data?",
+    "answer": "In silico testing of drug interaction with the PDB formats of proteins.",
+    "answer_idx": "C",
+    "options": {
+      "A": "In vitro testing of drugs on the homologous proteins in the cell line.",
+      "B": "In silico study of drug interaction with proteins after developing their crystal structure.",
+      "C": "In silico testing of drug interaction with the PDB formats of proteins.",
+      "D": "In vitro testing of drugs on the homologous protein in bacteria."
+    },
+    "source": "GPQA_Medical_test"
+  },
+  {
+    "question": "A child presented with abdominal distension, hepatomegaly, doll like facies and recurrent episodes of hypoglycemia. Which of the following is the most likely diagnosis?",
+    "options": {
+      "A": "Menkes disease",
+      "B": "Down syndrome",
+      "C": "Von gierke disease",
+      "D": "Lesch nyhan syndrome"
+    },
+    "answer_idx": "C",
+    "answer": "Von gierke disease",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "False statement about Thyroglossal Duct cyst is-",
+    "options": {
+      "A": "Infected thyroglossal cyst from sinus",
+      "B": "Lined by pseudostratified columnar epithelium",
+      "C": "40% cases have sub hyoid location",
+      "D": "It is due to congenital"
+    },
+    "answer_idx": "A",
+    "answer": "Infected thyroglossal cyst from sinus",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "What social and behavioral characteristics are paralleled in the primates, in particular chimpanzees, gorillas and man?",
+    "options": {
+      "A": "Aquatic lifestyle, migration, carnivorous diet, and aggressive behavior.",
+      "B": "Monogamous pair bonding, bioluminescence for communication, amphibious lifestyle, and metamorphosis.",
+      "C": "Predatory behavior, nocturnal lifestyle, hibernation, and solitary living.",
+      "D": "Burrowing lifestyle, herbivorous diet, mating rituals, and solitary living.",
+      "E": "Use of tools, construction of complex structures, agricultural practices, and development of written language.",
+      "F": "Arboreal living, fruit-based diet, nocturnal foraging, and use of echolocation.",
+      "G": "Solitary living, desert habitat adaptation, venomous defense mechanisms, and egg laying.",
+      "H": "Seasonal migration, hibernation, herbivorous diet, and complex burrowing systems.",
+      "I": "Grouping lifestyles, similar life cycles, birth spacing, dependency on the mother, play groups, division of labor between sexes, omnivorous diet, hunting and food sharing, communication, and occupying a specific geographic area.",
+      "J": "Pack hunting, diurnal lifestyle, camouflage techniques, and cold climate adaptation."
+    },
+    "answer": "Grouping lifestyles, similar life cycles, birth spacing, dependency on the mother, play groups, division of labor between sexes, omnivorous diet, hunting and food sharing, communication, and occupying a specific geographic area.",
+    "answer_idx": "I",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "The most appropriate method of testing the statistical significance of the differences between means of two groups is",
+    "options": {
+      "A": "Chi square test",
+      "B": "Multiple regression analysis",
+      "C": "Correlation coefficient analysis",
+      "D": "Student test"
+    },
+    "answer_idx": "D",
+    "answer": "Student test",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "An 18-year-old primigravid woman comes for her initial prenatal visit at 16 weeks' gestation. She is not sure about the date of her last menstrual period but says that the pregnancy probably occurred immediately after she stopped taking oral contraceptives 5 months ago. Maternal serum \u03b1-fetoprotein (MSAFP) concentration is increased to 3 multiples of the median. Which of the following is the most appropriate next step in management?",
+    "options": {
+      "A": "Amniocentesis for measurement of \u03b1-fetoprotein concentration",
+      "B": "Immediate cesarean section",
+      "C": "Hormone therapy to balance MSAFP levels",
+      "D": "Monitor patient without taking action",
+      "E": "Triple screening for MSAFP, serum \u03b2-hCG, and serum estriol concentrations",
+      "F": "Administer a pregnancy test",
+      "G": "Prescribe oral contraceptives",
+      "H": "Ultrasonography",
+      "I": "Repeat measurement of MSAFP concentration",
+      "J": "Conduct a pelvic exam"
+    },
+    "answer": "Ultrasonography",
+    "answer_idx": "H",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "A 50-year-old man presents to his physician with chronic cough, aching joints in his hips and lower back, and malaise over the past 2 months. He describes himself as being \u201cgenerally healthy\u201d before the cough began. Past medical history includes hypertension. The patient takes clopamide and a multivitamin daily. His parents are both well and living in a senior living facility. He does not smoke and only drinks alcohol occasionally. During a review of symptoms, the patient described a hiking trip in and around the desert near Phoenix, Arizona, 4 months ago. At the office, his temperature is 38.6\u00b0C (101.4\u00b0F), heart rate is 102/min, respirations are 20/min, and blood pressure is 120/82 mm Hg. A focused chest exam reveals mild fremetus and dullness with percussion on the right side. A chest X-ray shows a right-sided consolidation of the lower right lung, and a chest CT shows an irregular opacity measuring 3.8 cm x 3.0 cm in the sub-plural region of the right middle lobe, a small right-sided pleural effusion, and mild right-sided hilar adenopathy. A lung biopsy is performed to rule out cancer and reveals necrotic granulomatous inflammation with multinucleated giant cells and spherules with endospores in the surrounding tissues. The laboratory tests show the following results:\nHemoglobin 12.9 mg/dL\nLeukocyte count 9,300/mm3\nPlatelet count 167,000/mm3\nErythrocyte sedimentation rate 43 mm/hr\nPeriodic acid-Schiff and silver methenamine Positive\nAcid-fast stain Negative\n Which of the following is the most likely diagnosis?",
+    "answer": "Valley fever",
+    "options": {
+      "A": "Histoplasmosis",
+      "B": "Mycetoma",
+      "C": "Blastomycosis",
+      "D": "Valley fever"
+    },
+    "answer_idx": "D",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "The following test may be abnormal in disseminated intravascular coagulation except:",
+    "options": {
+      "A": "Prothrombin",
+      "B": "Activated partial thromboplastin time",
+      "C": "D-timer levels",
+      "D": "Clot solubility."
+    },
+    "answer_idx": "D",
+    "answer": "Clot solubility.",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Diminution in normal size of the body, well proportioned body, fine sparse hair on the head and other hairy regions wrinkled atrophic skin and often hypogonadism could be diagnosed as suffering from:",
+    "options": {
+      "A": "Hypothyroidism",
+      "B": "Hypopituitarism",
+      "C": "Hyperthyroidism",
+      "D": "None of the above"
+    },
+    "answer_idx": "B",
+    "answer": "Hypopituitarism",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Describe the sequence of succession leading to a climax communityfrom a bare rock surface.",
+    "options": {
+      "A": "The sequence starts with ferns, followed by lichens, then grasses and finally shrubs and trees.",
+      "B": "The sequence begins with aquatic plants, followed by mosses, then lichens, and finally terrestrial trees and shrubs.",
+      "C": "The sequence of succession leading to a climax community from a bare rock surface begins with lichens, then mosses, followed by ferns or seeds of grasses and annual herbs, then perennial herbs, then shrubs and trees. This process is known as primary succession.",
+      "D": "The sequence begins with annual herbs, followed by perennial herbs, then mosses and lichens.",
+      "E": "The sequence starts with lichens, followed directly by trees, without intermediate stages of mosses, herbs, or shrubs.",
+      "F": "The sequence starts with mosses, followed by lichens, then annual herbs, and concludes with the growth of perennial herbs only.",
+      "G": "The sequence begins with grasses, followed by annual herbs, then shrubs, and finally trees without the presence of lichens or mosses.",
+      "H": "Succession starts with shrubs and trees, then progresses backward to mosses, lichens, and ends with annual herbs.",
+      "I": "The sequence initiates with perennial herbs, then moves to shrubs, followed by trees, and ends with mosses and lichens.",
+      "J": "The sequence starts with trees, followed by shrubs and then mosses."
+    },
+    "answer": "The sequence of succession leading to a climax community from a bare rock surface begins with lichens, then mosses, followed by ferns or seeds of grasses and annual herbs, then perennial herbs, then shrubs and trees. This process is known as primary succession.",
+    "answer_idx": "C",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "The correlation between radiographic transition zone on contrast enema in Hirschsprung's disease and the total length of aganglionosis is known to be inaccurate. The aim of our study was to analyse this correlation more precisely to improve preoperative planning of the corrective surgery. From 1998 to 2009, 79 patients were operated on for Hirschsprung's disease. All available preoperative contrast enemas (n = 61) had been single blind reviewed by the same radiologist who defined the radiographic transition zone when present in vertebral level. Four groups were determined (rectal, rectosigmoid, long segment, and absence of transition zone) and by Kappa coefficient of agreement correlated to the length of aganglionosis in the pathological report. Radiological findings were concordant with the specimen in pathology in 8 cases of 19 in rectal form (42 %), in 20 cases of 35 in rectosigmoid form (57 %), in all 6 cases of long-segment form (100 %), in the 2 cases of total colonic form (100 %) with a global agreement of 58.1 %, \u03ba = 0.39 CI [0.24; 0.57].\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nDoes the radiographic transition zone correlate with the level of aganglionosis on the specimen in Hirschsprung's disease?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "no",
+    "answer_idx": "B",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "A 47-year-old female undergoes a thyroidectomy for treatment of Graves' disease. Post-operatively, she reports a hoarse voice and difficulty speaking. You suspect that this is likely a complication of her recent surgery. What is the embryologic origin of the damaged nerve that is most likely causing this patient's hoarseness?",
+    "answer": "6th pharyngeal arch",
+    "options": {
+      "A": "1st pharyngeal arch",
+      "B": "2nd pharyngeal arch",
+      "C": "3rd pharyngeal arch",
+      "D": "6th pharyngeal arch"
+    },
+    "answer_idx": "D",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "A 46 years old male patient was given subarachnoid block with bupivacaine (heavy) by the anesthetist. After 10 minutes he was found to have a BP of 72/44 mm Hg and hea rate of 52/min. On checking the level of block it was found to be T6. What is the likely explanation for the bradvcardia?",
+    "options": {
+      "A": "Bezold-Jarisch reflex",
+      "B": "Bainbridge reflex",
+      "C": "Block of Cardio-accelerator fibers of synthetic origin",
+      "D": "Reverse Bainbridge reflex"
+    },
+    "answer_idx": "A",
+    "answer": "Bezold-Jarisch reflex",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A male child with coarse facial features, macroglossia, thick lips presents with copious mucous discharge from nose at 10 months of age. The child was absolutely normal at bih. On examination he was found to have enlarged Liver and Spleen. Diagnosis is:",
+    "options": {
+      "A": "Hurler's syndrome",
+      "B": "Beckwith-Weidman syndrome",
+      "C": "Hypothyroidism",
+      "D": "Proteus syndrome"
+    },
+    "answer_idx": "A",
+    "answer": "Hurler's syndrome",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Lymphedema may be identified by simpler circumference changes as compared with changes in limb volume. Ninety breast cancer patients were prospectively enrolled in an academic trial, and seven upper extremity circumferences were measured quarterly for 3 years. A 10% volume increase or greater than 1 cm increase in arm circumference identified lymphedema with verification by a lymphedema specialist. Sensitivity and specificity of several different criteria for detecting lymphedema were compared using the academic trial as the standard. Thirty-nine cases of lymphedema were identified by the academic trial. Using a 10% increase in circumference at two sites as the criterion, half the lymphedema cases were detected (sensitivity 37%). When using a 10% increase in circumference at any site, 74.4% of cases were detected (sensitivity 49%). Detection by a 5% increase in circumference at any site was 91% sensitive.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nCan a practicing surgeon detect early lymphedema reliably?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "maybe",
+    "answer_idx": "C",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Which of the following is not used in hea failure?",
+    "options": {
+      "A": "Metoprolol",
+      "B": "Trimetazidine",
+      "C": "Sacubitril",
+      "D": "Nesiritide"
+    },
+    "answer_idx": "B",
+    "answer": "Trimetazidine",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "In leukemia patient, post extraction bleeding doesn't stop because of:",
+    "options": {
+      "A": "Increased leukocyte count",
+      "B": "Increased Ca+ level in blood",
+      "C": "Platelet disorder",
+      "D": "Deficiency of clotting factors"
+    },
+    "answer_idx": "C",
+    "answer": "Platelet disorder",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Most pediatric surgeons perform oophorectomy in girls presenting with ovarian torsion in which the ovary appears necrotic. However, the adult gynecology literature suggests that many ovaries can be treated by detorsion alone. All children with ovarian torsion on the gynecology and general surgery services between 1988 and 2002 were reviewed. There were 36 torsions in 34 children. Seventeen underwent detorsion with or without ovarian cystectomy, and 19 had oophorectomy (mean age 10 years in both groups). Torsion was suspected preoperatively in 94% of the detorsion cases and in 47% of the oophorectomy patients. Median time from presentation to surgery was significantly lower in the detorsion than the oophorectomy group (median 14 v 27 hours; P =.04). Postoperative complications and length of stay were similar between the 2 groups. Despite the ovary being judged intraoperatively as moderately to severely ischemic in 53% of the detorsion cases, follow-up sonogram or ovarian biopsy available in 14 of the 17 cases showed normal ovary with follicular development in each case.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nOvarian torsion in children: is oophorectomy necessary?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "no",
+    "answer_idx": "B",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Hypeensive hemorrhage is most commonly seen in:",
+    "options": {
+      "A": "Basal ganglia",
+      "B": "Thalamus",
+      "C": "Brain stem",
+      "D": "Cerebrum"
+    },
+    "answer_idx": "A",
+    "answer": "Basal ganglia",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Updated guidelines for the screening and management of cervical cancer in the United States recommend starting Papanicolaou (Pap) testing at age 21 and screening less frequently with less aggressive management for abnormalities. We sought to examine updated Pap test screening guidelines and how they may affect the detection of invasive cervical cancer, especially among women<30 years of age. Patients diagnosed at Brigham and Women's Hospital with invasive cervical cancer between 2002 and 2012 were retrospectively identified. Prior screening history was obtained and patients were divided into two groups based on age<30 years or age \u226530 years. The two groups were then compared with respect to demographics, pathological findings, and time to diagnosis. A total of 288 patients with invasive cervical carcinoma were identified. Among these patients, 109 had adequate information on prior screening history. Invasive adenocarcinoma (IAC) was diagnosed in 37 (33.94%) patients, whereas 64 (58.72%) patients were diagnosed with invasive squamous cell carcinoma (ISCC). The remaining eight patients were diagnosed with other types of cancers of the cervix. A total of 13 patients were younger than 30 while 96 patients were 30 or older. The mean time from normal Pap to diagnosis of IAC was 15 months in patients younger than 30 years of age compared to 56 months in patients aged 30 and older (p\u2009<\u20090.001). The mean time from normal Pap to diagnosis of ISCC was 38 months in patients younger than 30 years of age and 82 months in patients aged 30 and older (p\u2009=\u20090.018).\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nScreening History Among Women with Invasive Cervical Cancer in an Academic Medical Center: Will We Miss Cancers Following Updated Guidelines?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "no",
+    "answer_idx": "B",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Uterus-specific synthetic Prostaglandin analogues (gemeprost, sulproston etc.) have been widely employed for termination of pregnancy in the second trimester. Since paracervical anaesthesia may be useful during this procedure, we investigated in this prospective randomised study its impact on the clinical course of abortion and pain especially in the late first and second stage of labour. 20 women scheduled for elective abortion (fetal reasons) between the 16th and 23rd week of gestation were to be given 1 mg gemeprost vaginally every 6 hours. They were allocated at random: 10 women received only Pethidin intravenously and Butylscopolamine rectally, another 10 women were additionally treated by paracervical anaesthesia (2 x 10 ml 0.5% Bupivacain solution) at a cervical dilatation of 2-3 cm. A median of 3 gemeprost applications were administered in both groups. In the group without paracervical anaesthesia the median induction to abortion interval was 20 hours (range: 8-44 hours), 13 hours (range: 8-36 hours, NS) resulting for the paracervical anaesthesia group. The intervals from the last application of prostaglandin until abortion and from 3 cm cervical dilatation to abortion were slightly, but not significantly shorter in the paracervical anaesthesia group. The requirement of Butylscopolamine was higher in the latter group (p<0.05). The requirement of Pethidin and the intensity of pain (measured by pain scale according to Huskisson) especially in the late first stage of labour were not statistically different between both groups. Side effects of paracervical anaesthesia did not occur.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nDoes para-cervical block offer additional advantages in abortion induction with gemeprost in the 2nd trimester?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "yes",
+    "answer_idx": "A",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "A 52-year-old man is brought to the emergency department with dry cough, shortness of breath, and low-grade fever that began 6 days ago. He also reports that he has had 3 episodes of watery diarrhea per day for the last 2 days. He appears slightly pale. His temperature is 38.0\u00b0C (100.4\u00b0F), pulse is 65/min, respirations are 15/min, and blood pressure is 140/78 mm Hg. Diffuse crackles are heard over bibasilar lung fields. Laboratory studies show:\nHemoglobin 13.8 g/dL\nLeukocyte count 16,000/mm3\nPlatelet count 150,000/mm3\nSerum\nNa+ 131 mEq/L\nCl-\n102 mEq/L\nK+ 4.7 mEq/L\nHCO3- 26 mEq/L\nUrea nitrogen 18 mg/dL\nCreatinine 1.2 mg/dL\nAn x-ray of the chest shows patchy infiltrates in both lungs. Which of the following is the most appropriate pharmacotherapy?\"",
+    "answer": "Levofloxacin",
+    "options": {
+      "A": "Levofloxacin",
+      "B": "Trimethoprim/sulfamethoxazole",
+      "C": "Amoxicillin",
+      "D": "Rifampin"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "Which of the following is not a technique for protein precipitation?",
+    "options": {
+      "A": "Trichloroacetic acid",
+      "B": "Heat precipitation",
+      "C": "Isoelectric point method",
+      "D": "Titration with reducing sugar"
+    },
+    "answer_idx": "D",
+    "answer": "Titration with reducing sugar",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 75-year-old woman comes to the office because she has band-like, burning pain in her right upper abdomen extending from the epigastrium around to the midline of the back. Physical examination discloses no abdominal tenderness to palpation. Findings on ultrasonography of the gallbladder are normal. Serum amylase concentration is within the reference range. Which of the following is the most likely diagnosis?",
+    "options": {
+      "A": "Gallstones",
+      "B": "Gastric cancer",
+      "C": "Peptic Ulcer Disease",
+      "D": "Herpes zoster",
+      "E": "Irritable Bowel Syndrome",
+      "F": "Appendicitis",
+      "G": "Acalculous cholecystitis",
+      "H": "Diverticulitis of the cecum",
+      "I": "Hepatitis C"
+    },
+    "answer": "Herpes zoster",
+    "answer_idx": "D",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "DOC for bacterial vaginosis in pregnancy",
+    "options": {
+      "A": "Clindamycin",
+      "B": "Erythromycin",
+      "C": "Rovamycin",
+      "D": "Metronidazole"
+    },
+    "answer_idx": "D",
+    "answer": "Metronidazole",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "To determine whether patients with high-risk metastatic breast cancer draw benefit from combination chemotherapy as first-line treatment. A total of 260 women with measurable metastatic breast cancer fulfilling high-risk criteria, previously untreated with chemotherapy for their metastatic disease, were randomized to receive either mitoxantrone 12 mg/m(2) or the combination of fluorouracil 500 mg/m(2), epirubicin 50 mg/m(2) and cyclophosphamide 500 mg/m(2) (FEC) every 3 weeks. Treatment was continued until complete remission plus two cycles, or until disease progression. In the case of partial remission or stable disease, treatment was stopped after 12 cycles. Second-line treatment was vindesine, mitomycin and prednisolone. Gain from treatment was estimated using a modified Brunner's score composed of time to progression, patients' rating of the treatment benefit, alopecia, vomiting and performance status. After recruitment from 1992 to 1997 and observation from 1997 to 1999, the final evaluation showed that single-agent treatment with mitoxantrone does not differ significantly from combination treatment with FEC in terms of response, objective remission rate, remission duration, time to response, time to best response, time to progression or overall survival. There was, however, a significant difference in gain from treatment using a modified Brunner's score favoring the single-agent treatment arm. There was no evidence that any subgroup would fare better with combination treatment.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nIs first-line single-agent mitoxantrone in the treatment of high-risk metastatic breast cancer patients as effective as combination chemotherapy?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "yes",
+    "answer_idx": "A",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Haglund's deformity is seen in which joint?",
+    "options": {
+      "A": "Elbow",
+      "B": "Wrist",
+      "C": "Knee",
+      "D": "Ankle"
+    },
+    "answer_idx": "D",
+    "answer": "Ankle",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 70-year-old man with chronic heart failure presents to the emergency department due to difficulty in breathing. The patient is a known hypertensive for 20 years maintained on amlodipine and telmisartan. The physician notes that he is also being given a diuretic that blocks the Na+ channels in the cortical collecting tubule. Which drug is being referred to in this case?",
+    "answer": "Triamterene",
+    "options": {
+      "A": "Furosemide",
+      "B": "Hydrochlorothiazide",
+      "C": "Triamterene",
+      "D": "Acetazolamide"
+    },
+    "answer_idx": "C",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "To determine whether anginal episodes might be related to extremes of hypotension in patients with ischaemic heart disease taking drugs to treat angina and heart failure. Observational study of patients with ischaemic heart disease attending an urban tertiary referral cardiology centre. A selected patient population was enrolled, having: angina on one or more hypotensive cardiovascular medications; hypotension on clinic or ambulatory measurement; and a resting ECG suitable for ambulatory monitoring. Patients had echocardiography, ambulatory blood pressure monitoring, and Holter monitoring. Hypotension induced ischaemic (HII) events were defined as episodes of ST segment ischaemia occurring at least one minute after an ambulatory blood pressure measurement (systolic/diastolic) below 100/65 mm Hg during the day, or 90/50 mm Hg at night. 25 suitable patients were enrolled, and 107 hypotensive events were documented. 40 ST events occurred in 14 patients, of which a quarter were symptomatic. Fourteen HII events occurred in eight patients, with 13 of the 14 preceded by a fall in diastolic pressure (median diastolic pressure 57.5 mm Hg, interquartile range 11, maximum 72 mm Hg, minimum 45 mm Hg), and six preceded by a fall in systolic pressure (chi(2) = 11.9, p<0.001). ST events were significantly associated with preceding hypotensive events (chi(2) = 40.2, p<0.0001). Patients with HII events were more frequently taking multiple hypotensive drug regimens (8/8 v 9/17, chi(2) = 5.54, p = 0.022).\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nHypotension in patients with coronary disease: can profound hypotensive events cause myocardial ischaemic events?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "yes",
+    "answer_idx": "A",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "According to American association of Endodontics, which of following terminology is not mentioned in the glossary of terms:",
+    "options": {
+      "A": "Chronic apical periodontitis",
+      "B": "Acute apical abscess",
+      "C": "Chronic apical abscess",
+      "D": "Symptomatic apical periodontitis"
+    },
+    "answer_idx": "A",
+    "answer": "Chronic apical periodontitis",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "What % is the incidence of vertucci type 8",
+    "options": {
+      "A": "6%",
+      "B": "10%",
+      "C": "2%",
+      "D": "12%"
+    },
+    "answer_idx": "A",
+    "answer": "6%",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "In dislocation of the jaw, displacement of the\narticular disc beyond the articular tubercle of the temporomandibular joint results from spasm or excessive contraction of the following muscle?",
+    "options": {
+      "A": "Buccinator",
+      "B": "Lateral pterygoid",
+      "C": "Masseter",
+      "D": "Temporalis"
+    },
+    "answer_idx": "B",
+    "answer": "Lateral pterygoid",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "About acid etching of dentin all are true, except:",
+    "options": {
+      "A": "It removes smear layer",
+      "B": "It expose collagen",
+      "C": "It opens dentinal tubules",
+      "D": "It increase surface tension"
+    },
+    "answer_idx": "D",
+    "answer": "It increase surface tension",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 44-year-old man presents to the family medicine clinic for some small bumps on his left thigh. The lesions are non-pruritic and have been present for the last 3 weeks. He reports feeling fatigued and malaise for the past few months. The patient has no known medical problems and takes no medications. He smokes one pack of cigarettes per day and uses intravenous street drugs. His heart rate is 82/min, the respiratory rate is 14/min, the temperature is 36.7\u00b0C (98.1\u00b0F), and the blood pressure is 126/80 mm Hg. Auscultation of the heart is without murmurs. Lungs are clear to auscultation bilaterally. Three 2-3 mm, dome-shaped, hardened papules are noted on the left thigh. Central umbilication can be observed in each papule. There is a non-tender cervical lymphadenopathy present. Which of the following is the most likely diagnosis?",
+    "answer": "Molluscum contagiosum",
+    "options": {
+      "A": "Bed bug bite",
+      "B": "Molluscum contagiosum",
+      "C": "Atopic dermatitis",
+      "D": "Acute urticaria"
+    },
+    "answer_idx": "B",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "After Le-Fort 1 osteotomy the blood supply of maxilla is maintained by",
+    "options": {
+      "A": "Posterior superior alveolar artery",
+      "B": "Anterior superior alveolar artery",
+      "C": "Greater palatine artery",
+      "D": "Ascending palatine branch of facial artery"
+    },
+    "answer_idx": "D",
+    "answer": "Ascending palatine branch of facial artery",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Which among the following is used for sharpening of both stainless steel and carbon steel instrument:",
+    "options": {
+      "A": "Arkansas.",
+      "B": "Silicon carbide.",
+      "C": "Alumina.",
+      "D": "Diamond."
+    },
+    "answer_idx": "D",
+    "answer": "Diamond.",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "As compared to blood, vitreous humor has high concentration of:",
+    "options": {
+      "A": "Sodium",
+      "B": "Potassium",
+      "C": "Glucose",
+      "D": "Ascorbate"
+    },
+    "answer_idx": "D",
+    "answer": "Ascorbate",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Medical oncology is embracing information technology to standardize care and improve patient outcomes, with a range of Web-based systems used internationally. The authors' aim was to determine the factors affecting the uptake and use of a Web-based protocol system for medical oncology in the Australian setting. The authors conducted 50 interviews and observed medical oncology physicians, nurses, and pharmacists in their treatment setting at 6 hospitals in different geographic locations. The Web-based system plays a major role in guiding oncology treatment across participating sites. However, its use varies according to hospital location, clinician roles, and experience. A range of issues impact on clinicians' attitudes toward and use of the Web-based system. Important factors are clinician-specific (eg, their need for autonomy and perceptions of lack of time) or environmental (eg, hospital policy on protocol use, endorsement of the system, and the availability of appropriate infrastructure, such as sufficient computers). The level of education received regarding the system was also found to be integral to its ongoing use.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nStandardizing care in medical oncology: are Web-based systems the answer?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "maybe",
+    "answer_idx": "C",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "A 55-year-old man presents with a 2-month history of an increasing sensation of fullness in the upper left side of his abdomen. He complains of increasing fatigue and dyspnea. He has no history of serious illness and takes no medications. His temperature is 36.7\u00b0C (98.1\u00b0F), pulse is 90/min, respiratory rate is 18/min, and blood pressure is 125/70 mm Hg. His conjunctivae are pale. The examination of the heart and lungs shows no abnormalities. The splenic margin is palpable 8 cm (3.1 in) below the costal margin. No abnormal lymph nodes are found. Laboratory studies show:\nHemoglobin 8 g/dL\nMean corpuscular volume 90 \u03bcm3\nLeukocyte count 3,000/mm3\nPlatelet count 85,000/mm3\nPeripheral blood smear shows small lymphocytes with cell membrane projections. Bone marrow aspiration is unsuccessful. Cell immunophenotyping is positive for CD25. Which of the following is the most effective pharmacotherapy at this time?",
+    "answer": "Cladribine",
+    "options": {
+      "A": "Cladribine",
+      "B": "Fludarabine",
+      "C": "Prednisone",
+      "D": "Thalidomide"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "Which single statement about fat digestion and absorption is correct?\n",
+    "options": {
+      "A": "Absorption of fatty acids in the intestine occurs mainly through FABP and FAT/CD36 transport proteins in the enterocytes of the distal duodenum",
+      "B": "After absorption, medium chain triglycerides (MCT) enter the lymphatic system, whereas long chain triglycerides enter the portal blood system.",
+      "C": "The products of partial digestion of triglycerides (triacylglycerols) can form mixed micelles with pancreatic cholesterol and phospholipids and this increases absorption",
+      "D": "Triglycerides (triacylglycerols) must be emulsified and digested before the fatty acids can be transported"
+    },
+    "answer": "Triglycerides (triacylglycerols) must be emulsified and digested before the fatty acids can be transported",
+    "answer_idx": "D",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "Rapid prescreening (RPS) is one of the quality assurance (QA) methods used in gynecologic cytology. The efficacy of RPS has been previously studied but mostly with respect to squamous lesions; in fact, there has been no study so far specifically looking at the sensitivity of RPS for detecting glandular cell abnormalities. A total of 80,565 Papanicolaou (Pap) smears underwent RPS during a 25-month period. A sample was designated as \"review for abnormality\" (R) if any abnormal cells (at the threshold of atypical squamous cells of undetermined significance/atypical glandular cells [AGC]) were thought to be present or was designated as negative (N) if none were detected. Each sample then underwent full screening (FS) and was designated as either R or N and also given a cytologic interpretation. The final cytologic interpretation was a glandular cell abnormality (\u2265AGC) in 107 samples (0.13%); 39 of these (36.4%) were flagged as R on RPS. Twenty-four patients (33.8%) out of 71 who had histologic follow-up were found to harbor a high-grade squamous intraepithelial lesion or carcinoma; 13 of those 24 Pap smears (54.2%) had been flagged as R on RPS. Notably, 11 AGC cases were picked up by RPS only and not by FS and represented false-negative cases; 2 of these showed endometrial adenocarcinoma on histologic follow-up.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nPap smears with glandular cell abnormalities: Are they detected by rapid prescreening?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "yes",
+    "answer_idx": "A",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Increased collum angle is seen in",
+    "options": {
+      "A": "Class I bimaxillary protrusion",
+      "B": "Class II div 1",
+      "C": "Class II div 2",
+      "D": "Class III"
+    },
+    "answer_idx": "C",
+    "answer": "Class II div 2",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "It is generally considered that kidney grafts should be preserved at 4 degrees C during cold storage. However, actual temperature conditions are not known. We decided to study the temperature levels during preservation with the Biotainer storage can and Vitalpack transport pack. Temperature was monitored using the Thermobouton probe during preservation of pig kidneys, in the same conditions used with human grafts. The probe recorded the temperature level every 10 minutes during four days. We compared the results found with the new storage can with results obtained in the same conditions with the storage can formerly used by our team. We also studied the best position of the probe for temperature monitoring and the influence of the amount of ice within the transport pack on the temperature level. We then monitored the temperature during the conservation of actual human kidney grafts harvested at our institution from August 2007 to May 2008. The temperature levels were the same regardless of the position of the probe within the transport pack. The lowest temperature was maintained during 15 hours, and the temperature level stayed below 5 degrees C for 57 hours with the new storage can. The former storage can maintained the lowest temperature level for 80 minutes, and temperature reached 5 degrees C after 10 hours 40 minutes. Temperature levels were similar when 2 or 4 kg of crushed ice were used. We observed similar results when monitoring the conservation of human grafts.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nShould temperature be monitorized during kidney allograft preservation?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "no",
+    "answer_idx": "B",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Mediastinal lymph node dissection is an essential component of lung cancer surgery; however, choosing mediastinal lymph nodes stations to be dissected is subjective. We carried out this research to investigate the need for dissection of station 9 lymph nodes during lung cancer surgery. Patients with primary lung cancer who underwent radical surgery between 2010 and 2014 were retrospectively reviewed. Clinical, pathologic, and prognosis data were obtained and analyzed. A total number of 1397 patients were included in this research. The metastasis rate of station 9 was 3.45%, which was significantly lower than other mediastinal stations. This metastasis rate was significantly correlated with pT stage, the lobe where the tumor was located, metastasis status of intrapulmonary lymph nodes, pTNM stage, and most of the other mediastinal lymph node stations. In males or ground glass opacity (GGO) patients, the metastasis of station 9 nodes was more unlikely to occur, even though there was no statistical significance. The staging results of most patients (99.63%) would not be impaired, even if station 9 nodes were not dissected, and the prognostic analysis showed that the metastasis status of station 9 had no significant influence on survival.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nIs routine dissection of the station 9 lymph nodes really necessary for primary lung cancer?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "no",
+    "answer_idx": "B",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "Asymmetrical union of sutures resuting in twisted skull known as:",
+    "options": {
+      "A": "Plagiocephaly.",
+      "B": "Anencephaly.",
+      "C": "Scaphocephaly.",
+      "D": "Solicocephaly."
+    },
+    "answer_idx": "A",
+    "answer": "Plagiocephaly.",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A stillborn infant is delivered at 38 weeks' gestation to a 32-year-old woman. The mother had no prenatal care. Examination of the stillborn shows a small pelvis, shallow intergluteal cleft, and club feet. An x-ray shows the absence of the sacrum and lumbar vertebrae. Which of the following is the strongest predisposing factor for this patient's condition?",
+    "answer": "Maternal diabetes",
+    "options": {
+      "A": "Maternal oligohydramnios",
+      "B": "Intrauterine alcohol exposure",
+      "C": "Maternal diabetes",
+      "D": "Chromosome 18 trisomy"
+    },
+    "answer_idx": "C",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "What should be the ideal temperature in delivery room for the neonates to be kept in warmer?",
+    "options": {
+      "A": "22-26degC",
+      "B": "28-30degC",
+      "C": "30-35degC",
+      "D": "37degC"
+    },
+    "answer_idx": "A",
+    "answer": "22-26degC",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Suganti Devi is 30 weeks pregnant with idiopathic cholestasis, is likely to present with following features except:",
+    "options": {
+      "A": "Serum bilirubin of 2 mg/dl",
+      "B": "Serum alkaline phosphatase slightly elevated",
+      "C": "SGPT of 200 units",
+      "D": "Prolongation of prothrombin time"
+    },
+    "answer_idx": "D",
+    "answer": "Prolongation of prothrombin time",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "The following is the ovum of a helminth. What is true about the helminth?",
+    "options": {
+      "A": "Transmission is through ingestion of infected pork",
+      "B": "Both adult and larval stages are seen in humans",
+      "C": "The helminth causes a transient self-resolving infection in humans",
+      "D": "Drug of choice for this condition is albendazole"
+    },
+    "answer_idx": "B",
+    "answer": "Both adult and larval stages are seen in humans",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Normal anion gap metabolic acidosis seen in all except?",
+    "options": {
+      "A": "Proximal A",
+      "B": "Severe pancreatitis",
+      "C": "Diarrhea",
+      "D": "Salicylates poisoning"
+    },
+    "answer_idx": "D",
+    "answer": "Salicylates poisoning",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "The largest proportion of older adults living alone reside in",
+    "options": {
+      "A": "Massachusetts",
+      "B": "California",
+      "C": "Oregon",
+      "D": "Florida",
+      "E": "Michigan",
+      "F": "Alaska",
+      "G": "Washington, DC",
+      "H": "New York",
+      "I": "Hawaii",
+      "J": "Texas"
+    },
+    "answer": "Washington, DC",
+    "answer_idx": "G",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "This study sought to investigate the ischemic and bleeding outcomes of patients fulfilling high bleeding risk (HBR) criteria who were randomized to zotarolimus-eluting Endeavor Sprint stent (E-ZES) or bare-metal stent (BMS) implantation followed by an abbreviated dual antiplatelet therapy (DAPT) duration for stable or unstable coronary artery disease. DES instead of BMS use remains controversial in HBR patients, in whom long-term DAPT poses safety concerns. The ZEUS (Zotarolimus-Eluting Endeavor Sprint Stent in Uncertain DES Candidates) is a multinational, randomized single-blinded trial that randomized among others, in a stratified manner, 828 patients fulfilling pre-defined clinical or biochemical HBR criteria-including advanced age, indication to oral anticoagulants or other pro-hemorrhagic medications, history of bleeding and known anemia-to receive E-ZES or BMS followed by a protocol-mandated 30-day DAPT regimen. The primary endpoint of the study was the 12-month major adverse cardiovascular event rate, consisting of death, myocardial infarction, or target vessel revascularization. Compared with patients without, those with 1 or more HBR criteria had worse outcomes, owing to higher ischemic and bleeding risks. Among HBR patients, major adverse cardiovascular events occurred in 22.6% of the E-ZES and 29% of the BMS patients (hazard ratio: 0.75; 95% confidence interval: 0.57 to 0.98; p = 0.033), driven by lower myocardial infarction (3.5% vs. 10.4%; p<0.001) and target vessel revascularization (5.9% vs. 11.4%; p = 0.005) rates in the E-ZES arm. The composite of definite or probable stent thrombosis was significantly reduced in E-ZES recipients, whereas bleeding events did not differ between stent groups.\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nIs Bare-Metal Stent Implantation Still Justifiable in High Bleeding Risk Patients Undergoing Percutaneous Coronary Intervention?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "yes",
+    "answer_idx": "A",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "A 48-year-old Caucasian female presents to her primary care physician for evaluation of progressive weakness and shortness of breath. She has had progressive shortness of breath over the last year with an intermittent non-productive cough. In addition, she complains of difficulty raising her arms to brush her hair. Her temperature is 99.6\u00b0F (37.6\u00b0C), pulse is 80/min, blood pressure is 130/85 mmHg, respirations are 18/min, and oxygen saturation is 95% on room air. Neurologic exam shows 4/5 strength in the deltoid muscles bilaterally. Diffuse dry crackles are heard on lung auscultation. A faint erythematous rash is noted on the malar cheeks, periorbital areas, lateral proximal thighs, and the elbows. Which of the following tests is most likely to confirm the diagnosis?",
+    "answer": "Muscle biopsy",
+    "options": {
+      "A": "Muscle biopsy",
+      "B": "CT scan",
+      "C": "Serum ANA titer",
+      "D": "Skin biopsy"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "All of the following are derived from mesonephros except:",
+    "options": {
+      "A": "Paroophoron",
+      "B": "Vas deferens",
+      "C": "Epididymis",
+      "D": "Glomerulus"
+    },
+    "answer_idx": "D",
+    "answer": "Glomerulus",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 35-year-old woman comes to the physician because of intermittent episodes of heart palpitations for 3 weeks. The palpitations are accompanied by chest pain that is sharp and localized to the left 3rd intercostal space. The patient does not smoke. She drinks one to two glasses of wine on the weekends. She appears nervous. Her pulse is 110/min and irregularly irregular, and blood pressure is 135/85 mmHg. Examination shows a fine tremor on both hands and digital swelling. There is retraction of the left upper eyelid. A systolic ejection murmur is heard along the right upper sternal border. The extremities are warm, and pulses are 2+ bilaterally. Which of the following is the most appropriate pharmacotherapy?",
+    "answer": "Propranolol",
+    "options": {
+      "A": "Propranolol",
+      "B": "Digoxin",
+      "C": "Amiodarone",
+      "D": "Warfarin"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "The radiographic view of choice for diagnosing horizontally favorable and unfavorable # is:",
+    "options": {
+      "A": "OPG",
+      "B": "Occlusal",
+      "C": "Lateral Oblique view",
+      "D": "Transpharyngeal"
+    },
+    "answer_idx": "C",
+    "answer": "Lateral Oblique view",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Stoppage of which of the following drugs can result in anxiety and insomnia causing discontinuation syndrome?",
+    "options": {
+      "A": "Venlafaxine",
+      "B": "ImiPramine",
+      "C": "Valproate",
+      "D": "OlanzaPine"
+    },
+    "answer_idx": "A",
+    "answer": "Venlafaxine",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A midwife at a PI-IC is monitoring pregnancy and maintaining the paograph of pregnancy progression. At how much cervical dilation should the paograph plotting be staed?",
+    "options": {
+      "A": "4 cm",
+      "B": "5 cm",
+      "C": "6 cm",
+      "D": "8 cm"
+    },
+    "answer_idx": "A",
+    "answer": "4 cm",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 75-year-old man presents to the physician for his annual blood pressure visit and blood work. He has no complaints other than occasional knee pain. The past medical history includes hypertension. He has had knee osteoarthritis for several years and takes occasional acetaminophen for pain control. His diet is full of vegetables. He exercises every day. He has no history of smoking. He had a brother who died at the age of 84 due to hematologic malignancy. The temperature is 36.8\u2103 (98.2\u2109), and the blood pressure is 125/85 mm Hg. The physical examination shows no abnormalities other than a reduced range of motion and crepitus in both knees. The laboratory test results are as follows:\nHemoglobin 15 g/dL\nLeukocyte count 58,000/mm3\nPlatelet count 250,000/mm3\nFlow cytometry on the peripheral blood reveals an absolute lymphocyte count of 50,000/mm3. Which of the following is the most likely diagnosis?",
+    "answer": "Chronic lymphocytic leukemia (CLL)",
+    "options": {
+      "A": "Chronic lymphocytic leukemia (CLL)",
+      "B": "Monoclonal B cell lymphocytosis (MBL)",
+      "C": "Monoclonal gammopathy of undetermined significance (MGUS)",
+      "D": "Multiple myeloma (MM)"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "On Andros Islands in the Bahamas, populations of mosquito fish, Gambusia hubbsi, colonized a series of ponds. These ponds are no longer connected. However, the environments are very similar except that some ponds contain predatory fish, while others do not. In high predation ponds, selection has favored the evolution of a body shape that enables rapid bursts of speed. In low predation ponds, another body type is favored\u2014one that is well-suited to swim for long periods of time.",
+    "options": {
+      "A": "Reproductive isolation was a result of behavioral changes.",
+      "B": "Geographic isolation resulted in sympatric speciation.",
+      "C": "Allopatric isolation brought about reproductive isolation.",
+      "D": "Allopatric isolation did not affect reproductive isolation.",
+      "E": "Reproductive isolation caused geographic isolation.",
+      "F": "Sympatric isolation resulted in geographic isolation.",
+      "G": "The body shapes of the fish are the result of genetic drift.",
+      "H": "Sympatric isolation brought about reproductive isolation.",
+      "I": "Reproductive isolation was not complete.",
+      "J": "The evolution of different body shapes is an example of coevolution."
+    },
+    "answer": "Allopatric isolation brought about reproductive isolation.",
+    "answer_idx": "C",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "A 39-year-old man presents to his primary care physician because he has been having severe headaches and fever for the last 2 days. He also says his right eyelid has been painlessly swelling and is starting to block his vision from that eye. He recently returned from a tour of the world where he visited Thailand, Ethiopia, and Brazil. Otherwise his past medical history is unremarkable. On presentation, his temperature is 102\u00b0F (38.8\u00b0C), blood pressure is 126/81 mmHg, pulse is 125/min, and respirations are 13/min. Physical exam reveals a nontender swelling of the right eyelid, lymphadenopathy, and an indurated red patch with surrounding erythema and local swelling on his left leg. Which of the following drugs should be used to treat this patient's condition?",
+    "answer": "Benznidazole",
+    "options": {
+      "A": "Benznidazole",
+      "B": "Ivermectin",
+      "C": "Mebendazol",
+      "D": "Sodium stibogluconate"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "According to Weber-Fechner's law, strength of stimulus perceived is directly propoional to:",
+    "options": {
+      "A": "Intensity of stimulus",
+      "B": "Amplitude of action potential",
+      "C": "Number of neurons stimulated",
+      "D": "Number of receptors stimulated"
+    },
+    "answer_idx": "A",
+    "answer": "Intensity of stimulus",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A newborn with eyes closed 6 hrs after birth lustily crying, no chest retraction and movements of all four limbs. Neonatal behavioral response grading \u2013",
+    "options": {
+      "A": "State 1",
+      "B": "State 3",
+      "C": "State 5",
+      "D": "State 6"
+    },
+    "answer_idx": "D",
+    "answer": "State 6",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 28-year-old woman, gravida 2, para 1, at 40 weeks of gestation is admitted to the hospital in active labor. The patient has attended many prenatal appointments and followed her physician's advice about screening for diseases, laboratory testing, diet, and exercise. Her pregnancy has been uncomplicated. She has no history of a serious illness. Her first child was delivered via normal vaginal delivery. Her vital signs are within normal limits. Cervical examination shows 100% effacement and 10 cm dilation. A cardiotocograph is shown. Which of the following is the most appropriate initial step in management?",
+    "answer": "Reassurance",
+    "options": {
+      "A": "Amnioinfusion",
+      "B": "Induced vaginal delivery",
+      "C": "Reassurance",
+      "D": "Repositioning"
+    },
+    "answer_idx": "C",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "An episiotomy is to be performed in a primigravida in labor. Which of these is an advantage of mediolateral episiotomy over midline episiotomy?",
+    "options": {
+      "A": "Less chance of extension",
+      "B": "Can be repaired at ease",
+      "C": "Fewer breakdown",
+      "D": "Lesser blood loss"
+    },
+    "answer_idx": "A",
+    "answer": "Less chance of extension",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "You want to study the role of the GADD45G protein in a mouse model. You are highly interested in whether the IL-2-induced protein has a role in the SARS-CoV-2 infection. You decide to create a transgenic mouse model with the inducible overexpression of the coding sequence for the GADD45G gene. You can use it to affinity-purify the protein and identify the protein partners that bind to GADD45G after you infect the mice with the virus. For that purpose, you will modify the gene's coding sequence by introducing the sequence for a single influenza hemagglutinin antigenic determinant that will be at the N-terminus of your recombinant protein. You genetically engineer the plasmid and, aided by Lipofectamine\u00ae, transfect it into the Chinese hamster ovary cells. You select the antibiotic-resistant cell colonies to test the expression level of your construct. Once you begin, you observe that you are unable to overexpress your protein as you expected. In the series of tests you undertake to identify the cause, you realize that the sequence of the plus strand of your construct reads:\n\n\n5'ATGTACCCATACGATGTTCCAGATTACGCCAAATGACTCTGGAAGAAGTCCGCGGCCAGGACACAGTTCCGGAAAGCACAGCCAGGATGCAGGGTGCCGGGAAAGCGCTGCATGAGTTGCTGCTGTCGGCGCAGCGTCAGGGCTGCCTCACTGCCGGCGTCTACGAGTCAGCCAAAGTCTTGAACGTGGACCCCGACAATGTGACCTTCTGTGTGCTGGCTGCGGGTGAGGAGGACGAGGGCGACATCGCGCTGCAGATCCATTTTACGCTGATCCAGGCTTTCTGCTGCGAGAACGACATCGACATAGTGCGCGTGGGCGATGTGCAGCGGCTGGCGGCTATCGTGGGCGCCGGCGAGGAGGCGGGTGCGCCGGGCGACCTGCACTGCATCCTCATTTCGAACCCCAACGAGGACGCCTGGAAGGATCCCGCCTTGGAGAAGCTCAGCCTGTTTTGCGAGGAGAGCCGCAGCGTTAACGACTGGGTGCCCAGCATCACCCTCCCCGAGTGA3'\n\nYou annoyingly notice the reason.",
+    "answer": "The ribosome terminated the translation early",
+    "answer_idx": "B",
+    "options": {
+      "A": "The tRNA for the UAA codon does not exist in the mouse",
+      "B": "The ribosome terminated the translation early",
+      "C": "The sequence for the antigenic determinant has a missense mutation",
+      "D": "The lack of the linker sequence is triggering proteolysis of the nascent chain"
+    },
+    "source": "GPQA_Medical_test"
+  },
+  {
+    "question": "Explain the method of copulation in the earthworms.",
+    "options": {
+      "A": "Earthworms reproduce asexually by fission.",
+      "B": "Earthworms engage in internal fertilization where one worm injects sperm directly into the ovaries of the other.",
+      "C": "Each earthworm fertilizes its own eggs internally without the need for a mate.",
+      "D": "Earthworms attract mates through airborne pheromones and mate on the surface without physical contact.",
+      "E": "Earthworms reproduce by budding, where small worms grow out of the parent's body.",
+      "F": "Earthworms exchange sperm by connecting their posterior ends and then separate to lay fertilized eggs.",
+      "G": "Earthworms reproduce by external fertilization in water.",
+      "H": "Earthworms lay eggs without any copulation.",
+      "I": "Two earthworms unite ventral surface to ventral surface with opposite anterior ends. They discharge sperm into the other's seminal receptacles. After separation, a cocoon is secreted for egg and sperm deposition.",
+      "J": "Two earthworms connect at their anterior ends and exchange sperm through their mouths before separating to lay eggs independently."
+    },
+    "answer": "Two earthworms unite ventral surface to ventral surface with opposite anterior ends. They discharge sperm into the other's seminal receptacles. After separation, a cocoon is secreted for egg and sperm deposition.",
+    "answer_idx": "I",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "The presence of two or more cell lines from different zygotes in a single individual is known as:",
+    "options": {
+      "A": "heterozygosity.",
+      "B": "triploidy.",
+      "C": "mosaicism.",
+      "D": "monosomy.",
+      "E": "chimaerism.",
+      "F": "polyzygosity.",
+      "G": "diploidy.",
+      "H": "aneuploidy.",
+      "I": "autopolyploidy.",
+      "J": "polyploidy."
+    },
+    "answer": "chimaerism.",
+    "answer_idx": "E",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "Mean and standard deviation can be worked out only if data is on",
+    "options": {
+      "A": "Nominal scale",
+      "B": "Dichotomous scale",
+      "C": "Interval/Ratio scale",
+      "D": "Ordinal scale"
+    },
+    "answer_idx": "C",
+    "answer": "Interval/Ratio scale",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 22-year-old male presents to the emergency room complaining of neck stiffness. He reports that his neck started \u201clocking\u201d three hours ago. He is now unable to move it. His past medical history is notable for schizophrenia and asthma and he currently takes albuterol as well as another medication whose name he does not remember. His temperature is 99.0\u00b0F (37.2\u00b0C), blood pressure is 130/90 mmHg, pulse is 105/min, and respirations are 18/min. On physical examination, the patient appears anxious and diaphoretic. He speaks in full sentences and is oriented to person, place, and time. The patient\u2019s neck is flexed and rotated to the right approximately 40 degrees. The right sternocleidomastoid and trapezius are firm and contracted. Extraocular movements are full and intact. Upon further questioning, he reports that he took more medication four hours ago because he was hearing voices. Which of the following should most likely be administered to this patient?",
+    "answer": "Benztropine",
+    "options": {
+      "A": "Glycopyrrolate",
+      "B": "Benztropine",
+      "C": "Levodopa",
+      "D": "Dantrolene"
+    },
+    "answer_idx": "B",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "Preferred drug for the treatment of uncomplicated grade 2 hypeension in a 48 year old man is",
+    "options": {
+      "A": "Chlohalidone",
+      "B": "Triamterene",
+      "C": "Spironolactone",
+      "D": "Furosemide"
+    },
+    "answer_idx": "A",
+    "answer": "Chlohalidone",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Heart of controlled trial?",
+    "options": {
+      "A": "Blinding",
+      "B": "Experiment",
+      "C": "Randomization",
+      "D": "Intervention"
+    },
+    "answer_idx": "C",
+    "answer": "Randomization",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A 40-year-old man presents to the physician with progressive weight loss for the last 3 months. He also says he frequently sweats profusely at night and has a recurring low-grade fever, for which he takes acetaminophen. The patient denies any symptoms like cough, breathlessness, or gastrointestinal symptoms. His temperature is 37.1\u00baC  (98.8\u00baF), pulse is 76/min, blood pressure is 116/78 mm Hg, and respiratory rate is 13/min. On physical examination, he has generalized pallor. Bilateral cervical lymphadenopathy is present. Examination of his abdomen reveals non-tender hepatosplenomegaly in the right upper quadrant. Laboratory evaluation confirms the diagnosis of Hodgkin\u2019s lymphoma. Which of the following viral infections is most likely to have played a role in the pathogenesis of this patient\u2019s malignancy?",
+    "answer": "Epstein-Barr virus",
+    "options": {
+      "A": "Epstein-Barr virus",
+      "B": "Human T-cell leukemia virus type 1",
+      "C": "Human herpesvirus-8",
+      "D": "Human papillomavirus type 16"
+    },
+    "answer_idx": "A",
+    "source": "MedQA_USLME_test"
+  },
+  {
+    "question": "If a particular character in a certain species of animal were always transmitted from the mother to the offspring, but never from the father to the offspring, what could you conclude about its mode of inheritance?",
+    "options": {
+      "A": "the trait is a result of genomic imprinting favoring maternal alleles",
+      "B": "the trait is a polygenic inheritance with maternal bias",
+      "C": "the trait is Y-linked",
+      "D": "the trait is autosomal dominant",
+      "E": "the trait is sex-linked",
+      "F": "the trait is autosomal but influenced by maternal environmental factors",
+      "G": "an extrachromosomal trait could only be transmitted by the mother",
+      "H": "the trait is a result of paternal mitochondrial DNA",
+      "I": "the trait is autosomal recessive",
+      "J": "the trait is influenced by paternal epigenetic modifications"
+    },
+    "answer": "an extrachromosomal trait could only be transmitted by the mother",
+    "answer_idx": "G",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "Flower length varies between two strains of a certain plant. This is due to a specific number ofpolygenes. Using the data given below, find approximately how many genes are in the series. Group Mean (X) Variance (s^2) Cause of variation Strain A 21 mm 1.43 mm^2 Environment Strain B 39 1.16 Environment F_1 (A \u00d7 B) 30 1.80 Environment F_2 (F_1 \u00d7 F_1) 30 5.10 Genes, environment",
+    "options": {
+      "A": "14 gene pairs",
+      "B": "8 gene pairs",
+      "C": "18 gene pairs",
+      "D": "25 gene pairs",
+      "E": "20 gene pairs",
+      "F": "7 gene pairs",
+      "G": "10 gene pairs",
+      "H": "15 gene pairs",
+      "I": "5 gene pairs",
+      "J": "12 gene pairs"
+    },
+    "answer": "12 gene pairs",
+    "answer_idx": "J",
+    "source": "MMLU-Pro_Medical_test"
+  },
+  {
+    "question": "Hypertension is one of the important contributing factors linked with both causation and development of kidney disease. It is a multifactorial, polygenic, and complex disorder due to interaction of several risk genes with environmental factors. The present study was aimed to explore genetic polymorphism in ACE-1 gene as a risk factor for CKD among hypertensive patients. Three hundred patients were enrolled in the study. Ninety were hypertensive patients with CKD taken as cases, whereas 210 hypertensive patients without CKD were taken as controls. Demographic data including age, sex, Body mass index (BMI), and other risk factors were also recorded. DNA was extracted from blood by salting out method. Genotyping of ACE gene was done by PCR technique. All the statistical analysis was done by using Epi Info and SPSS version 16 software (SPSS Inc., Chicago, IL). Mean age was higher in the control group (p\u2009<\u20090.05). Variables among two groups were compared out of which age, BMI, hemoglobin (Hb) was found to be statistically significant whereas other variables like systolic blood pressure, triglyceride and low-density lipoprotein were not. Blood urea and serum creatinine levels were statistically significant in the two genotypes (p\u2009<\u20090.05). Total and HDL cholesterol were statistically significant for DD genotype of ACE gene (OR\u2009=\u20091.42, 95% CI\u2009=\u20090.72-2.81). Similarly, the risk for CKD among hypertensive patients was also associated with D allele of ACE gene (OR\u2009=\u20091.25, 95% CI\u2009=\u20090.86-1.79).\n\nUsing the above document as a reference, please review the following question and choose the option you find most appropriate.\nDoes angiotensin-converting enzyme-1 (ACE-1) gene polymorphism lead to chronic kidney disease among hypertensive patients?",
+    "options": {
+      "A": "yes",
+      "B": "no",
+      "C": "maybe"
+    },
+    "answer": "yes",
+    "answer_idx": "A",
+    "source": "PubMedQA_test"
+  },
+  {
+    "question": "In which of the following tumor MRI is better than CT Scan..",
+    "options": {
+      "A": "Brochogenic Carcinoma",
+      "B": "SCC of lung",
+      "C": "Mesothelioma",
+      "D": "Pancost tumor"
+    },
+    "answer_idx": "D",
+    "answer": "Pancost tumor",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Which of the following hormone is/are under inhibitory of hypothalamus?",
+    "options": {
+      "A": "Prolactin",
+      "B": "Only prolactin",
+      "C": "Only growth hormone",
+      "D": "Both prolactin and growth hormone"
+    },
+    "answer_idx": "D",
+    "answer": "Both prolactin and growth hormone",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Which of these statements about DNA methylation in mammalian development is true?",
+    "answer": "During na\u00efve pluripotency, DNA methylation is largely restricted to transposable elements, and imprinted loci",
+    "answer_idx": "C",
+    "options": {
+      "A": "DNA methylation is primarily associated with silencing house-keeping and developmental genes",
+      "B": "After implantation, around 20-30% of CpGs in the mammalian genome are methylated",
+      "C": "During na\u00efve pluripotency, DNA methylation is largely restricted to transposable elements, and imprinted loci",
+      "D": "DNA demethylation can occur both passively (by enzymes) and actively (by cell division)"
+    },
+    "source": "GPQA_Medical_test"
+  },
+  {
+    "question": "A research group is investigating the production of a candidate recombinant protein to treat an autoimmune disease using bacterial hosts. However, the target gene (45 Kb) requires a tight regulation system. Therefore their objective is to ensure the recombinant genes can be regulated through a double procaryote regulation mechanism.  Which pair of gene regulation mechanisms would be inappropriate for their purposes?",
+    "answer": "Transcription of structural genes lacZ, lacY and lacA within the lactose operon and; nucleosome alterations by losing DNA-histone contacts (chromatin remodeling).",
+    "answer_idx": "C",
+    "options": {
+      "A": "Gene upregulation for enzymes through interactions of trans- and cis-regulatory elements and; DNA methylation of adenine in the sequence 5\u2019-GATC-3\u2019. ",
+      "B": "Gene downregulation for the enzyme phosphoenolpyruvate to reduce L-tryptophan and; DNA methylation of adenine in the sequence 5\u2019-GATC-3\u2019.",
+      "C": "Transcription of structural genes lacZ, lacY and lacA within the lactose operon and; nucleosome alterations by losing DNA-histone contacts (chromatin remodeling).",
+      "D": "Transcription of structural genes lacZ, lacY and lacA within the lactose operon and; DNA-binding of the lac repressor resulting in blocking RNA polymerase (negative control). "
+    },
+    "source": "GPQA_Medical_test"
+  },
+  {
+    "question": "Infective endocarditis is most commonly seen in:",
+    "options": {
+      "A": "ASD",
+      "B": "VSD",
+      "C": "PDA",
+      "D": "Pulmonary stenosis"
+    },
+    "answer_idx": "B",
+    "answer": "VSD",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "A boy presented with a history of fever, headache and vomiting since 3 days and disorientation since I day. On examination, neck rigidity was positive. He also had 1 episode of generalized tonic clonic seizures (GTC) and then he became unconscious. CECT was found to be normal. CSF examination reveals a cell count of 300 cells/mm3 (polymorphs: 50-70%), protein 70 mg/dL, sugar 50 mg/dL (blood: 95 mg/dL). Which of the following is the most likely diagnosis?",
+    "options": {
+      "A": "Pyogenic meningitis",
+      "B": "Tubercular meningitis",
+      "C": "Herpes encephalitis",
+      "D": "Cerebral malaria"
+    },
+    "answer_idx": "A",
+    "answer": "Pyogenic meningitis",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Angiotensin receptor blocker (ARB) with PPARgamma function as well is:",
+    "options": {
+      "A": "Olmesaan",
+      "B": "Candesaan",
+      "C": "Telmisaan",
+      "D": "Eprosaan"
+    },
+    "answer_idx": "C",
+    "answer": "Telmisaan",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "An avulsed tooth which is replanted shows loss of lamina dura radiographically, high sound on percussion. The type of resorption is",
+    "options": {
+      "A": "Internal resorpton",
+      "B": "External resorption",
+      "C": "Replacement resorption",
+      "D": "Cervical resorption"
+    },
+    "answer_idx": "C",
+    "answer": "Replacement resorption",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "In periodontal flap most important factor to be considered is:",
+    "options": {
+      "A": "Depth of vestibule",
+      "B": "Frenum attachment",
+      "C": "Amount of attached gingiva",
+      "D": "Free gingiva"
+    },
+    "answer_idx": "C",
+    "answer": "Amount of attached gingiva",
+    "source": "MedMCQA_validation"
+  },
+  {
+    "question": "Hemoglobin is a molecule that binds to both O2 and CO2. There is an allosteric relationship between the concentrations of O2 and CO2. Hemoglobin's affinity for O2",
+    "options": {
+      "A": "increases as H+ concentration increases",
+      "B": "decreases as blood pH decreases",
+      "C": "decreases in resting muscle tissue",
+      "D": "increases as blood pH decreases",
+      "E": "increases as O2 concentration decreases",
+      "F": "decreases as CO2 concentration decreases",
+      "G": "remains constant regardless of O2 and CO2 concentrations",
+      "H": "increases in exercising muscle tissue",
+      "I": "increases as CO2 concentration decreases"
+    },
+    "answer": "decreases as blood pH decreases",
+    "answer_idx": "B",
+    "source": "MMLU-Pro_Medical_test"
+  }
+]

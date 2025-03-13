@@ -1,0 +1,19 @@
+The **Single-task selection method** follows a **round-robin** approach to iteratively select the most valuable data points from a dataset \( D \), given a scoring function \( S[v, d] \) for each pair of a scoring entity \( v \in V \) and a data point \( d \in D \). The selection process ensures diversity across \( V \).
+
+### **Algorithm Summary:**
+1. **Initialize an empty selection list \( L \).**
+2. **Iterate until \( L \) reaches the desired size \( n \):**
+   - For each \( v \in V \) (round-robin fashion):
+     1. Find the **highest-scoring** \( d \in D \) according to \( S[v, d] \).
+     2. Add \( d \) to \( L \).
+     3. Set \( S[v, d] \) to \(-\infty\) to prevent re-selection.
+     4. If \( L \) reaches \( n \), exit early.
+3. **Return \( L \), the final selected dataset.**
+
+### **Key Features:**
+- **Ensures fairness**: The selection proceeds iteratively across different scoring sources \( v \).
+- **Prevents duplicates**: Once a data point is selected, it is removed from further consideration.
+- **Prioritizes high-scoring points**: Always selects the best available data points first.
+- **Efficient stopping**: Exits as soon as \( L \) reaches \( n \).
+
+This method effectively balances **diversity and quality** when constructing task-specific datasets.

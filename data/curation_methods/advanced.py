@@ -5,6 +5,7 @@ Advanced curation methods for the med-s1k dataset.
 import pandas as pd
 import numpy as np
 import os
+import json
 import logging
 import random
 from typing import Dict, Optional, List, Tuple
@@ -169,6 +170,16 @@ def embedding_similarity_curation(df: pd.DataFrame, config: Dict, n_samples: int
     """
     Embedding-similarity curation method.
     
+    Implements the algorithm from embedding_similarity_algorithm.txt:
+    1. Initialize an empty selection list L
+    2. Iterate until L reaches the desired size n:
+       - For each v in V (round-robin fashion):
+         a. Find the highest-scoring d in D according to S[v, d]
+         b. Add d to L
+         c. Set S[v, d] to -infinity to prevent re-selection
+         d. If L reaches n, exit early
+    3. Return L, the final selected dataset
+    
     Args:
         df: Input dataframe with all examples
         config: Curation configuration
@@ -177,8 +188,100 @@ def embedding_similarity_curation(df: pd.DataFrame, config: Dict, n_samples: int
     Returns:
         DataFrame with embedding-similarity curated examples selected for training
     """
-    # This method is not implemented yet as per the task requirements
-    raise NotImplementedError("Embedding-similarity curation method is not yet implemented")
+    logging.info(f"Starting embedding-similarity curation with {len(df)} examples...")
+    
+    # Check if filtered dataset exists
+    data_dir = os.environ.get('DATA_DIR')
+    if not data_dir:
+        raise ValueError("DATA_DIR environment variable not set")
+    
+    # Get med-s1 directory from environment
+    med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+    
+    # Reset filter status and reason for all examples
+    df['filter_status'] = 'kept'
+    df['filter_stage'] = None
+    df['filter_reason'] = None
+    df['selected_for_training'] = False
+    
+    # Get parameters from config
+    curation_params = config.get("curation", {})
+    
+    # Determine column to use for embeddings
+    column = curation_params.get("column", "Question")  # Default to Question for embedding-similarity
+    
+    # Parse column from experiment name if not in config
+    curation_method = curation_params.get("method", "")
+    if column == "Question" and "-cot" in curation_method.lower():
+        column = "Complex_CoT"
+    
+    logging.info(f"Using column '{column}' for embedding similarity")
+    
+    # Load representative queries from eval_data_samples.json
+    eval_samples_path = os.path.join(med_s1_dir, 'eval', 'data', 'eval_data_samples.json')
+    eval_embeddings_path = os.path.join(med_s1_dir, 'eval', 'data', 'eval_data_samples.npy')
+    
+    # Check if the samples and embeddings exist
+    if not os.path.exists(eval_samples_path) or not os.path.exists(eval_embeddings_path):
+        logging.error(f"Representative samples or embeddings not found. Please run find_samples.py first.")
+        raise FileNotFoundError(f"Required files not found: {eval_samples_path} or {eval_embeddings_path}")
+    
+    # Load representative samples
+    with open(eval_samples_path, 'r') as f:
+        eval_samples = json.load(f)
+    
+    # Load representative embeddings
+    eval_embeddings = np.load(eval_embeddings_path)
+    
+    logging.info(f"Loaded {len(eval_samples)} representative samples with embeddings")
+    
+    # Get or generate embeddings for the dataset
+    embeddings = get_or_generate_embeddings(df, data_dir, columns=[column])
+    column_embeddings = embeddings[column]
+    
+    # Calculate cosine similarity matrix between representative samples and dataset
+    # Shape: (n_samples, n_dataset)
+    similarity_matrix = cosine_similarity(eval_embeddings, column_embeddings)
+    
+    # Initialize selection list
+    selected_indices = []
+    
+    # Create a mask to track which examples are still available
+    available_mask = np.ones(len(df), dtype=bool)
+    
+    # Implement round-robin selection
+    while len(selected_indices) < n_samples:
+        for i in range(len(eval_samples)):
+            if len(selected_indices) >= n_samples:
+                break
+                
+            # Get similarities for this representative sample
+            similarities = similarity_matrix[i].copy()
+            
+            # Set similarities of already selected examples to -infinity
+            similarities[~available_mask] = -np.inf
+            
+            # Find the highest-scoring example
+            if np.max(similarities) > -np.inf:
+                best_idx = np.argmax(similarities)
+                selected_indices.append(df.index[best_idx])
+                available_mask[best_idx] = False
+            else:
+                # No more examples with positive similarity for this representative
+                continue
+    
+    logging.info(f"Selected {len(selected_indices)} examples using embedding-similarity")
+    
+    # Mark selected examples
+    df['selected_for_training'] = df.index.isin(selected_indices)
+    
+    # Mark unselected examples
+    unselected_mask = ~df['selected_for_training'] & (df['filter_status'] == 'kept')
+    df.loc[unselected_mask, 'filter_status'] = 'removed'
+    df.loc[unselected_mask, 'filter_stage'] = 'embedding-similarity'
+    df.loc[unselected_mask, 'filter_reason'] = 'not_selected_in_sampling'
+    
+    return df
 
 def embedding_diversity_curation(df: pd.DataFrame, config: Dict, n_samples: int) -> pd.DataFrame:
     """
@@ -328,15 +431,28 @@ def check_novelty_answer_prerequisites(data_dir: str) -> bool:
     embeddings_dir = os.path.join(data_dir, "embeddings-25k")
     return os.path.exists(filtered_path) and os.path.exists(embeddings_dir)
 
-def check_embedding_prerequisites(data_dir: str) -> bool:
+def check_embedding_prerequisites(data_dir: str, method: str = None) -> bool:
     """
     Check if the prerequisites for embedding-based curation exist.
     
     Args:
         data_dir: Path to the data directory
+        method: The specific embedding method to check for (optional)
         
     Returns:
         bool: True if prerequisites exist, False otherwise
     """
+    # Get med-s1 directory from environment
+    med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+    
+    # Check for basic embedding prerequisites
     embeddings_dir = os.path.join(data_dir, "embeddings-25k")
-    return os.path.exists(embeddings_dir)
+    basic_prereqs = os.path.exists(embeddings_dir)
+    
+    # If method is embedding-similarity, also check for eval samples
+    if method == "embedding-similarity":
+        eval_samples_path = os.path.join(med_s1_dir, 'eval', 'data', 'eval_data_samples.json')
+        eval_embeddings_path = os.path.join(med_s1_dir, 'eval', 'data', 'eval_data_samples.npy')
+        return basic_prereqs and os.path.exists(eval_samples_path) and os.path.exists(eval_embeddings_path)
+    
+    return basic_prereqs

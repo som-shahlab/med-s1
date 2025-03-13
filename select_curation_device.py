@@ -105,12 +105,31 @@ def select_device(experiment_name: str, results_json_path: str, data_dir: str) -
         # Check if embeddings exist for the specific column
         column_embedding_path = os.path.join(embeddings_dir_path, f"{column}_embeddings.npy")
         
-        if os.path.exists(embeddings_dir_path) and os.path.exists(column_embedding_path):
-            logging.info(f"Method '{curation_method}' using CPU (embeddings exist for {column})")
-            return "cpu"
+        # For embedding-similarity, also check for eval samples
+        if curation_method == "embedding-similarity":
+            # Get med-s1 directory from environment
+            med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+            eval_samples_path = os.path.join(med_s1_dir, 'eval', 'data', 'eval_data_samples.json')
+            eval_embeddings_path = os.path.join(med_s1_dir, 'eval', 'data', 'eval_data_samples.npy')
+            
+            # Check if all required files exist
+            if (os.path.exists(embeddings_dir_path) and
+                os.path.exists(column_embedding_path) and
+                os.path.exists(eval_samples_path) and
+                os.path.exists(eval_embeddings_path)):
+                logging.info(f"Method '{curation_method}' using CPU (embeddings and eval samples exist)")
+                return "cpu"
+            else:
+                logging.info(f"Method '{curation_method}' using GPU (embeddings or eval samples do not exist)")
+                return "gpu"
         else:
-            logging.info(f"Method '{curation_method}' using GPU (embeddings do not exist for {column})")
-            return "gpu"
+            # For embedding-diversity, just check for column embeddings
+            if os.path.exists(embeddings_dir_path) and os.path.exists(column_embedding_path):
+                logging.info(f"Method '{curation_method}' using CPU (embeddings exist for {column})")
+                return "cpu"
+            else:
+                logging.info(f"Method '{curation_method}' using GPU (embeddings do not exist for {column})")
+                return "gpu"
     
     # Default to GPU for unknown methods
     else:

@@ -47,34 +47,52 @@ def postprocess_output(pred: str) -> str:
         pred = pred[1:]
     return pred
 
-def load_file(input_fp: str) -> List[Dict]:
+def load_samples_file(samples_path: str) -> List[Dict]:
+    """Load the evaluation samples data from a JSON file.
+    
+    Args:
+        samples_path (str): The path to the JSON file containing the evaluation samples.
+        
+    Returns:
+        list: A list of dictionaries containing the evaluation samples.
+    """
+    try:
+        with open(samples_path, 'r') as f:
+            samples = json.load(f)
+        return samples
+    except FileNotFoundError:
+        logging.warning(f"Samples file {samples_path} not found. No samples will be excluded.")
+        return []
+
+def load_file(input_fp: str, exclude_samples: bool = True) -> List[Dict]:
     """Load the evaluation data from a JSON file.
     Args:
         input_fp (str): The path to the JSON file containing the evaluation data.
+        exclude_samples (bool): Whether to exclude samples from eval_data_samples.json.
 
     Returns:
         list: A list of dictionaries containing the evaluation data.
 
     Each example in the returned list looks like this:
         {
-            'question': 'Which of the following is not true for myelinated nerve fibers:', 
+            'question': 'Which of the following is not true for myelinated nerve fibers:',
             'options': {
-                'A': 'Impulse through myelinated fibers is slower than non-myelinated fibers', 
-                'B': 'Membrane currents are generated at nodes of Ranvier', 
-                'C': 'Saltatory conduction of impulses is seen', 
+                'A': 'Impulse through myelinated fibers is slower than non-myelinated fibers',
+                'B': 'Membrane currents are generated at nodes of Ranvier',
+                'C': 'Saltatory conduction of impulses is seen',
                 'D': 'Local anesthesia is effective only when the nerve is not covered by myelin sheath'
-            }, 
-            'answer_idx': 'A', 
-            'answer': 'Impulse through myelinated fibers is slower than non-myelinated fibers', 
+            },
+            'answer_idx': 'A',
+            'answer': 'Impulse through myelinated fibers is slower than non-myelinated fibers',
             'source': 'MedMCQA_validation'
         }
         
     Count of each example in the HuatuoGPT-O1 evaluation dataset:
         Counter({
-            'MedMCQA_validation': 4183, 
-            'MMLU-Pro_Medical_test': 1535, 
-            'MedQA_USLME_test': 1273, 
-            'PubMedQA_test': 1000, 
+            'MedMCQA_validation': 4183,
+            'MMLU-Pro_Medical_test': 1535,
+            'MedQA_USLME_test': 1273,
+            'PubMedQA_test': 1000,
             'GPQA_Medical_test': 390
         })
     """
@@ -87,6 +105,24 @@ def load_file(input_fp: str) -> List[Dict]:
         for da in v:
             da['source'] = k
         input_data.extend(v)
+    
+    # Exclude samples if requested
+    if exclude_samples:
+        # Get the directory of the input file
+        input_dir = os.path.dirname(input_fp)
+        samples_path = os.path.join(input_dir, 'eval_data_samples.json')
+        samples = load_samples_file(samples_path)
+        
+        if samples:
+            # Create a set of question strings for faster lookup
+            sample_questions = {sample.get('question', '') for sample in samples}
+            
+            # Filter out samples
+            original_count = len(input_data)
+            input_data = [item for item in input_data if item.get('question', '') not in sample_questions]
+            excluded_count = original_count - len(input_data)
+            print(f"Excluded {excluded_count} samples from evaluation data")
+    
     return input_data
 
 from test_time_scaling import evaluate_test_time_scaling

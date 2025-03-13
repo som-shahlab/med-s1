@@ -81,7 +81,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-random",
-          "timestamp": "2025-03-13T16:52:10Z",
+          "timestamp": "2025-03-13T19:09:34Z",
           "metrics": null
         }
       }
@@ -194,37 +194,13 @@
           "gradient_accumulation_steps": 16
         }
       },
-      "results": {}
-    },
-    "huatuo-1k-embedding-similarity-cot": {
-      "description": "1k sample using embedding similarity on complex cot",
-      "config": {
-        "model_key": "llama3.1:8b",
+      "results": {
         "curation": {
-          "method": "embedding-similarity",
-          "huatuo_format": true,
-          "n_samples": 1000,
-          "column": "Complex_CoT"
-        },
-        "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 2,
-          "num_epochs": 10,
-          "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.95,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 16
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-embedding-similarity-question_20250313_203451/med_s1k_formatted",
+          "timestamp": "2025-03-13T20:34:59.716164",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-embedding-similarity-question_curation.json"
         }
-      },
-      "results": {}
+      }
     },
     "huatuo-1k-embedding-diversity-question-cluster-10-outlier-5": {
       "description": "1k sample using embedding diversity on questions with 10% clusters and 5% outliers",
@@ -256,7 +232,18 @@
           "gradient_accumulation_steps": 16
         }
       },
-      "results": {}
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-embedding-diversity-question-cluster-10-outlier-5_20250313_183135/med_s1k_formatted",
+          "timestamp": "2025-03-13T18:31:36.697712",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-embedding-diversity-question-cluster-10-outlier-5_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-embedding-diversity-question-cluster-10-outlier-5",
+          "timestamp": "2025-03-13T19:58:01Z",
+          "metrics": null
+        }
+      }
     },
     "huatuo-1k-embedding-diversity-cot-cluster-10-outlier-5": {
       "description": "1k sample using embedding diversity on complex cot with 10% clusters and 5% outliers",
@@ -322,6 +309,11 @@
           "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-difficulty-substring_20250313_171901/med_s1k_formatted",
           "timestamp": "2025-03-13T17:19:02.788796",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-difficulty-substring_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-difficulty-substring",
+          "timestamp": "2025-03-13T18:14:51Z",
+          "metrics": null
         }
       }
     },
@@ -352,7 +344,18 @@
           "gradient_accumulation_steps": 16
         }
       },
-      "results": {}
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-novelty-answer_20250313_185051/med_s1k_formatted",
+          "timestamp": "2025-03-13T18:50:53.197176",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-novelty-answer_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-novelty-answer",
+          "timestamp": "2025-03-13T20:50:46Z",
+          "metrics": null
+        }
+      }
     }
   }
 }
