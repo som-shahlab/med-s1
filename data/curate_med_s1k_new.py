@@ -126,72 +126,102 @@ async def main():
     # Check if base dataset exists
     filtered_path = os.path.join(data_dir, "plumbing_test_001_20250219_145607/med_s1k_filtered.parquet")
     
-    # Process based on curation method and dataset existence
-    if os.path.exists(filtered_path):
-        # Load existing dataset with all metadata
-        df = pd.read_parquet(filtered_path)
-        logging.info(f"Loaded existing dataset from {filtered_path}")
-        
-        # Apply appropriate sampling method
-        if curation_method == "all":
-            df = full_dataset(df, experiment_config)
-        elif curation_method == "random":
-            df = random_sample_dataset(df, n_samples)
-        elif curation_method == "s1":
+    # Process based on curation method
+    if curation_method == "all":
+        # For "all" method, load dataset and use full dataset
+        if os.path.exists(filtered_path):
+            df = pd.read_parquet(filtered_path)
+            logging.info(f"Loaded existing dataset from {filtered_path}")
+        else:
+            df = load_base_dataset()
+        df = full_dataset(df, experiment_config)
+    
+    elif curation_method == "random":
+        # For "random" method, load dataset and randomly sample
+        if os.path.exists(filtered_path):
+            df = pd.read_parquet(filtered_path)
+            logging.info(f"Loaded existing dataset from {filtered_path}")
+        else:
+            df = load_base_dataset()
+        df = random_sample_dataset(df, n_samples)
+    
+    elif curation_method == "s1":
+        # For "s1" method, process with S1 pipeline
+        if os.path.exists(filtered_path):
+            df = pd.read_parquet(filtered_path)
+            logging.info(f"Loaded existing dataset from {filtered_path}")
             df = await process_s1_dataset(
-                df, config, tokenizer, n_samples, 
-                specialty_weights, safe_experiment_name, 
+                df, config, tokenizer, n_samples,
+                specialty_weights, safe_experiment_name,
                 output_dir, None  # No need to run pipeline again
             )
-        elif curation_method == "novelty-answer":
-            df = novelty_answer_curation(df, experiment_config, n_samples)
-        elif curation_method == "difficulty-substring":
-            df = difficulty_substring_curation(df, experiment_config, n_samples)
-        elif curation_method == "embedding-similarity":
-            df = embedding_similarity_curation(df, experiment_config, n_samples)
-        elif curation_method == "embedding-diversity":
-            df = embedding_diversity_curation(df, experiment_config, n_samples)
         else:
-            raise ValueError(f"Unknown curation method: {curation_method}")
-    else:
-        # Load base dataset
-        df = load_base_dataset()
+            df = load_base_dataset()
+            df = await process_s1_dataset(
+                df, config, tokenizer, n_samples,
+                specialty_weights, safe_experiment_name,
+                output_dir, run_pipeline
+            )
+            # Save processed dataset for future use
+            os.makedirs(os.path.dirname(filtered_path), exist_ok=True)
+            df.to_parquet(filtered_path)
+    
+    elif curation_method == "difficulty-substring":
+        # For "difficulty-substring" method, always use CPU and load directly
+        df = difficulty_substring_curation(experiment_config, n_samples)
+    
+    elif curation_method == "novelty-answer":
+        # For "novelty-answer" method, need filtered dataset and embeddings
+        if os.path.exists(filtered_path):
+            df = pd.read_parquet(filtered_path)
+            logging.info(f"Loaded existing dataset from {filtered_path}")
+        else:
+            # Create and save filtered dataset first
+            df = load_base_dataset()
+            df = await process_s1_dataset(
+                df, config, tokenizer, n_samples,
+                specialty_weights, safe_experiment_name,
+                output_dir, run_pipeline
+            )
+            os.makedirs(os.path.dirname(filtered_path), exist_ok=True)
+            df.to_parquet(filtered_path)
         
-        # Apply appropriate processing method
-        if curation_method == "all":
-            df = full_dataset(df, experiment_config)
-        elif curation_method == "random":
-            df = random_sample_dataset(df, n_samples)
-        elif curation_method == "s1":
-            df = await process_s1_dataset(
-                df, config, tokenizer, n_samples, 
-                specialty_weights, safe_experiment_name, 
-                output_dir, run_pipeline
-            )
-            # Save processed dataset for future use
-            os.makedirs(os.path.dirname(filtered_path), exist_ok=True)
-            df.to_parquet(filtered_path)
+        # Check if base_model_response column exists
+        if 'base_model_response' not in df.columns:
+            logging.error("base_model_response column not found in dataset. This is required for novelty-answer curation.")
+            raise ValueError("base_model_response column not found in dataset. This is required for novelty-answer curation.")
+        
+        # Apply novelty-answer curation
+        df = novelty_answer_curation(df, experiment_config, n_samples)
+    
+    elif curation_method in ["embedding-similarity", "embedding-diversity"]:
+        # For embedding methods, need dataset with embeddings
+        if os.path.exists(filtered_path):
+            df = pd.read_parquet(filtered_path)
+            logging.info(f"Loaded existing dataset from {filtered_path}")
         else:
-            # For other methods, we need to create the base dataset first
-            logging.info(f"Creating base dataset for method '{curation_method}'")
-            df = await process_s1_dataset(
-                df, config, tokenizer, n_samples, 
-                specialty_weights, safe_experiment_name, 
-                output_dir, run_pipeline
-            )
-            # Save processed dataset for future use
-            os.makedirs(os.path.dirname(filtered_path), exist_ok=True)
-            df.to_parquet(filtered_path)
-            
-            # Now apply the specific curation method
-            if curation_method == "novelty-answer":
-                df = novelty_answer_curation(df, experiment_config, n_samples)
-            elif curation_method == "difficulty-substring":
-                df = difficulty_substring_curation(df, experiment_config, n_samples)
-            elif curation_method == "embedding-similarity":
-                df = embedding_similarity_curation(df, experiment_config, n_samples)
-            elif curation_method == "embedding-diversity":
-                df = embedding_diversity_curation(df, experiment_config, n_samples)
+            df = load_base_dataset()
+        
+        # Get column from config
+        curation_params = experiment_config.get("curation", {})
+        column = curation_params.get("column", "Complex_CoT")
+        
+        # Parse column from experiment name if not in config
+        if column == "Complex_CoT" and "-question" in curation_method.lower():
+            column = "Question"
+        elif column == "Complex_CoT" and "-cot" in curation_method.lower():
+            column = "Complex_CoT"
+        
+        logging.info(f"Using column '{column}' for embedding-based curation")
+        
+        # Apply appropriate embedding method
+        if curation_method == "embedding-similarity":
+            df = embedding_similarity_curation(df, experiment_config, n_samples)
+        else:  # embedding-diversity
+            df = embedding_diversity_curation(df, experiment_config, n_samples)
+    
+    else:
+        raise ValueError(f"Unknown curation method: {curation_method}")
     
     # Get paths for final outputs
     paths = get_final_paths(output_dir, args.experiment)

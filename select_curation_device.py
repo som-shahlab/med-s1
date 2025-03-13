@@ -48,8 +48,13 @@ def select_device(experiment_name: str, results_json_path: str, data_dir: str) -
     logging.info(f"Checking for embeddings directory: {embeddings_dir_path}")
     
     # Simple methods that always use CPU
-    if curation_method in ["all", "random", "difficulty-substring"]:
+    if curation_method in ["all", "random"]:
         logging.info(f"Method '{curation_method}' always uses CPU")
+        return "cpu"
+        
+    # Difficulty-substring method - always uses CPU
+    elif curation_method == "difficulty-substring":
+        logging.info(f"Method '{curation_method}' always uses CPU (loads dataset directly)")
         return "cpu"
     
     # S1 method - check for filtered dataset
@@ -61,22 +66,50 @@ def select_device(experiment_name: str, results_json_path: str, data_dir: str) -
             logging.info(f"Method '{curation_method}' using GPU (filtered dataset does not exist)")
             return "gpu"
     
-    # Novelty-answer method - check for both filtered dataset and embeddings
+    # Novelty-answer method - check for filtered dataset and required embeddings
     elif curation_method == "novelty-answer":
-        if os.path.exists(filtered_dataset_path) and os.path.exists(embeddings_dir_path):
-            logging.info(f"Method '{curation_method}' using CPU (both filtered dataset and embeddings exist)")
+        # Novelty-answer needs Response and base_model_response embeddings
+        response_embedding_path = os.path.join(embeddings_dir_path, "Response_embeddings.npy")
+        base_model_embedding_path = os.path.join(embeddings_dir_path, "base_model_response_embeddings.npy")
+        
+        if (os.path.exists(filtered_dataset_path) and
+            os.path.exists(embeddings_dir_path) and
+            os.path.exists(response_embedding_path) and
+            os.path.exists(base_model_embedding_path)):
+            logging.info(f"Method '{curation_method}' using CPU (filtered dataset and required embeddings exist)")
             return "cpu"
         else:
-            logging.info(f"Method '{curation_method}' using GPU (filtered dataset or embeddings do not exist)")
+            logging.info(f"Method '{curation_method}' using GPU (filtered dataset or required embeddings do not exist)")
             return "gpu"
     
-    # Embedding methods - check for embeddings directory
+    # (Removed duplicate check for difficulty-substring)
+    
+    # Embedding methods - check for required embeddings
     elif curation_method in ["embedding-similarity", "embedding-diversity"]:
-        if os.path.exists(embeddings_dir_path):
-            logging.info(f"Method '{curation_method}' using CPU (embeddings exist)")
+        # Parse column from curation method if present
+        column = "Complex_CoT"  # Default column
+        if "-question" in curation_method.lower():
+            column = "Question"
+        elif "-cot" in curation_method.lower():
+            column = "Complex_CoT"
+        
+        # Get column from config if available
+        try:
+            config_curation = config.get("curation", {})
+            if "column" in config_curation:
+                column = config_curation["column"]
+                logging.info(f"Using column from config: {column}")
+        except Exception as e:
+            logging.warning(f"Error getting column from config: {e}")
+        
+        # Check if embeddings exist for the specific column
+        column_embedding_path = os.path.join(embeddings_dir_path, f"{column}_embeddings.npy")
+        
+        if os.path.exists(embeddings_dir_path) and os.path.exists(column_embedding_path):
+            logging.info(f"Method '{curation_method}' using CPU (embeddings exist for {column})")
             return "cpu"
         else:
-            logging.info(f"Method '{curation_method}' using GPU (embeddings do not exist)")
+            logging.info(f"Method '{curation_method}' using GPU (embeddings do not exist for {column})")
             return "gpu"
     
     # Default to GPU for unknown methods

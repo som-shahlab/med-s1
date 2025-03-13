@@ -1,0 +1,21 @@
+Cluster all points into k = CP% * n where CP is the cluster percentage
+Let OP% be the percentage of outliers you want among the final n samples.
+Compute the number of outliers to pick: outlier_count=⌊OP%×n⌋. 
+
+Identify the top outliers.
+Within each cluster, measure each point’s distance from its cluster centroid.
+Rank all points (across all clusters) by their distance to the centroid, from largest to smallest.
+Select the top outlier_count points as the “outliers.”
+Add outliers to the final set and remove them from their clusters.
+
+Include the selected outliers in your final sample set.
+Mark them as “taken” so you don’t select them again.
+Evenly sample from the remaining data to reach n.
+
+You still need remaining_count=n−outlier_count samples.
+Distribute remaining_count evenly across the k clusters by taking an equal number from each cluster (if possible). If a cluster runs out of points (after removing outliers), skip it and ignore it in later rounds. Iterate if needed.
+
+If there are still spots left in the final set (because some clusters didn’t have enough points), repeat the even-sampling step among the clusters that still have unselected points.
+Continue until you have n samples or exhaust the available points.
+
+The final set consists of: the outlier points selected first and the remaining points drawn evenly from clusters, ensuring no duplicates are selected.

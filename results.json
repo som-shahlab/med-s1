@@ -56,11 +56,11 @@
           "n_samples": 1000
         },
         "training_params": {
-          "learning_rate": 5e-06,
+          "learning_rate": 2e-06,
           "batch_size": 2,
-          "num_epochs": 15,
+          "num_epochs": 10,
           "weight_decay": 0.1,
-          "warmup_ratio": 0.1,
+          "warmup_ratio": 0.15,
           "optimizer": {
             "no_decay_params": [
               "bias",
@@ -81,7 +81,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-random",
-          "timestamp": "2025-03-13T07:34:34Z",
+          "timestamp": "2025-03-13T15:28:47Z",
           "metrics": null
         }
       }
@@ -161,10 +161,192 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-100-random",
-          "timestamp": "2025-03-13T06:27:29Z",
+          "timestamp": "2025-03-13T11:49:45Z",
           "metrics": null
         }
       }
+    },
+    "huatuo-1k-embedding-similarity-question": {
+      "description": "1k sample using embedding similarity on questions",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "embedding-similarity",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "column": "Question"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {}
+    },
+    "huatuo-1k-embedding-similarity-cot": {
+      "description": "1k sample using embedding similarity on complex cot",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "embedding-similarity",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "column": "Complex_CoT"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {}
+    },
+    "huatuo-1k-embedding-diversity-question-cluster-10-outlier-5": {
+      "description": "1k sample using embedding diversity on questions with 10% clusters and 5% outliers",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "embedding-diversity",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "column": "Question",
+          "cluster_percentage": 10,
+          "outlier_percentage": 5
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {}
+    },
+    "huatuo-1k-embedding-diversity-cot-cluster-10-outlier-5": {
+      "description": "1k sample using embedding diversity on complex cot with 10% clusters and 5% outliers",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "embedding-diversity",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "column": "Complex_CoT",
+          "cluster_percentage": 10,
+          "outlier_percentage": 5
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {}
+    },
+    "huatuo-1k-difficulty-substring": {
+      "description": "1k sample using difficulty substring filtering",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "difficulty-substring",
+          "huatuo_format": true,
+          "n_samples": 1000
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {}
+    },
+    "huatuo-1k-novelty-answer": {
+      "description": "1k sample using novelty answer filtering",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "novelty-answer",
+          "huatuo_format": true,
+          "n_samples": 1000
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {}
     }
   }
 }
