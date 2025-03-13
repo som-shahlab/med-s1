@@ -496,19 +496,25 @@ def main():
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
-        
-    # Create eval results
+    
+    # Import path_utils for updating results.json
+    import sys
+    sys.path.append(os.path.join(os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1'), 'data'))
+    from utils.path_utils import update_results_json, get_results_storage_path, save_results_to_file
+    
+    # Create paths dict for update_results_json
+    paths = {
+        'outputs_path': os.path.abspath(path_to_output),
+        'metrics_path': os.path.abspath(metrics_file)
+    }
+    
+    # Create stats dict with summary metrics
+    stats = {"summary": metrics}
+    
+    # Add test time scaling specific data if applicable
     if args.test_time_scaling:
-        # For test time scaling, include paths, metrics, and token counts for each approach
-        eval_results = {
-            "outputs_path": os.path.abspath(path_to_output),  # Path to all outputs
-            "timestamp": datetime.now().isoformat(),
-            "test_time_scaling": True,
-            "summary": metrics,  # Contains metrics for each approach
-            "reasoning_tokens": {}  # Will store average reasoning tokens per approach
-        }
-        
         # Calculate average reasoning tokens for each approach
+        reasoning_tokens = {}
         for approach in approaches:
             tokens = []
             for result in final_results:
@@ -516,46 +522,25 @@ def main():
                     if scaling_result['approach'] == approach:
                         tokens.append(scaling_result['n_reasoning_tokens'])
             if tokens:
-                eval_results["reasoning_tokens"][approach] = sum(tokens) / len(tokens)
+                reasoning_tokens[approach] = sum(tokens) / len(tokens)
+        
+        # Add to stats
+        stats["test_time_scaling"] = True
+        stats["reasoning_tokens"] = reasoning_tokens
         
         # Add path to test time scaling plot
         plot_path = os.path.join(args.path_to_output_dir, f"{task_name}_plot.png")
-        eval_results["test_time_scaling_plot"] = os.path.abspath(plot_path)
-    else:
-        # Original eval results format
-        eval_results = {
-            "outputs_path": os.path.abspath(path_to_output),
-            "metrics_path": os.path.abspath(metrics_file),
-            "timestamp": datetime.now().isoformat(),
-            "summary": metrics
-        }
+        stats["test_time_scaling_plot"] = os.path.abspath(plot_path)
     
-    # Update results.json safely by reading latest version before writing
-    max_retries = 5
-    retry_delay = 1  # seconds
-    
-    for attempt in range(max_retries):
-        try:
-            # Read the latest version of results.json
-            with open(results_json, "r") as f:
-                results = json.load(f)
-            
-            # Update the eval results
-            results["experiments"][args.experiment_name]["results"]["eval"] = eval_results
-            
-            # Write back to results.json
-            with open(results_json, "w") as f:
-                json.dump(results, f, indent=2)
-                
-            break  # Success - exit retry loop
-            
-        except Exception as e:
-            if attempt == max_retries - 1:  # Last attempt
-                print(f"Failed to update results.json after {max_retries} attempts: {e}")
-                raise
-            else:
-                print(f"Attempt {attempt + 1} failed, retrying in {retry_delay}s: {e}")
-                time.sleep(retry_delay)
+    # Update results.json using the path_utils function
+    update_results_json(
+        results_json_path=results_json,
+        experiment_name=args.experiment_name,
+        stage="eval",
+        paths=paths,
+        timestamp=datetime.now().isoformat(),
+        stats=stats
+    )
 
 
 if __name__ == "__main__":

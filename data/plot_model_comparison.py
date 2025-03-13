@@ -10,18 +10,30 @@ def load_results(json_path):
 
 def get_model_metrics(model_data):
     """Extract accuracies and confidence intervals from model results"""
-    if not model_data.get('results', {}).get('eval', {}).get('summary'):
+    if not model_data.get('results', {}).get('eval', {}):
         return None
 
     eval_data = model_data.get('results', {}).get('eval', {})
-    if not eval_data or 'summary' not in eval_data:
+    
+    # Check if we have a summary directly in results.json
+    if 'summary' in eval_data:
+        summary = eval_data['summary']
+    # Otherwise, check if we have a reference to a summary file
+    elif 'summary_file' in eval_data:
+        try:
+            with open(eval_data['summary_file'], 'r') as f:
+                summary_data = json.load(f)
+                summary = summary_data.get('summary', {})
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading summary file {eval_data['summary_file']}: {e}")
+            return None
+    else:
         return None
-
-    summary = eval_data['summary']
+    
     metrics = {}
     for dataset, data in summary.items():
         if 'total_examples' not in data:
-            return None
+            continue
         dataset_metrics = {}
         if 'accuracy' in data:
             dataset_metrics['accuracy'] = data['accuracy']
@@ -35,6 +47,9 @@ def get_model_metrics(model_data):
             dataset_metrics['ci_upper'] = 0
         dataset_metrics['total_examples'] = data['total_examples']  # Add total examples for weighting
         metrics[dataset] = dataset_metrics
+    
+    if not metrics:
+        return None
     
     # Calculate weighted average across datasets
     total_examples = sum(data['total_examples'] for data in metrics.values())

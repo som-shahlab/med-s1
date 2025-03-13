@@ -335,52 +335,14 @@ if [ -d "/local-scratch" ]; then
     rm -rf $LOCAL_DATA_DIR
 fi
 
-# Update results.json with model path and timestamp
-model_path="${checkpoint_dir}"
-timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# Update results.json with model path and timestamp using the Python script
+echo "Updating results.json with training results..."
+python "${MED_S1_DIR}/train/update_training_results.py" \
+    --experiment_name="${experiment_name}" \
+    --model_path="${checkpoint_dir}" \
+    --results_json="${RESULTS_JSON}"
 
-# Function to update results.json with retries
-update_results_json() {
-    local max_retries=5
-    local retry_delay=1
-    local attempt=1
-    
-    while [ $attempt -le $max_retries ]; do
-        echo "Attempting to update results.json (attempt $attempt/$max_retries)..."
-        
-        # Create a unique temporary file
-        local tmp_file="${RESULTS_JSON}.tmp.$$"
-        
-        # Read the latest version and update it
-        if jq --arg path "$model_path" --arg time "$timestamp" \
-            ".experiments[\"$experiment_name\"].results.training = {
-                \"model_path\": \$path,
-                \"timestamp\": \$time,
-                \"metrics\": null
-            }" \
-            "$RESULTS_JSON" > "$tmp_file"; then
-            
-            # Atomic move of the temp file
-            if mv "$tmp_file" "$RESULTS_JSON"; then
-                echo "Successfully updated results.json"
-                return 0
-            fi
-        fi
-        
-        # Clean up temp file if it exists
-        [ -f "$tmp_file" ] && rm "$tmp_file"
-        
-        echo "Failed to update results.json, retrying in ${retry_delay}s..."
-        sleep $retry_delay
-        attempt=$((attempt + 1))
-    done
-    
-    echo "Failed to update results.json after $max_retries attempts"
-    return 1
-}
-
-# Try to update results.json
-if ! update_results_json; then
+if [ $? -ne 0 ]; then
     echo "Error: Failed to update results.json"
     exit 1
 fi

@@ -42,6 +42,16 @@ def calculate_weighted_average(metrics):
     
     return accuracy, ci_lower, ci_upper, total_examples
 
+def load_summary_from_file(summary_file_path):
+    """Load summary data from a separate file"""
+    try:
+        with open(summary_file_path, 'r') as f:
+            data = json.load(f)
+            return data.get('summary', {})
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading summary file {summary_file_path}: {e}")
+        return {}
+
 def extract_answer(output, question_data):
     # Split on special tokens if present
     if '<|start_header_id|>answer<|end_header_id|>' in output:
@@ -316,13 +326,48 @@ def main():
             
             # For -tts experiments, check required fields
             if '-tts' in exp_name:
-                if not eval_data.get('test_time_scaling') or not eval_data.get('summary') or not eval_data.get('reasoning_tokens'):
+                # Check if we have summary directly or via a file
+                has_summary = False
+                if 'summary' in eval_data:
+                    has_summary = True
+                elif 'summary_file' in eval_data:
+                    # Try to load summary from file
+                    summary = load_summary_from_file(eval_data['summary_file'])
+                    if summary:
+                        # Add summary to eval_data for easier access later
+                        eval_data['summary'] = summary
+                        has_summary = True
+                
+                # Check for reasoning tokens
+                has_reasoning_tokens = False
+                if 'reasoning_tokens' in eval_data:
+                    has_reasoning_tokens = True
+                elif 'summary_file' in eval_data:
+                    # Try to load reasoning tokens from file
+                    summary_data = load_summary_from_file(eval_data['summary_file'])
+                    if 'reasoning_tokens' in summary_data:
+                        eval_data['reasoning_tokens'] = summary_data['reasoning_tokens']
+                        has_reasoning_tokens = True
+                
+                if not eval_data.get('test_time_scaling') or not has_summary or not has_reasoning_tokens:
                     print(f"Warning: {exp_name} missing required data")
                     continue
             # For huatuo-2000, just check summary
-            elif not eval_data.get('summary'):
-                print(f"Warning: {exp_name} missing required data")
-                continue
+            else:
+                has_summary = False
+                if 'summary' in eval_data:
+                    has_summary = True
+                elif 'summary_file' in eval_data:
+                    # Try to load summary from file
+                    summary = load_summary_from_file(eval_data['summary_file'])
+                    if summary:
+                        # Add summary to eval_data for easier access later
+                        eval_data['summary'] = summary
+                        has_summary = True
+                
+                if not has_summary:
+                    print(f"Warning: {exp_name} missing required data")
+                    continue
                 
             print(f"Found results for {exp_name}")
             tts_experiments[exp_name] = exp_data
