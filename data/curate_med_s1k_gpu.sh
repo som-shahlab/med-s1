@@ -2,7 +2,7 @@
 #SBATCH --job-name=med-s1-curate
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.err
-#SBATCH --partition=gpu
+#SBATCH --partition=nigam-h100
 #SBATCH --gres=gpu:1
 #SBATCH --mem=40GB
 #SBATCH --time=06:00:00

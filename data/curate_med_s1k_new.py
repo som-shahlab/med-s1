@@ -262,8 +262,13 @@ async def main():
         "selected_examples": len(df[df['selected_for_training']]),
         "filtered_examples": len(df[df['filter_status'] == 'removed']),
         "filter_reasons": df[df['filter_status'] == 'removed']['filter_reason'].value_counts().to_dict(),
-        "specialty_distribution": df[df['selected_for_training']]['specialty'].value_counts().to_dict()
     }
+    
+    # Add specialty distribution if the column exists
+    if 'specialty' in df.columns:
+        stats["specialty_distribution"] = df[df['selected_for_training']]['specialty'].value_counts().to_dict()
+    else:
+        logging.warning("'specialty' column not found in dataframe, skipping specialty distribution stats")
     
     # Get results.json path from environment
     results_json = os.environ.get('RESULTS_JSON')

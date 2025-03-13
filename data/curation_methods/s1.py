@@ -123,8 +123,8 @@ async def process_s1_dataset(
     Returns:
         DataFrame with s1-processed examples selected for training
     """
-    from ..curation_methods.base import quality_filter
-    from ..utils.path_utils import get_intermediate_path
+    from curation_methods.base import quality_filter
+    from utils.path_utils import get_intermediate_path
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     

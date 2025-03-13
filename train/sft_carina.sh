@@ -301,9 +301,9 @@ fi
 # Launch training command with Accelerate
 echo "Launching training with accelerate..."
 # Set early stopping parameters with hardcoded defaults
-early_stopping="false"  # Set to "true" to enable early stopping
-early_stopping_patience="3"
-early_stopping_threshold="0.01"
+early_stopping="true"  # Set to "true" to enable early stopping
+early_stopping_patience="2"
+early_stopping_threshold="0.001"
 early_stopping_metric="loss"  # Options: "loss" or "accuracy"
 
 # Build early stopping flags

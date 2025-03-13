@@ -9,7 +9,7 @@ import logging
 import random
 from typing import Dict, Optional, List, Tuple
 from sklearn.cluster import KMeans
-from ..utils.embedding_utils import get_or_generate_embeddings, cosine_similarity
+from utils.embedding_utils import get_or_generate_embeddings, cosine_similarity
 
 def novelty_answer_curation(df: pd.DataFrame, config: Dict, n_samples: int) -> pd.DataFrame:
     """
