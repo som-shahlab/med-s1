@@ -395,6 +395,11 @@
               "Consultation-Liaison Psychiatry": 1
             }
           }
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-random",
+          "timestamp": "2025-03-12T23:53:56Z",
+          "metrics": null
         }
       }
     },
@@ -564,6 +569,100 @@
               "Molecular Genetic Pathology": 1,
               "Neuromuscular Medicine": 1,
               "Epilepsy": 1,
+              "Consultation-Liaison Psychiatry": 1
+            }
+          }
+        }
+      }
+    },
+    "huatuo-100-random": {
+      "description": "100 uniform random sample; many epochs, very small LR, higher warmup ratio to avoid overshooting quickly",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 100
+        },
+        "training_params": {
+          "learning_rate": 2e-06,
+          "batch_size": 2,
+          "num_epochs": 20,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-100-random_20250313_023433/med_s1k_formatted",
+          "timestamp": "2025-03-13T02:34:42.074516",
+          "stats": {
+            "total_examples": 25371,
+            "selected_examples": 100,
+            "filtered_examples": 25364,
+            "filter_reasons": {
+              "not_selected_in_sampling": 25336,
+              "base_model_correct": 28
+            },
+            "specialty_distribution": {
+              "Allergy and Immunology": 3,
+              "Infectious Disease": 3,
+              "Physics": 3,
+              "Obstetrics and Gynecology": 3,
+              "Gastroenterology": 3,
+              "Hematology": 2,
+              "Ophthalmology": 2,
+              "Dentistry": 2,
+              "Pathology - Anatomic": 2,
+              "Developmental-Behavioral Pediatrics": 2,
+              "Math": 2,
+              "Endocrinology, Diabetes and Metabolism": 2,
+              "Neonatal-Perinatal Medicine": 2,
+              "Neurology": 2,
+              "Anesthesiology": 2,
+              "Pediatric Infectious Diseases": 2,
+              "Pathology - Forensic": 2,
+              "Orthopaedic Surgery": 2,
+              "Pediatrics": 1,
+              "Clinical Genetics and Genomics (MD)": 1,
+              "Pediatric Dermatology": 1,
+              "Pulmonary Disease": 1,
+              "Public Health and General Preventive Medicine": 1,
+              "Forensic Psychiatry": 1,
+              "Medical Physics (Diagnostic, Nuclear, Therapeutic)": 1,
+              "Orthopaedic Sports Medicine": 1,
+              "Sports Medicine": 1,
+              "Dermatology": 1,
+              "Pain Medicine": 1,
+              "Cardiovascular Disease": 1,
+              "Computer Science": 1,
+              "Health Care Administration, Leadership, and Management": 1,
+              "Geriatric Medicine": 1,
+              "Complex Pediatric Otolaryngology": 1,
+              "Clinical Cardiac Electrophysiology": 1,
+              "Chemistry": 1,
+              "Vascular Neurology": 1,
+              "Pediatric Gastroenterology": 1,
+              "General Surgery": 1,
+              "Critical Care Medicine": 1,
+              "Nephrology": 1,
+              "Neurotology": 1,
+              "Pediatric Hematology-Oncology": 1,
+              "Pediatric Nephrology": 1,
+              "General Knowledge": 1,
+              "Child and Adolescent Psychiatry": 1,
+              "Pediatric Endocrinology": 1,
+              "Urology": 1,
               "Consultation-Liaison Psychiatry": 1
             }
           }

@@ -3,16 +3,16 @@
 # Set directory paths
 
 # # michael
-MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
-CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
-DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
-RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results_michael.json"
-
-# caleb
-# MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
+# MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
 # CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
 # DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
-# RESULTS_JSON="/share/pi/nigam/users/calebwin/med-s1/results.json"
+# RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results_michael.json"
+
+# caleb
+MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
+CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
+DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
+RESULTS_JSON="/share/pi/nigam/users/calebwin/med-s1/results.json"
 
 # Export paths for scripts
 export MED_S1_DIR
@@ -32,7 +32,6 @@ export HF_CACHE_DIR="$CACHE_DIR"
 export MED_S1K_OUTPUT="$DATA_DIR"
 
 # HF, Gemini, and Wandb credentials
-export WANDB_API_KEY="2210b81ce15254b58bdefdaee78b4aa6dbc9916b"
 
 # Debug: Print environment variables
 echo "Wandb Key: ${WANDB_API_KEY:0:10}..."

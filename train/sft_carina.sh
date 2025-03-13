@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=med-s1-train
-#SBATCH --output=/share/pi/nigam/mwornow/med-s1-train-%j.out
-#SBATCH --error=/share/pi/nigam/mwornow/med-s1-train-%j.err
-#SBATCH --partition=nigam-h100
+#SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
+#SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
+#SBATCH --partition=nigam-a100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=28
 #SBATCH --mem=150G
+#SBATCH --time=04:00:00
 #SBATCH --account=nigam
 
 # Usage: sbatch sft_carina.sh [--debug] <experiment_name>
@@ -150,10 +151,10 @@ echo "  Adam Beta2: $adam_beta2"
 echo "  Adam Epsilon: $adam_epsilon"
 
 # Setup environment
-# echo "Setting up conda environment..."
-# source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
-# echo "Activating med-s1 environment..."
-# conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+echo "Setting up conda environment..."
+source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+echo "Activating med-s1 environment..."
+conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
 
 # Get network interface for NCCL
 export NCCL_SOCKET_IFNAME=$(ip route show default | awk '/default/ {print $5}')
