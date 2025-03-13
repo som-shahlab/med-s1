@@ -33,6 +33,12 @@ class TrainingConfig:
     seed: int = field(default=42)
     debug: bool = field(default=False)  # Explicitly set default to False
     max_ckpts: int = field(default=2)
+    
+    # Early stopping parameters
+    early_stopping: bool = field(default=False)
+    early_stopping_patience: int = field(default=3)
+    early_stopping_threshold: float = field(default=0.01)
+    early_stopping_metric: str = field(default="loss")  # Options: "loss", "accuracy"
 
     def __post_init__(self):
         """Validate configuration after initialization."""

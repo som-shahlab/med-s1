@@ -78,6 +78,16 @@ def main():
     parser.add_argument('--max_ckpts', type=int, default=2,
                       help='Maximum number of checkpoints to keep')
     
+    # Early stopping arguments
+    parser.add_argument('--early_stopping', action='store_true',
+                      help='Enable early stopping')
+    parser.add_argument('--early_stopping_patience', type=int, default=3,
+                      help='Number of epochs with no improvement after which training will be stopped')
+    parser.add_argument('--early_stopping_threshold', type=float, default=0.01,
+                      help='Minimum change in the monitored quantity to qualify as an improvement')
+    parser.add_argument('--early_stopping_metric', type=str, default='loss', choices=['loss', 'accuracy'],
+                      help='Metric to monitor for early stopping')
+    
     args = parser.parse_args()
     
     # Set random seed

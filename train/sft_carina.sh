@@ -300,6 +300,22 @@ fi
 
 # Launch training command with Accelerate
 echo "Launching training with accelerate..."
+# Set early stopping parameters with hardcoded defaults
+early_stopping="false"  # Set to "true" to enable early stopping
+early_stopping_patience="3"
+early_stopping_threshold="0.01"
+early_stopping_metric="loss"  # Options: "loss" or "accuracy"
+
+# Build early stopping flags
+early_stopping_flags=""
+if [ "$early_stopping" = "true" ]; then
+    early_stopping_flags="--early_stopping --early_stopping_patience=${early_stopping_patience} --early_stopping_threshold=${early_stopping_threshold} --early_stopping_metric=${early_stopping_metric}"
+    echo "Early stopping enabled with:"
+    echo "  Patience: ${early_stopping_patience}"
+    echo "  Threshold: ${early_stopping_threshold}"
+    echo "  Metric: ${early_stopping_metric}"
+fi
+
 cmd="accelerate launch \
     --config_file \"${accelerate_config}\" \
     --main_process_port $MASTER_PORT \
@@ -319,6 +335,7 @@ cmd="accelerate launch \
     --adam_beta2=${adam_beta2} \
     --adam_epsilon=${adam_epsilon} \
     --num_train_epochs=${num_epochs} \
+    ${early_stopping_flags} \
     $debug_flag"
 
 # Print launch configuration

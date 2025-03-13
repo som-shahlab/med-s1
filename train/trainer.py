@@ -4,6 +4,8 @@ import os
 import logging
 import datetime
 import shutil
+import math
+import copy
 from dataclasses import asdict
 import torch
 from torch.utils.data import DataLoader
@@ -32,6 +34,12 @@ class SFTTrainer:
             mixed_precision='bf16',
             gradient_accumulation_steps=config.gradient_accumulation_steps,
         )
+        
+        # Initialize early stopping variables
+        self.early_stopping_counter = 0
+        self.best_metric = float('inf') if config.early_stopping_metric == 'loss' else float('-inf')
+        self.best_model_state = None
+        self.should_stop = False
         
         if self.accelerator.is_main_process:
             wandb.init(
@@ -222,18 +230,73 @@ class SFTTrainer:
         
         return val_loss, val_acc
         
-    def save_checkpoint(self, epoch: int, is_final: bool = False):
+    def check_early_stopping(self, val_loss: float, val_acc: float) -> bool:
+        """Check if early stopping criteria are met.
+        
+        Args:
+            val_loss: Validation loss
+            val_acc: Validation accuracy
+            
+        Returns:
+            bool: True if training should stop, False otherwise
+        """
+        if not self.config.early_stopping:
+            return False
+            
+        # Determine current metric value based on configuration
+        current_metric = val_loss if self.config.early_stopping_metric == 'loss' else val_acc
+        
+        # For loss, lower is better; for accuracy, higher is better
+        is_better = False
+        if self.config.early_stopping_metric == 'loss':
+            # Check if current loss is better (lower) than best loss by at least the threshold
+            is_better = current_metric < (self.best_metric - self.config.early_stopping_threshold)
+        else:
+            # Check if current accuracy is better (higher) than best accuracy by at least the threshold
+            is_better = current_metric > (self.best_metric + self.config.early_stopping_threshold)
+        
+        if is_better:
+            # Reset counter and update best metric
+            self.early_stopping_counter = 0
+            self.best_metric = current_metric
+            
+            # Save best model state
+            if self.accelerator.is_main_process:
+                logger.info(f"New best {self.config.early_stopping_metric}: {current_metric:.4f}")
+                self.best_model_state = copy.deepcopy(
+                    self.accelerator.get_state_dict(self.model)
+                )
+            return False
+        else:
+            # Increment counter
+            self.early_stopping_counter += 1
+            if self.accelerator.is_main_process:
+                logger.info(f"Early stopping counter: {self.early_stopping_counter}/{self.config.early_stopping_patience}")
+                
+            # Check if we should stop
+            if self.early_stopping_counter >= self.config.early_stopping_patience:
+                if self.accelerator.is_main_process:
+                    logger.info(f"Early stopping triggered after {self.early_stopping_counter} epochs without improvement")
+                return True
+            return False
+    
+    def save_checkpoint(self, epoch: int, is_final: bool = False, is_best: bool = False):
         """Save model checkpoint.
         
         Args:
             epoch: Current epoch number
             is_final: Whether this is the final checkpoint
+            is_best: Whether this is the best model according to early stopping metric
         """
         if not self.accelerator.is_main_process:
             return
             
-        # For intermediate checkpoints, save in numbered subdirectories
-        if not is_final:
+        # Determine save directory
+        if is_best:
+            save_dir = os.path.join(self.config.output_dir, "best_model")
+            os.makedirs(save_dir, exist_ok=True)
+            logger.info(f"Saving best model to {save_dir}")
+        elif not is_final:
             save_dir = os.path.join(self.config.output_dir, f"checkpoint-{epoch}")
             os.makedirs(save_dir, exist_ok=True)
         else:
@@ -242,17 +305,28 @@ class SFTTrainer:
         
         # Get model state dict
         unwrapped_model = self.accelerator.unwrap_model(self.model)
-        unwrapped_model.save_pretrained(
-            save_dir,
-            is_main_process=self.accelerator.is_main_process,
-            save_function=self.accelerator.save,
-            state_dict=self.accelerator.get_state_dict(self.model)
-        )
+        
+        # If saving best model and we have a stored best state
+        if is_best and self.best_model_state is not None:
+            unwrapped_model.save_pretrained(
+                save_dir,
+                is_main_process=self.accelerator.is_main_process,
+                save_function=self.accelerator.save,
+                state_dict=self.best_model_state
+            )
+        else:
+            unwrapped_model.save_pretrained(
+                save_dir,
+                is_main_process=self.accelerator.is_main_process,
+                save_function=self.accelerator.save,
+                state_dict=self.accelerator.get_state_dict(self.model)
+            )
+        
         self.tokenizer.save_pretrained(save_dir)
         
-        # Only rotate checkpoints for intermediate saves
-        if not is_final:
-            checkpoint_dirs = [d for d in os.listdir(self.config.output_dir) 
+        # Only rotate checkpoints for intermediate saves (not best or final)
+        if not is_final and not is_best:
+            checkpoint_dirs = [d for d in os.listdir(self.config.output_dir)
                              if d.startswith("checkpoint-")]
             if len(checkpoint_dirs) > self.config.max_ckpts:
                 oldest_checkpoint = sorted(checkpoint_dirs, key=lambda x: int(x.split("-")[-1]))[0]
@@ -266,6 +340,14 @@ class SFTTrainer:
         progress_bar = tqdm(range(self.num_training_steps), disable=not self.accelerator.is_main_process)
         completed_steps = 0
         starting_epoch = 0
+        
+        # Log early stopping configuration if enabled
+        if self.config.early_stopping and self.accelerator.is_main_process:
+            logger.info("\nEarly Stopping Configuration:")
+            logger.info(f"  Enabled: {self.config.early_stopping}")
+            logger.info(f"  Patience: {self.config.early_stopping_patience}")
+            logger.info(f"  Threshold: {self.config.early_stopping_threshold}")
+            logger.info(f"  Metric: {self.config.early_stopping_metric}")
 
         for epoch in range(starting_epoch, self.config.num_train_epochs):
             self.model.train()
@@ -322,6 +404,22 @@ class SFTTrainer:
                         'val_accuracy': val_acc,
                         'epoch': epoch,
                     })
+                
+                # Check early stopping criteria if validation is available and early stopping is enabled
+                if self.config.early_stopping:
+                    should_stop = self.check_early_stopping(val_loss, val_acc)
+                    
+                    # Save best model if this is the best performance so far
+                    if self.early_stopping_counter == 0 and self.accelerator.is_main_process:
+                        self.save_checkpoint(epoch, is_best=True)
+                    
+                    # Broadcast early stopping decision to all processes
+                    should_stop = self.accelerator.gather(torch.tensor([should_stop], device=self.accelerator.device)).any().item()
+                    
+                    if should_stop:
+                        if self.accelerator.is_main_process:
+                            logger.info("Early stopping triggered, stopping training")
+                        break
             
             # Save intermediate checkpoint
             self.save_checkpoint(epoch)
@@ -329,5 +427,12 @@ class SFTTrainer:
         # Save final model directly in output directory
         if self.accelerator.is_main_process:
             logger.info("\nSaving final model...")
-            self.save_checkpoint(self.config.num_train_epochs - 1, is_final=True)
+            
+            # If early stopping was enabled and we have a best model state, use that for the final model
+            if self.config.early_stopping and self.best_model_state is not None:
+                logger.info("Using best model from early stopping for final model")
+                self.save_checkpoint(self.config.num_train_epochs - 1, is_final=True, is_best=True)
+            else:
+                self.save_checkpoint(self.config.num_train_epochs - 1, is_final=True)
+                
             wandb.finish()
