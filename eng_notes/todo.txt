@@ -1,0 +1,59 @@
+Let's implement a few new methods for curation. We want to create experiments for the following:
+
+HuaTuo-25k
+HuaTuo-{1k | 5k}-random
+HuaTuo-{100}-random
+HuaTuo-{1k | 5k}-embedding-similarity-{question | cot}
+HuaTuo-{1k | 5k}-embedding-diversity-{question | cot}-cluster-{10}-outlier-{5}
+HuaTuo-{1k | 5k}-difficulty-substring
+HuaTuo-{1k | 5k}-novelty-answer (minimal EmbedSim(base answer, true answer))
+
+We should have experiments for all of these in @/med-s1/results.json.
+We already have huatuo-25k, huatuo-1k-random, huatuo-5k-random defined.
+We should define all the others - names should be lowercase, description should be short,
+training params should match either 1k random or 5k random depending on 1k or 5k,
+results should be empty dict, curation.n_samples set to either 1000 or 5000,
+huatuo_format should be true,
+and curation.method should be set to either
+embedding-similarity, embedding-diversity, difficulty-substring, novelty-answer.
+Parameters can be added under curation for column (question|cot), cluster percentage, outlier percentage.
+
+The difficulty substring is the simplest one.
+It does not require CPU (curate_med_s1k.sh should check for this and dispatch the _cpu not the _gpu curation slurm job)
+and simply runs WHERE contains(Complex_CoT, 'confus') OR contains(Complex_CoT, 'mislead') OR contains(Complex_CoT, 'overlook') OR contains(Complex_CoT, 'double-check') OR contains(Complex_CoT, 'confirm') and then randomly samples n_samples.
+
+The other methods require embeddings of the Complex_CoT, Question, and Response to generate.
+Look at $DATA_DIR/embeddings-25k/ and if the directory exists, then we can use CPU otherwise GPU.
+Inside $DATA_DIR/embeddings-25k/ we should store matrix data files for each of the 3 columns (Complex_CoT, Question, Response). We should have a function in a separate file for generating this on GPU, and reading it in on CPU. We should batch generate the embeddings (use microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext) on GPU
+in the case where directory doesn't exist and write to files. We should read in on CPU and then use
+the embeddings for the different methods.
+
+For these methods embedding-similarity, embedding-diversity, difficulty-substring, novelty-answer,
+we should add a branch to the curation Python script so that instead of
+going to normal path, it should branch and take a different path (put this in a separate file) to do the 
+filtering.
+For embedding-similarity, embedding-diversity, novelty-answer; we use the embeddings so hould read 
+in on CPU.
+
+For embedding-diversity, cluster into cluster percentage of the target number of samples
+number of cluster. Compute the outlier percentage of the target number of samples
+and take the top-(OP% of n_samples) data points ranked by longest distance to their cluster
+centroid and then for the remainder of n_samples divide across the clusters and randomly take
+an equal number from each, discarding any clusters that get exhausted by this and
+discarding any outlier data points we already added before we do this. If we still need to add more, then
+sort of repeat this to evenly take from all clusters until full, randomly if needed. Basicaly the principle is to add outliers first, then take evenly from each cluster, but don't add any duplicates to the final set. Think about the algorithm first before implementing. It should not be overly complicated.
+
+For novelty-answer, this is simple. This should only run if the $DATA_DIR/plumbing_test_001_20250219_145607/med_s1k_filtered.parquet already exists, fail otherwise.
+It should load the embeddings (generate with GPU if not created otherwise just read in with CPU)
+and just rank by embedding similarity between base
+
+TODO: Explain where embedding file gets created
+TODO: Explain the control flow of CPU vs GPU and what to run
+TODO: Determine if we want a couple more variants that have 5% outliers
+TODO: Describe the embedding similarity properly
+TODO: separate task for refactoring
+
+Also notice how we generate so much... let's put it in a file in... and then add the path here...
+update the files that read these in... TODO
+
+TODO: validation set + all of the eval changes we made to verify results... <-- only do this after we do curation

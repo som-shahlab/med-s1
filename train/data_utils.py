@@ -1,6 +1,7 @@
 """Dataset utilities for medical dialogue model training."""
 
 import logging
+import os
 import torch
 from torch.utils.data import Dataset
 from datasets import load_from_disk
@@ -15,7 +16,7 @@ class PreformattedDataset(Dataset):
     "<|begin_of_text|><|start_header_id|>system<|end_header_id|>...<|eot_id|>"
     """
     
-    def __init__(self, data_path: str, tokenizer, block_size: int, debug: bool = False):
+    def __init__(self, data_path: str, tokenizer, block_size: int, debug: bool = False, split: str = "train"):
         """Initialize dataset.
         
         Args:
@@ -23,23 +24,54 @@ class PreformattedDataset(Dataset):
             tokenizer: Tokenizer for encoding text
             block_size: Maximum sequence length
             debug: If True, use reduced dataset size
+            split: Dataset split to use ("train" or "validation")
         """
         # Load dataset
         logger.info(f"Loading dataset from: {data_path}")
-        dataset = load_from_disk(data_path)
+        
+        # Check if data_path is a directory with train/validation subdirectories
+        train_dir = os.path.join(data_path, 'train')
+        validation_dir = os.path.join(data_path, 'validation')
+        test_dir = os.path.join(data_path, 'test')
+        
+        if os.path.exists(train_dir) and (os.path.exists(validation_dir) or os.path.exists(test_dir)):
+            # New format with separate directories
+            if split == "train":
+                logger.info(f"Loading training split from {train_dir}")
+                self.dataset = load_from_disk(train_dir)
+            elif split == "validation" and os.path.exists(validation_dir):
+                logger.info(f"Loading validation split from {validation_dir}")
+                self.dataset = load_from_disk(validation_dir)
+            elif split == "validation" and os.path.exists(test_dir):
+                logger.info(f"Loading validation split from test directory {test_dir}")
+                self.dataset = load_from_disk(test_dir)
+            else:
+                raise ValueError(f"Split {split} not found in {data_path}")
+        else:
+            # Old format with dataset_dict.json
+            dataset = load_from_disk(data_path)
+            
+            # Check available splits
+            if 'train' in dataset and split == 'train':
+                self.dataset = dataset['train']
+            elif 'validation' in dataset and split == 'validation':
+                self.dataset = dataset['validation']
+            elif 'test' in dataset and split == 'validation':
+                # Use test split for validation if validation not available
+                self.dataset = dataset['test']
+            else:
+                raise ValueError(f"Split {split} not found in dataset")
         
         # Log dataset size
-        logger.info(f"Loaded dataset with {len(dataset['train'])} samples")
+        logger.info(f"Loaded dataset with {len(self.dataset)} samples")
         
         # Handle debug mode
         if debug:
             min_samples = 32  # At least 8 samples per GPU
             logger.warning(f"Debug mode: Using {min_samples} samples")
-            self.dataset = dataset['train'].select(range(min_samples))
+            self.dataset = self.dataset.select(range(min(min_samples, len(self.dataset))))
             logger.warning(f"Debug dataset size: {len(self.dataset)}")
             logger.warning(f"First example: {self.dataset[0]}")
-        else:
-            self.dataset = dataset['train']
         
         self.tokenizer = tokenizer
         self.block_size = block_size

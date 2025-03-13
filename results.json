@@ -572,6 +572,11 @@
               "Consultation-Liaison Psychiatry": 1
             }
           }
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-5k-random",
+          "timestamp": "2025-03-13T04:40:24Z",
+          "metrics": null
         }
       }
     },
@@ -666,6 +671,11 @@
               "Consultation-Liaison Psychiatry": 1
             }
           }
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-100-random",
+          "timestamp": "2025-03-13T06:27:29Z",
+          "metrics": null
         }
       }
     }

@@ -26,13 +26,14 @@ mkdir -p "${MED_S1_DIR}/logs"
 # Export experiment name for Python script
 export EXPERIMENT_NAME="$experiment_name"
 
-# Check if base dataset exists in hf_cache
-if [ -d "$DATA_DIR/plumbing_test_001_20250219_145607" ] && [ -f "$DATA_DIR/plumbing_test_001_20250219_145607/med_s1k_filtered.parquet" ]; then
-    echo "Base dataset already exists at $DATA_DIR/plumbing_test_001_20250219_145607"
-    echo "Using CPU for processing since we only need to read and process existing data..."
+# Use the new Python script to determine whether to use GPU or CPU
+echo "Determining whether to use GPU or CPU..."
+device=$(python "${MED_S1_DIR}/select_curation_device.py" --experiment "$experiment_name")
+
+if [ "$device" = "cpu" ]; then
+    echo "Using CPU for processing..."
     sbatch "${MED_S1_DIR}/data/curate_med_s1k_cpu.sh" "$experiment_name"
 else
-    echo "Base dataset needs to be created"
-    echo "Using GPU for processing since we need to run model inference..."
+    echo "Using GPU for processing..."
     sbatch "${MED_S1_DIR}/data/curate_med_s1k_gpu.sh" "$experiment_name"
 fi

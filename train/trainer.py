@@ -81,14 +81,32 @@ class SFTTrainer:
             eps=self.config.adam_epsilon
         )
 
-        # Create dataset and dataloader
+        # Create training dataset
         train_dataset = PreformattedDataset(
             self.config.train_file_path,
             self.tokenizer,
             self.config.block_size,
-            self.config.debug
+            self.config.debug,
+            split="train"
         )
         
+        # Create validation dataset if available
+        try:
+            val_dataset = PreformattedDataset(
+                self.config.train_file_path,
+                self.tokenizer,
+                self.config.block_size,
+                self.config.debug,
+                split="validation"
+            )
+            self.has_validation = True
+            logger.info(f"Validation dataset loaded with {len(val_dataset)} examples")
+        except (ValueError, FileNotFoundError) as e:
+            logger.warning(f"No validation dataset found: {e}")
+            val_dataset = None
+            self.has_validation = False
+        
+        # Create dataloaders
         self.train_dataloader = DataLoader(
             train_dataset,
             batch_size=self.config.per_device_train_batch_size,
@@ -96,6 +114,15 @@ class SFTTrainer:
             drop_last=True,
             collate_fn=train_dataset.collate_fn
         )
+        
+        if self.has_validation:
+            self.val_dataloader = DataLoader(
+                val_dataset,
+                batch_size=self.config.per_device_train_batch_size,
+                shuffle=False,
+                drop_last=False,
+                collate_fn=val_dataset.collate_fn
+            )
 
         # Calculate training steps accounting for distributed training
         world_size = self.accelerator.num_processes
@@ -144,9 +171,14 @@ class SFTTrainer:
         )
 
         # Prepare everything with accelerator
-        self.model, self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(
-            self.model, self.optimizer, self.train_dataloader, self.lr_scheduler
-        )
+        if self.has_validation:
+            self.model, self.optimizer, self.train_dataloader, self.val_dataloader, self.lr_scheduler = self.accelerator.prepare(
+                self.model, self.optimizer, self.train_dataloader, self.val_dataloader, self.lr_scheduler
+            )
+        else:
+            self.model, self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(
+                self.model, self.optimizer, self.train_dataloader, self.lr_scheduler
+            )
 
         # Initialize metric tracker with accelerator for consistent world size
         self.metric = SFTMetric(device=self.accelerator.device, accelerator=self.accelerator)
@@ -160,12 +192,36 @@ class SFTTrainer:
             logger.info(f"  Total optimization steps: {self.num_training_steps}")
             logger.info(f"  Number of warmup steps: {num_warmup_steps}")
             logger.info(f"  Dataset size: {len(train_dataset)}")
+            if self.has_validation:
+                logger.info(f"  Validation dataset size: {len(val_dataset)}")
             logger.info(f"  Learning rate: {self.config.learning_rate}")
             logger.info(f"  Weight decay: {self.config.weight_decay}")
             logger.info(f"  Warmup ratio: {self.config.warmup_ratio}")
             logger.info(f"  Adam betas: ({self.config.adam_beta1}, {self.config.adam_beta2})")
             logger.info(f"  Adam epsilon: {self.config.adam_epsilon}")
 
+    def validate(self):
+        """Evaluate model on validation set."""
+        if not self.has_validation:
+            return 0.0, 0.0
+            
+        self.model.eval()
+        val_metric = SFTMetric(device=self.accelerator.device, accelerator=self.accelerator)
+        
+        with torch.no_grad():
+            for batch in self.val_dataloader:
+                outputs = self.model(**batch)
+                loss = outputs.loss
+                
+                # Update metrics
+                val_metric(outputs.logits, batch["labels"], loss)
+        
+        # Get validation metrics
+        val_acc, val_loss = val_metric.get_metric()
+        self.model.train()
+        
+        return val_loss, val_acc
+        
     def save_checkpoint(self, epoch: int, is_final: bool = False):
         """Save model checkpoint.
         
@@ -246,8 +302,8 @@ class SFTTrainer:
                         )
                         
                         wandb.log({
-                            'loss': train_loss,
-                            'accuracy': acc,
+                            'train_loss': train_loss,
+                            'train_accuracy': acc,
                             'learning_rate': self.lr_scheduler.get_last_lr()[0],
                             'epoch': epoch,
                             'step': completed_steps,
@@ -256,6 +312,17 @@ class SFTTrainer:
                 if completed_steps >= self.num_training_steps:
                     break
 
+            # Run validation if available
+            if self.has_validation:
+                val_loss, val_acc = self.validate()
+                if self.accelerator.is_main_process:
+                    logger.info(f"Validation - Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}")
+                    wandb.log({
+                        'val_loss': val_loss,
+                        'val_accuracy': val_acc,
+                        'epoch': epoch,
+                    })
+            
             # Save intermediate checkpoint
             self.save_checkpoint(epoch)
 

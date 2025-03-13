@@ -2,7 +2,7 @@ import pandas as pd
 import logging
 import os
 import re
-from typing import Dict
+from typing import Dict, Tuple, Optional
 from datetime import datetime
 from datasets import Dataset
 from transformers import AutoTokenizer
@@ -43,8 +43,21 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
         {"role": "assistant", "content": assistant_content}
     ], tokenize=False)
 
-def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict, experiment_name: str) -> Dataset:
-    """Format data for training with sft.py"""
+def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict, experiment_name: str, 
+                       validation_split: float = 0.1) -> Tuple[Dataset, Optional[Dataset]]:
+    """
+    Format data for training with sft.py.
+    
+    Args:
+        df: DataFrame with selected examples
+        config: Global configuration
+        experiment_config: Experiment-specific configuration
+        experiment_name: Name of experiment
+        validation_split: Fraction of data to use for validation (0.0 to disable)
+        
+    Returns:
+        Tuple of (train_dataset, validation_dataset)
+    """
     logging.info("Formatting for training...")
     
     # Check formatting mode from config
@@ -81,32 +94,16 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
         )
         formatted_data.append({"text": text})
     
-    # Convert to HF dataset and create train/test split
+    # Convert to HF dataset
     dataset = Dataset.from_dict({'text': [d['text'] for d in formatted_data]})
-    split = dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
     
-    # Save dataset
-    output_dir = os.environ.get('MED_S1K_OUTPUT')
-    experiment_dir = os.path.join(output_dir, experiment_name)
-    os.makedirs(experiment_dir, exist_ok=True)
-    formatted_path = os.path.join(experiment_dir, "med_s1k_formatted")
-    split.save_to_disk(formatted_path)
-    
-    # Update results.json with dataset path
-    results_json = os.environ.get('RESULTS_JSON')
-    if not results_json:
-        raise ValueError("RESULTS_JSON environment variable not set")
-        
-    with open(results_json, "r") as f:
-        results = json.load(f)
-    results["experiments"][experiment_name]["results"]["curation"] = {
-        "dataset_path": formatted_path,
-        "timestamp": datetime.now().isoformat()
-    }
-    with open(results_json, "w") as f:
-        json.dump(results, f, indent=2)
-    
-    logging.info(f"Split dataset into {len(split['train'])} train and {len(split['test'])} test examples")
-    logging.info(f"Saved formatted dataset to {formatted_path}")
-    
-    return split
+    # Create train/validation split if requested
+    if validation_split > 0.0:
+        split_dataset = dataset.train_test_split(test_size=validation_split, shuffle=True, seed=42)
+        train_dataset = split_dataset["train"]
+        validation_dataset = split_dataset["test"]
+        logging.info(f"Split dataset into {len(train_dataset)} train and {len(validation_dataset)} validation examples")
+        return train_dataset, validation_dataset
+    else:
+        logging.info(f"No validation split requested, using all {len(dataset)} examples for training")
+        return dataset, None
