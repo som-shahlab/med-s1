@@ -1,54 +1,54 @@
 {
   "summary": {
     "MedMCQA_validation": {
-      "accuracy": 0.5778149653358834,
+      "accuracy": 0.5869670542635659,
       "accuracy_ci": [
-        0.562514941429596,
-        0.5933600286875449
+        0.5709786821705426,
+        0.6002906976744186
       ],
-      "num_correct": 2417,
-      "total_examples": 4183,
-      "num_answered": 2410
+      "num_correct": 2420,
+      "total_examples": 4128,
+      "num_answered": 2423
     },
     "MedQA_USLME_test": {
-      "accuracy": 0.6944226237234878,
+      "accuracy": 0.6828298887122417,
       "accuracy_ci": [
-        0.6661233307148469,
-        0.7172230950510604
+        0.6573926868044515,
+        0.7090620031796503
       ],
-      "num_correct": 882,
-      "total_examples": 1273,
-      "num_answered": 884
+      "num_correct": 859,
+      "total_examples": 1258,
+      "num_answered": 854
     },
     "PubMedQA_test": {
-      "accuracy": 0.755,
+      "accuracy": 0.7629179331306991,
       "accuracy_ci": [
-        0.727,
-        0.781
+        0.7365754812563323,
+        0.790273556231003
       ],
-      "num_correct": 754,
-      "total_examples": 1000,
-      "num_answered": 755
+      "num_correct": 753,
+      "total_examples": 987,
+      "num_answered": 753
     },
     "MMLU-Pro_Medical_test": {
-      "accuracy": 0.6039087947882736,
+      "accuracy": 0.5845951283739302,
       "accuracy_ci": [
-        0.5726384364820847,
-        0.6241042345276873
+        0.5595622119815669,
+        0.6083113890717577
       ],
-      "num_correct": 918,
-      "total_examples": 1535,
-      "num_answered": 927
+      "num_correct": 887,
+      "total_examples": 1519,
+      "num_answered": 888
     },
     "GPQA_Medical_test": {
-      "accuracy": 0.5051282051282051,
+      "accuracy": 0.4756756756756757,
       "accuracy_ci": [
-        0.44358974358974357,
-        0.5358974358974359
+        0.41621621621621624,
+        0.518918918918919
       ],
-      "num_correct": 191,
-      "total_examples": 390,
-      "num_answered": 197
+      "num_correct": 173,
+      "total_examples": 370,
+      "num_answered": 176
     }
   }
 }

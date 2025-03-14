@@ -3,7 +3,6 @@
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-eval-%j.err
 #SBATCH --partition=nigam-h100
-#SBATCH --constraint="GPU_SKU:H100_PCIE"
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
@@ -65,29 +64,6 @@ if [ "$config_test_time_scaling" = "true" ]; then
     test_time_scaling=true
 fi
 
-# Get model info based on experiment
-# First check if there's a trained model path
-model_path=$(jq -r ".experiments[\"$experiment_name\"].results.training.model_path" "$RESULTS_JSON")
-
-if [ "$model_path" != "null" ] && [ -d "$model_path" ]; then
-    echo "Using fine-tuned model: $model_path"
-else
-    # Fallback to pre-trained model path from config.json
-    model_key=$(jq -r ".experiments[\"$experiment_name\"].config.model_key" "$RESULTS_JSON")
-    if [ "$model_key" = "null" ]; then
-        echo "Error: Neither training model_path nor model_key found in $RESULTS_JSON"
-        exit 1
-    fi
-    model_path=$(jq -r ".models[\"$model_key\"].hf_path" "${MED_S1_DIR}/config.json")
-    echo "Using pre-trained model: $model_path"
-fi
-
-# Only verify directory exists for fine-tuned models
-if [[ "$model_path" == /* ]] && [ ! -d "$model_path" ]; then
-    echo "Error: Fine-tuned model directory not found: $model_path"
-    exit 1
-fi
-
 # Create logs directory
 echo "Creating logs directory..."
 mkdir -p "${MED_S1_DIR}/logs"
@@ -111,13 +87,11 @@ export CUDA_VISIBLE_DEVICES=0
 
 # Run evaluation using vllm
 echo "Starting evaluation..."
-echo "Model path: ${model_path}"
 echo "Output directory: ${output_dir}"
 
 # Build eval.py command
 cmd="python ${MED_S1_DIR}/eval/eval.py \
     --experiment_name ${experiment_name} \
-    --model_path ${model_path} \
     --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
     --path_to_output_dir ${output_dir}"
 

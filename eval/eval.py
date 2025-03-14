@@ -5,17 +5,18 @@ import sglang as sgl
 import os
 import json
 import time
+import numpy as np
 from tqdm import tqdm
 from jinja2 import Template
 from transformers import AutoTokenizer
 from scorer import get_results, score, match_choice
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any, Optional
 from datetime import datetime
+from collections import Counter
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', type=str, required=True, help='Name of experiment from results.json')
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model checkpoint')
     parser.add_argument('--path_to_eval_json', type=str, required=True, help='Path to the evaluation data')
     parser.add_argument('--path_to_output_dir', type=str, default='./results', help='Path to the output directory')
     parser.add_argument('--max_new_tokens', type=int, default=2000, help='Maximum number of new tokens to generate')
@@ -28,6 +29,7 @@ def parse_args():
     parser.add_argument('--debug', action='store_true', help='Run in debug mode with subset of data')
     parser.add_argument('--debug_samples', type=int, default=100, help='Number of samples to use in debug mode')
     parser.add_argument('--test_time_scaling', action='store_true', help='Run test time scaling evaluation')
+    parser.add_argument('--gpqa_repeats', type=int, default=5, help='Number of times to run GPQA_Medical_test for averaging')
     return parser.parse_args()
 
 def print_indented(text: str):
@@ -36,66 +38,24 @@ def print_indented(text: str):
         print(f'\t{line}')
 
 def postprocess_output(pred: str) -> str:
-    """Postprocess the output of the model.
-    Args:
-        pred (str): The predicted output of the model.
-    Returns:
-        str: The postprocessed predicted output.
-    """
+    """Postprocess the output of the model."""
     pred = pred.replace("</s>", "")
     if len(pred) > 0 and pred[0] == " ":
         pred = pred[1:]
     return pred
 
 def load_samples_file(samples_path: str) -> List[Dict]:
-    """Load the evaluation samples data from a JSON file.
-    
-    Args:
-        samples_path (str): The path to the JSON file containing the evaluation samples.
-        
-    Returns:
-        list: A list of dictionaries containing the evaluation samples.
-    """
+    """Load the evaluation samples data from a JSON file."""
     try:
         with open(samples_path, 'r') as f:
             samples = json.load(f)
         return samples
     except FileNotFoundError:
-        logging.warning(f"Samples file {samples_path} not found. No samples will be excluded.")
+        print(f"Warning: Samples file {samples_path} not found. No samples will be excluded.")
         return []
 
 def load_file(input_fp: str, exclude_samples: bool = True) -> List[Dict]:
-    """Load the evaluation data from a JSON file.
-    Args:
-        input_fp (str): The path to the JSON file containing the evaluation data.
-        exclude_samples (bool): Whether to exclude samples from eval_data_samples.json.
-
-    Returns:
-        list: A list of dictionaries containing the evaluation data.
-
-    Each example in the returned list looks like this:
-        {
-            'question': 'Which of the following is not true for myelinated nerve fibers:',
-            'options': {
-                'A': 'Impulse through myelinated fibers is slower than non-myelinated fibers',
-                'B': 'Membrane currents are generated at nodes of Ranvier',
-                'C': 'Saltatory conduction of impulses is seen',
-                'D': 'Local anesthesia is effective only when the nerve is not covered by myelin sheath'
-            },
-            'answer_idx': 'A',
-            'answer': 'Impulse through myelinated fibers is slower than non-myelinated fibers',
-            'source': 'MedMCQA_validation'
-        }
-        
-    Count of each example in the HuatuoGPT-O1 evaluation dataset:
-        Counter({
-            'MedMCQA_validation': 4183,
-            'MMLU-Pro_Medical_test': 1535,
-            'MedQA_USLME_test': 1273,
-            'PubMedQA_test': 1000,
-            'GPQA_Medical_test': 390
-        })
-    """
+    """Load the evaluation data from a JSON file."""
     with open(input_fp, 'r') as f:
         data = json.load(f)
     input_data = []
@@ -125,24 +85,18 @@ def load_file(input_fp: str, exclude_samples: bool = True) -> List[Dict]:
     
     return input_data
 
-from test_time_scaling import evaluate_test_time_scaling
-
-async def call_model(engine: sgl.Engine, prompts: List[str], tokenizer: AutoTokenizer, template: Template, max_new_tokens: int = 50, temperature: float = 0, is_print_example: bool = False, is_use_chat_template: bool = False, max_tokens: int = -1) -> Tuple[List[str], List[str]]:
-    """Call the model to get the predicted output using sglang.
-    Args:
-        engine (sgl.Engine): The sglang Engine instance
-        prompts (List[str]): The prompts to call the model with
-        tokenizer (AutoTokenizer): The tokenizer to use
-        template (Template): The chat template to use
-        max_new_tokens (int): Maximum number of new tokens to generate
-        temperature (float): Sampling temperature
-        is_print_example (bool): Whether to print an example
-        is_use_chat_template (bool): Whether to use the chat template
-        max_tokens (int): Maximum total tokens (-1 for no limit)
-
-    Returns:
-        Tuple[List[str], List[str]]: Tuple of (processed predictions, raw predictions)
-    """
+async def call_model(
+    engine: sgl.Engine, 
+    prompts: List[str], 
+    tokenizer: AutoTokenizer, 
+    template: Template, 
+    max_new_tokens: int = 50, 
+    temperature: float = 0, 
+    is_print_example: bool = False, 
+    is_use_chat_template: bool = False, 
+    max_tokens: int = -1
+) -> Tuple[List[str], List[str]]:
+    """Call the model to get the predicted output using sglang."""
     if is_print_example:
         print("Raw prompt:")
         print("```")
@@ -197,61 +151,194 @@ async def call_model(engine: sgl.Engine, prompts: List[str], tokenizer: AutoToke
         
     return preds, raw_preds
 
-def main():
-    args = parse_args()
-    os.makedirs(args.path_to_output_dir, exist_ok=True)
-
-    # Initialize vllm model
-    print(f"\nInitializing vllm with model: {args.model_path}")
-    print(f"Using tensor parallel size: {args.tensor_parallel_size}")
+async def process_data_batch(
+    engine: sgl.Engine,
+    tokenizer: AutoTokenizer,
+    input_data: List[Dict],
+    template: Template,
+    query_prompt: str,
+    max_new_tokens: int,
+    temperature: float,
+    is_use_chat_template: bool,
+    max_tokens: int,
+    batch_size: int = 256
+) -> List[Dict]:
+    """Process a batch of data through the model."""
+    results = []
+    total_batches = (len(input_data) + batch_size - 1) // batch_size
     
-    # Set PyTorch memory settings
-    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+    print(f"Processing {len(input_data)} examples in {total_batches} batches (size {batch_size})...")
     
-    print("Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, padding_side='left')
-    print("Tokenizer loaded")
-    if "Llama" in args.model_path:
-        tokenizer.pad_token = "<|reserved_special_token_5|>"
-    elif "Qwen" in args.model_path:
-        tokenizer.pad_token = "<|fim_pad|>"
-
-    print("Loading model...")
-
-    # Initialize sglang engine with vllm backend
-    # vllm_engine_args = VllmEngineArgs(
-    #     tensor_parallel_size=args.tensor_parallel_size,
-    #     gpu_memory_utilization=0.9,
-    #     max_num_seqs=args.batch_size,
-    #     max_num_batched_tokens=4096,
-    # )
+    for i in tqdm(range(0, len(input_data), batch_size), desc="Processing batches"):
+        batch = input_data[i:i + batch_size]
+        current_batch = i // batch_size + 1
+        print(f"\nBatch {current_batch}/{total_batches} ({len(batch)} examples)")
+        
+        # Format batch
+        for item in batch:
+            item['option_str'] = '\n'.join([f'{op}. {ans}' for op,ans in item['options'].items()])
+            item["input_str"] = query_prompt.format_map(item)
+        
+        # Process batch
+        preds, _ = await call_model(
+            engine=engine,
+            prompts=[item["input_str"] for item in batch],
+            tokenizer=tokenizer,
+            template=template,
+            max_new_tokens=max_new_tokens,
+            is_print_example=(i == 0),
+            temperature=temperature,
+            is_use_chat_template=is_use_chat_template,
+            max_tokens=max_tokens
+        )
+        
+        # Store results
+        for item, pred in zip(batch, preds):
+            if len(pred) > 0:
+                item_copy = item.copy()
+                item_copy["output"] = pred
+                results.append(item_copy)
     
-    #     engine_args=vllm_engine_args,
-    #     enable_prefix_caching=True,
-    #     trust_remote_code=True,
+    return results
 
-    engine = sgl.Engine(
-        model_path=args.model_path,
-    )
-    print("Model loaded")
-    template = Template(tokenizer.chat_template) if args.use_chat_template else None
+async def process_gpqa_with_multiple_runs(
+    engine: sgl.Engine,
+    tokenizer: AutoTokenizer,
+    gpqa_data: List[Dict],
+    template: Template,
+    query_prompt: str,
+    max_new_tokens: int,
+    temperature: float,
+    is_use_chat_template: bool,
+    max_tokens: int,
+    batch_size: int,
+    num_runs: int
+) -> List[Dict]:
+    """Process GPQA data with multiple runs and majority voting."""
+    print(f"\nProcessing {len(gpqa_data)} GPQA examples with {num_runs} runs each...")
+    gpqa_results = []
+    
+    # Run GPQA data multiple times
+    for run in range(num_runs):
+        print(f"\nGPQA Run {run+1}/{num_runs}")
+        run_results = await process_data_batch(
+            engine=engine,
+            tokenizer=tokenizer,
+            input_data=gpqa_data,
+            template=template,
+            query_prompt=query_prompt,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            is_use_chat_template=is_use_chat_template,
+            max_tokens=max_tokens,
+            batch_size=batch_size
+        )
+        
+        # Store results for this run
+        for i, result in enumerate(run_results):
+            if run == 0:
+                # First run, initialize the result with runs array
+                result["runs"] = [{"output": result["output"]}]
+                gpqa_results.append(result)
+            else:
+                # Add this run's output to the existing result
+                gpqa_results[i]["runs"].append({"output": result["output"]})
+    
+    # Process the multiple runs to get averaged results
+    for result in gpqa_results:
+        # Get all outputs from runs
+        outputs = [run["output"] for run in result["runs"]]
+        
+        # Get all parsed answers
+        answers = []
+        for output in outputs:
+            ans, ans_type = match_choice(output, result["options"])
+            answers.append(ans[-1])  # Use the last answer (most likely the final answer)
+        
+        # Count occurrences of each answer
+        answer_counts = Counter(answers)
+        
+        # Get the most common answer
+        most_common_answer = answer_counts.most_common(1)[0][0]
+        
+        # Use the output from the first run where the answer matches the most common answer
+        for i, run in enumerate(result["runs"]):
+            ans, _ = match_choice(run["output"], result["options"])
+            if ans[-1] == most_common_answer:
+                result["output"] = run["output"]
+                result["majority_vote"] = most_common_answer
+                result["vote_counts"] = dict(answer_counts)
+                result["confidence"] = answer_counts[most_common_answer] / num_runs
+                break
+    
+    return gpqa_results
 
+def get_model_path_from_results(experiment_name: str) -> str:
+    """Get the model path from results.json based on experiment name."""
+    results_json = os.environ.get('RESULTS_JSON')
+    if not results_json:
+        raise ValueError("RESULTS_JSON environment variable not set")
+        
+    with open(results_json, "r") as f:
+        results = json.load(f)
+    
+    if experiment_name not in results.get("experiments", {}):
+        raise ValueError(f"Experiment {experiment_name} not found in results.json")
+        
+    experiment = results["experiments"][experiment_name]
+    
+    # Get model_path from results.json
+    model_path = None
+    
+    # First try to get model_path from training results
+    if experiment.get("results", {}).get("training", {}) and experiment["results"]["training"].get("model_path"):
+        base_model_path = experiment["results"]["training"]["model_path"]
+        best_model_path = os.path.join(base_model_path, "best_model")
+        
+        # Check if best_model directory exists, otherwise use the base path
+        if os.path.exists(best_model_path) and os.path.isdir(best_model_path):
+            model_path = best_model_path
+            print(f"Using best_model from training results: {model_path}")
+        else:
+            model_path = base_model_path
+            print(f"Using base model path from training results: {model_path}")
+    # If not available, try to get it from model_key in config
+    elif experiment.get("config", {}).get("model_key"):
+        model_key = experiment["config"]["model_key"]
+        print(f"No model_path in training results, using model_key: {model_key}")
+        
+        # Load config.json to get the model path from model_key
+        med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+        with open(os.path.join(med_s1_dir, 'config.json'), 'r') as f:
+            config = json.load(f)
+        
+        if model_key in config.get("models", {}):
+            model_path = config["models"][model_key]["hf_path"]
+            print(f"Found model path in config.json: {model_path}")
+        else:
+            raise ValueError(f"Model key {model_key} not found in config.json")
+    else:
+        raise ValueError(f"No model_path or model_key found for experiment {experiment_name}")
+    
+    return model_path, experiment
+
+def prepare_data(args, experiment):
+    """Load and prepare data for evaluation."""
     print("\nLoading evaluation data...")
-    input_data: List[Dict] = load_file(args.path_to_eval_json)
+    input_data = load_file(args.path_to_eval_json)
     print(f"Loaded {len(input_data)} total examples")
+    
+    # Separate GPQA_Medical_test data for multiple runs
+    gpqa_data = [item for item in input_data if item['source'] == 'GPQA_Medical_test']
+    non_gpqa_data = [item for item in input_data if item['source'] != 'GPQA_Medical_test']
+    
+    if gpqa_data:
+        print(f"Found {len(gpqa_data)} GPQA_Medical_test examples for multiple runs")
     
     # Get eval_sample from config if test_time_scaling
     eval_sample = None
     if args.test_time_scaling:
-        # Get experiment config from results.json
-        results_json = os.environ.get('RESULTS_JSON')
-        if not results_json:
-            raise ValueError("RESULTS_JSON environment variable not set")
-            
-        with open(results_json, "r") as f:
-            results = json.load(f)
-        
-        config = results["experiments"][args.experiment_name]["config"]
+        config = experiment["config"]
         eval_sample = config.get("eval_sample", None)
         
     # Set random seed for reproducibility
@@ -262,6 +349,9 @@ def main():
     if eval_sample:
         print(f"\nRandomly sampling {eval_sample} examples (seed 42)...")
         input_data = random.sample(input_data, eval_sample)
+        # Re-separate after sampling
+        gpqa_data = [item for item in input_data if item['source'] == 'GPQA_Medical_test']
+        non_gpqa_data = [item for item in input_data if item['source'] != 'GPQA_Medical_test']
     
     # Print dataset distribution
     datasets = set(item['source'] for item in input_data)
@@ -279,116 +369,114 @@ def main():
         # Sort datasets for consistent ordering
         sorted_datasets = sorted(list(datasets))
         for dataset in sorted_datasets:
-            dataset_items = [item for item in input_data if item['source'] == dataset and "probable diagnosis" in item["question"]]
+            dataset_items = [item for item in input_data if item['source'] == dataset]
             if len(dataset_items) > 0:
                 # Shuffle with same seed for reproducibility
                 random.shuffle(dataset_items)
                 debug_data.extend(dataset_items[:samples_per_dataset])
         
         input_data = debug_data
+        # Re-separate after debug sampling
+        gpqa_data = [item for item in input_data if item['source'] == 'GPQA_Medical_test']
+        non_gpqa_data = [item for item in input_data if item['source'] != 'GPQA_Medical_test']
+        
         print(f"\nDebug dataset sizes:")
         for dataset in sorted_datasets:
             count = sum(1 for item in debug_data if item['source'] == dataset)
             print(f"  {dataset}: {count} samples")
     
-    final_results: List[Dict] = []
-    # Always use strict prompt for test time scaling to ensure consistent answer format
-    if args.test_time_scaling:
-        query_prompt = "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
-    else:
-        if args.strict_prompt:
-            query_prompt = "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
-        else:
-            query_prompt = "Please answer the following multiple-choice question:\n{question}\n{option_str}"
+    return input_data, gpqa_data, non_gpqa_data
 
-    # Process examples
-    if args.test_time_scaling:
-        print("\nRunning test time scaling evaluation...")
-        # Use a larger batch size for test time scaling since we're doing multiple passes
-        test_time_batch_size = 48  # Smaller batches since we do multiple passes
-        print(f"\nUsing batch size of {test_time_batch_size} for test time scaling evaluation")
-        # Install uvloop as event loop policy
-        uvloop.install()
-        
-        # Get reasoning approaches from config if specified
-        reasoning_approaches = None
-        if "reasoning_approaches" in config:
-            reasoning_approaches = config["reasoning_approaches"]
-            print(f"\nUsing reasoning approaches from config: {reasoning_approaches}")
-        
-        # Set environment variable for test_time_scaling.py to access
-        os.environ['EXPERIMENT_NAME'] = args.experiment_name
-        
-        # Run evaluation asynchronously
-        final_results = asyncio.run(
-            evaluate_test_time_scaling(
-                engine=engine,
-                tokenizer=tokenizer,
-                input_data=input_data,
-                template=template,
-                temperature=args.temperature,
-                debug=args.debug,
-                debug_samples=args.debug_samples,
-                batch_size=test_time_batch_size,
-                reasoning_approaches=reasoning_approaches
-            )
+def get_query_prompt(args):
+    """Get the appropriate query prompt based on args."""
+    if args.test_time_scaling or args.strict_prompt:
+        return "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
+    else:
+        return "Please answer the following multiple-choice question:\n{question}\n{option_str}"
+
+async def run_test_time_scaling(args, engine, tokenizer, input_data, template, experiment):
+    """Run test time scaling evaluation."""
+    from test_time_scaling import evaluate_test_time_scaling
+    
+    print("\nRunning test time scaling evaluation...")
+    # Use a larger batch size for test time scaling since we're doing multiple passes
+    test_time_batch_size = 48  # Smaller batches since we do multiple passes
+    print(f"\nUsing batch size of {test_time_batch_size} for test time scaling evaluation")
+    
+    # Get reasoning approaches from config if specified
+    reasoning_approaches = None
+    if "reasoning_approaches" in experiment["config"]:
+        reasoning_approaches = experiment["config"]["reasoning_approaches"]
+        print(f"\nUsing reasoning approaches from config: {reasoning_approaches}")
+    
+    # Set environment variable for test_time_scaling.py to access
+    os.environ['EXPERIMENT_NAME'] = args.experiment_name
+    
+    # Run evaluation
+    return await evaluate_test_time_scaling(
+        engine=engine,
+        tokenizer=tokenizer,
+        input_data=input_data,
+        template=template,
+        temperature=args.temperature,
+        debug=args.debug,
+        debug_samples=args.debug_samples,
+        batch_size=test_time_batch_size,
+        reasoning_approaches=reasoning_approaches
+    )
+
+async def run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt):
+    """Run standard evaluation with optional GPQA multiple runs."""
+    results = []
+    
+    # Process non-GPQA data normally
+    if non_gpqa_data:
+        print(f"\nProcessing {len(non_gpqa_data)} non-GPQA examples...")
+        non_gpqa_results = await process_data_batch(
+            engine=engine,
+            tokenizer=tokenizer,
+            input_data=non_gpqa_data,
+            template=template,
+            query_prompt=query_prompt,
+            max_new_tokens=args.max_new_tokens,
+            temperature=args.temperature,
+            is_use_chat_template=args.use_chat_template,
+            max_tokens=args.max_tokens,
+            batch_size=256
         )
-    else:
-        # Install uvloop as event loop policy
-        uvloop.install()
-        
-        # Original batched evaluation
-        batch_size = 256  # Match vllm's max_num_seqs
-        final_results = []
-        total_batches = (len(input_data) + batch_size - 1) // batch_size
-        
-        print(f"\nProcessing {len(input_data)} examples in {total_batches} batches (size {batch_size})...")
-        
-        async def process_batches():
-            for i in tqdm(range(0, len(input_data), batch_size), desc="Processing batches"):
-                batch = input_data[i:i + batch_size]
-                current_batch = i // batch_size + 1
-                print(f"\nBatch {current_batch}/{total_batches} ({len(batch)} examples)")
-                
-                # Format batch
-                for item in batch:
-                    item['option_str'] = '\n'.join([f'{op}. {ans}' for op,ans in item['options'].items()])
-                    item["input_str"] = query_prompt.format_map(item)
-                
-                # Process batch
-                preds, _ = await call_model(
-                    engine=engine,
-                    prompts=[item["input_str"] for item in batch],
-                    tokenizer=tokenizer,
-                    template=template,
-                    max_new_tokens=args.max_new_tokens,
-                    is_print_example=(i == 0),
-                    temperature=args.temperature,
-                    is_use_chat_template=args.use_chat_template,
-                    max_tokens=args.max_tokens
-                )
-                
-                # Store results
-                for item, pred in zip(batch, preds):
-                    if len(pred) > 0:
-                        item["output"] = pred
-                        final_results.append(item)
-            
-            return final_results
-        
-        # Run batches asynchronously
-        final_results = asyncio.run(process_batches())
+        results.extend(non_gpqa_results)
+    
+    # Process GPQA data with multiple runs
+    if gpqa_data:
+        gpqa_results = await process_gpqa_with_multiple_runs(
+            engine=engine,
+            tokenizer=tokenizer,
+            gpqa_data=gpqa_data,
+            template=template,
+            query_prompt=query_prompt,
+            max_new_tokens=args.max_new_tokens,
+            temperature=args.temperature,
+            is_use_chat_template=args.use_chat_template,
+            max_tokens=args.max_tokens,
+            batch_size=256,
+            num_runs=args.gpqa_repeats
+        )
+        results.extend(gpqa_results)
+    
+    return results
 
+def save_and_score_results(args, final_results, model_path):
+    """Save results to file and score them."""
     # Save outputs
-    model_name: str = os.path.split(args.model_path)[-1]
-    task_name: str = model_name + os.path.basename(args.path_to_eval_json).replace('.json','') + \
-                     ('_strict-prompt' if args.strict_prompt else '') + \
-                     ('_debug' if args.debug else '')
-    file_name: str = f'{task_name}.json'
-    path_to_output: str = os.path.join(args.path_to_output_dir, file_name)
-    with open(path_to_output,'w') as fw:
+    model_name = os.path.split(model_path)[-1]
+    task_name = model_name + os.path.basename(args.path_to_eval_json).replace('.json','') + \
+                ('_strict-prompt' if args.strict_prompt else '') + \
+                ('_debug' if args.debug else '')
+    file_name = f'{task_name}.json'
+    path_to_output = os.path.join(args.path_to_output_dir, file_name)
+    with open(path_to_output, 'w') as fw:
         json.dump(final_results, fw, ensure_ascii=False, indent=2)
-
+    
     # Score outputs and get metrics
     if args.test_time_scaling:
         # For test time scaling, score each approach separately
@@ -402,8 +490,6 @@ def main():
         # Score each approach
         for approach in approaches:
             # Create temporary results with just this approach's outputs
-            # Use scorer.py's match_choice to properly parse answers
-            from scorer import match_choice
             approach_results = []
             for item in final_results:
                 for result in item['scaling_results']:
@@ -504,7 +590,6 @@ def main():
             else:
                 print(f"\nApproach: {approach} - No failures found!")
     else:
-        from scorer import match_choice
         failures = []
         for result in all_results:
             answer = result['answer_idx']
@@ -528,15 +613,19 @@ def main():
         else:
             print("No failures found!")
     
-    # Update results.json with eval results and metrics
+    return path_to_output, metrics_file, metrics, approaches if args.test_time_scaling else None
+
+def update_results_json(args, path_to_output, metrics_file, metrics, approaches=None):
+    """Update results.json with evaluation results."""
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
     
     # Import path_utils for updating results.json
     import sys
-    sys.path.append(os.path.join(os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1'), 'data'))
-    from utils.path_utils import update_results_json, get_results_storage_path, save_results_to_file
+    med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+    sys.path.append(os.path.join(med_s1_dir, 'data'))
+    from utils.path_utils import update_results_json as update_json
     
     # Create paths dict for update_results_json
     paths = {
@@ -548,7 +637,7 @@ def main():
     stats = {"summary": metrics}
     
     # Add test time scaling specific data if applicable
-    if args.test_time_scaling:
+    if args.test_time_scaling and approaches:
         # Calculate average reasoning tokens for each approach
         reasoning_tokens = {}
         for approach in approaches:
@@ -565,11 +654,12 @@ def main():
         stats["reasoning_tokens"] = reasoning_tokens
         
         # Add path to test time scaling plot
+        task_name = os.path.basename(path_to_output).replace('.json', '')
         plot_path = os.path.join(args.path_to_output_dir, f"{task_name}_plot.png")
         stats["test_time_scaling_plot"] = os.path.abspath(plot_path)
     
     # Update results.json using the path_utils function
-    update_results_json(
+    update_json(
         results_json_path=results_json,
         experiment_name=args.experiment_name,
         stage="eval",
@@ -578,6 +668,61 @@ def main():
         stats=stats
     )
 
+async def main_async():
+    args = parse_args()
+    os.makedirs(args.path_to_output_dir, exist_ok=True)
+
+    # Get model path from results.json
+    model_path, experiment = get_model_path_from_results(args.experiment_name)
+
+    # Initialize model
+    print(f"\nInitializing model: {model_path}")
+    print(f"Using tensor parallel size: {args.tensor_parallel_size}")
+    
+    # Set PyTorch memory settings
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+    
+    # Load tokenizer
+    print("Loading tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, padding_side='left')
+    print("Tokenizer loaded")
+    if "Llama" in model_path:
+        tokenizer.pad_token = "<|reserved_special_token_5|>"
+    elif "Qwen" in model_path:
+        tokenizer.pad_token = "<|fim_pad|>"
+
+    # Load model
+    print("Loading model...")
+    engine = sgl.Engine(model_path=model_path)
+    print("Model loaded")
+    template = Template(tokenizer.chat_template) if args.use_chat_template else None
+
+    # Prepare data
+    input_data, gpqa_data, non_gpqa_data = prepare_data(args, experiment)
+    
+    # Get query prompt
+    query_prompt = get_query_prompt(args)
+    
+    # Run evaluation
+    if args.test_time_scaling:
+        final_results = await run_test_time_scaling(args, engine, tokenizer, input_data, template, experiment)
+    else:
+        final_results = await run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt)
+    
+    # Save and score results
+    path_to_output, metrics_file, metrics, approaches = save_and_score_results(args, final_results, model_path)
+    
+    # Update results.json
+    update_results_json(args, path_to_output, metrics_file, metrics, approaches)
+    
+    print("\nEvaluation complete!")
+
+def main():
+    # Install uvloop as event loop policy
+    uvloop.install()
+    
+    # Run the async main function
+    asyncio.run(main_async())
 
 if __name__ == "__main__":
     main()
