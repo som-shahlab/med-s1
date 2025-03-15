@@ -3,10 +3,10 @@ Let's implement a few new methods for curation. We want to create experiments fo
 HuaTuo-25k
 HuaTuo-{1k | 5k}-random
 HuaTuo-{100}-random
-HuaTuo-{1k | 5k}-embedding-similarity-{question | cot}
-HuaTuo-{1k | 5k}-embedding-diversity-{question | cot}-cluster-{10}-outlier-{5}
-HuaTuo-{1k | 5k}-difficulty-substring
-HuaTuo-{1k | 5k}-novelty-answer (minimal EmbedSim(base answer, true answer))
+HuaTuo-{1k}-embedding-similarity-{question | cot}
+HuaTuo-{1k}-embedding-diversity-{question | cot}-cluster-{10}-outlier-{5}
+HuaTuo-{1k}-difficulty-substring
+HuaTuo-{1k}-novelty-answer (minimal EmbedSim(base answer, true answer))
 
 We should have experiments for all of these in @/med-s1/results.json.
 We already have huatuo-25k, huatuo-1k-random, huatuo-5k-random defined.
@@ -57,3 +57,46 @@ Also notice how we generate so much... let's put it in a file in... and then add
 update the files that read these in... TODO
 
 TODO: validation set + all of the eval changes we made to verify results... <-- only do this after we do curation
+
+Steps:
+
+Look at how we have different data curation configurations defined in @/../../mwornow/meds1/med-s1/results.json and @/med-s1/data/curate_med_s1k_new.py will call out to different modules like @/med-s1/data/curation_methods/advanced.py to curate.
+
+Let's implement new experiments: huatuo-100-random-step-extract, huatuo-1k-random-step-extract (the curation method is "random" but also has a curation field extract set to "step"), base-step-prompt (this has no curation involved but it does have a configuration indicating the prompting approach is "step").
+
+We should update @/med-s1/data/curate_med_s1k_new.py and related modules so that if config.curation.extract is set and set to "step" then after we've selected our data we need to a transformation step on the Complex_CoT column before saving (and have a Complex_CoT_orig column) in the curated.parquet filtered.parquet and the formatted huggingface dataset. This transformation step involes prompting the LLM (see the utility files we have in @med-s1/data/ for calling LLM for curation) to transform the complex chain of thought to organize it into steps.
+
+This is an example of one transformed chain of thought:
+
+"## Step 1: Assess the patient's condition and the current treatment.\nThe patient has moderate anemia, which is indicated by low hemoglobin (HGB) levels of 8 g/dL, low hematocrit (HCT) of 30%, and a red blood cell (RBC) count of 3.5 x 10^12/L. The patient is undergoing chemotherapy for lung cancer with metastasis to the liver, gastric body, and small bowel.\n\n## Step 2: Evaluate the effectiveness of the current treatment.\nThe patient is currently on oral iron and folate therapy. However, the patient's ferritin level is 112 mcg/L, which is within the normal range. This suggests that the patient is not iron deficient, as ferritin levels are a good indicator of iron stores. Therefore, oral iron therapy may not be effective for this patient.\n\n## Step 3: Consider the patient's other lab values.\nThe mean corpuscular volume (MCV) is 83 fL, which is below the normal range, indicating microcytic anemia. The mean corpuscular hemoglobin (MCH) is 28 pg, which is also below the normal range, indicating that the red blood cells are smaller than normal. The red cell distribution width (RDW) is 19%, which is slightly elevated, indicating a variation in the size of the red blood cells.\n\n## Step 4: Determine the most likely cause of the patient's anemia.\nGiven the patient's microcytic anemia, the most likely cause is not iron deficiency, but rather a deficiency in either folate or vitamin B12. The patient is already on folate therapy, so the issue may be related to vitamin B12 deficiency.\n\n## Step 5: Choose the most appropriate recommendation based on the patient's condition and lab results.\nGiven the patient's microcytic anemia and the fact that the patient is already on folate therapy, the most likely cause of the anemia is a vitamin B12 deficiency. Therefore, the most appropriate recommendation would be to add vitamin B12 therapy, specifically cyanocobalamin, to the patient's treatment.\n\nThe final answer is: $\\boxed{B}$"
+
+Make sure to update @/med-s1/select_curation_device.py to make sure these all run on CPU.
+
+We should update @/med-s1/eval/eval.py so when we're doing LLM inference it adds "Let's think step by step" to the prompt just at the end.
+
+Case reports TODO
+
+See @/med-s1/results_v2.json and how we've defined experiments. Let's make a results.json that has the following experiments:
+- base
+- huatuo
+- medqa-1k-random
+- medqa-1k-embedding-diversity-question-cluster-10-outlier-5
+- medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
+- medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
+- medqa-25k
+- medqa-1k-random-step-extract
+- medqa-1k-random-no-cot
+- medqa-1k-random-1-sentence-extract
+- medqa-5k-random-no-cot
+- medqa-10k-random-no-cot
+
+For many of these you can copy over configurations from @/med-s1/results_v2.json or infer the configuration based on others (e.g. extrapolate what hyperparameters should be for 5k and 10k based on the ones for 1k and 25k).
+
+medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5 should have a config field under curation that specifies that intra-group ranking is cot-length and then we should update @/med-s1/data/curate_med_s1k_new.py and the modules it calls into so that if this is true instead of randomly sampling within each k-mean-clustered group we choose the longest Complex_CoT length ones.
+
+For medqa-1k-random-no-cot we should have extract set to none and if set then the formatting in curation should format to not include ## Thinking followed by the Complex_CoT.
+
+medqa-1k-random-1-sentence-extract should be similar to step-extract except here we instead prompt to generate a 1-sentence chain of thought that captures the original trace.
+
+Now let's focus on hyperparameter configuration. We can use ideas in prior work like LIMA, LIMO, s1, and HuaTuo-o1 the first 3 of which train on 1k-length datasets. But we should first know roughly how many tokens we'd actually be training on for each experiment. Make a file analyze_tokens.py which goes through all the experiments in results.json and looks at the result of curation (see @/med-s1/data/curate_med_s1k_new.py for how we generate a curated.parquet, filered.parquet, and formatted HuggingFace dataset) to basically go through the curated dataset and determine how many reasoning+answer tokens are there (using tokenizer of the base model that is fine-tuned) and determine min, max, average (per sample), and total. We can then use this to determine how to set hyperparameters.
+TODO: analyze token counts + read LIMA, LIMO, s1, HuaTuo-o1 to arrive at hyperparameter configurations.

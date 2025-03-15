@@ -1,54 +1,55 @@
 {
   "summary": {
     "MedMCQA_validation": {
-      "accuracy": 0.6424418604651163,
+      "accuracy": 0.6356589147286822,
       "accuracy_ci": [
-        0.6281492248062015,
-        0.6567405523255814
+        0.6218447189922481,
+        0.6497153585271318
       ],
-      "num_correct": 2652,
+      "num_correct": 2624,
       "total_examples": 4128,
-      "num_answered": 2649
+      "num_answered": 2623
     },
     "MedQA_USLME_test": {
-      "accuracy": 0.7599364069952306,
+      "accuracy": 0.7694753577106518,
       "accuracy_ci": [
-        0.73447933227345,
-        0.7821939586645469
+        0.7456081081081082,
+        0.7917527821939586
       ],
-      "num_correct": 956,
+      "num_correct": 968,
       "total_examples": 1258,
-      "num_answered": 943
+      "num_answered": 959
     },
     "PubMedQA_test": {
-      "accuracy": 0.7922998986828774,
+      "accuracy": 0.7963525835866262,
       "accuracy_ci": [
-        0.767983789260385,
-        0.817629179331307
+        0.7710233029381965,
+        0.818693009118541
       ],
-      "num_correct": 782,
+      "num_correct": 786,
       "total_examples": 987,
-      "num_answered": 782
+      "num_answered": 786
     },
     "MMLU-Pro_Medical_test": {
-      "accuracy": 0.65174456879526,
+      "accuracy": 0.6524028966425279,
       "accuracy_ci": [
-        0.6280283080974325,
-        0.6761191573403554
+        0.6293449637919685,
+        0.6774193548387096
       ],
-      "num_correct": 990,
+      "num_correct": 991,
       "total_examples": 1519,
-      "num_answered": 987
+      "num_answered": 991
     },
     "GPQA_Medical_test": {
-      "accuracy": 0.6,
+      "accuracy": 0.538918918918919,
       "accuracy_ci": [
-        0.5486486486486486,
-        0.6486486486486487
+        0.5135135135135135,
+        0.5610810810810811
       ],
-      "num_correct": 222,
+      "num_correct": 202,
       "total_examples": 370,
-      "num_answered": 219
+      "num_answered": 202,
+      "majority_vote_accuracy": 0.5459459459459459
     }
   }
 }

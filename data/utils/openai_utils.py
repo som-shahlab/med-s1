@@ -49,7 +49,8 @@ async def get_model_response(
     prompt: str,
     model: str,
     max_retries: int = 3,
-    initial_retry_delay: float = 0.1  # Start with 100ms delay
+    initial_retry_delay: float = 0.1,  # Start with 100ms delay
+    max_tokens=500
 ) -> Optional[str]:
     """Get response from model API with exponential backoff"""
     client = get_client(model)
@@ -60,7 +61,7 @@ async def get_model_response(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
-                max_tokens=500
+                max_tokens=max_tokens
             )
             return response.choices[0].message.content
         except Exception as e:

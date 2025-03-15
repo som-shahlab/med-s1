@@ -1,18 +1,54 @@
 {
   "experiments": {
-    "huatuo-25k": {
-      "description": "Current configuration with existing hyperparameters",
+    "base": {
+      "description": "Base LLaMA model without fine-tuning",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": null,
+        "training_params": null
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base/Llama-3.1-8B-Instructeval_data_metrics.json",
+          "timestamp": "2025-03-15T22:16:49.150561",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base_eval.json"
+        }
+      }
+    },
+    "huatuo": {
+      "description": "Pre-trained HuatuoGPT medical model",
+      "config": {
+        "model_key": "huatuo:8b",
+        "curation": null,
+        "training_params": null
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_metrics.json",
+          "timestamp": "2025-03-15T22:29:05.214214",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random": {
+      "description": "1k uniform random sample",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
-          "method": "all",
+          "method": "random",
           "huatuo_format": true,
-          "n_samples": 25371
+          "n_samples": 1000
         },
         "training_params": {
           "learning_rate": 5e-06,
           "batch_size": 2,
-          "num_epochs": 3,
+          "num_epochs": 10,
           "weight_decay": 0.1,
           "warmup_ratio": 0.05,
           "optimizer": {
@@ -29,180 +65,24 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-25k_20250304_173206/med_s1k_formatted",
-          "timestamp": "2025-03-04T17:32:13.385452",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-25k_curation.json"
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random_20250315_174440/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:44:42.688674",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random_curation.json"
         },
         "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-25k",
-          "timestamp": "2025-03-07T21:38:40Z",
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random",
+          "timestamp": "2025-03-15T20:31:04Z",
           "metrics": null
         },
         "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-25k/huatuo-25keval_data.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo-25k/huatuo-25keval_data_metrics.json",
-          "timestamp": "2025-03-07T22:55:15.075314",
-          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-25k_eval.json"
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T22:43:39.265496",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random_eval.json"
         }
       }
     },
-    "huatuo-1k-random": {
-      "description": "1k uniform random sample",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "random",
-          "huatuo_format": true,
-          "n_samples": 1000
-        },
-        "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 2,
-          "num_epochs": 10,
-          "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.95,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 16
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-random_20250310_172443/med_s1k_formatted",
-          "timestamp": "2025-03-10T17:24:45.149596",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-random_curation.json"
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-random",
-          "timestamp": "2025-03-13T19:09:34Z",
-          "metrics": null
-        }
-      }
-    },
-    "huatuo-5k-random": {
-      "description": "5k uniform random sample",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "random",
-          "huatuo_format": true,
-          "n_samples": 5000
-        },
-        "training_params": {
-          "learning_rate": 5e-06,
-          "batch_size": 2,
-          "num_epochs": 8,
-          "weight_decay": 0.1,
-          "warmup_ratio": 0.1,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.95,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 16
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-5k-random_20250310_172443/med_s1k_formatted",
-          "timestamp": "2025-03-10T17:24:47.086996",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-5k-random_curation.json"
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-5k-random",
-          "timestamp": "2025-03-13T04:40:24Z",
-          "metrics": null
-        }
-      }
-    },
-    "huatuo-100-random": {
-      "description": "100 uniform random sample; many epochs, very small LR, higher warmup ratio to avoid overshooting quickly",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "random",
-          "huatuo_format": true,
-          "n_samples": 100
-        },
-        "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 2,
-          "num_epochs": 25,
-          "weight_decay": 0.1,
-          "warmup_ratio": 0.2,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.95,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 16
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-100-random_20250313_023433/med_s1k_formatted",
-          "timestamp": "2025-03-13T02:34:42.074516",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-100-random_curation.json"
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-100-random",
-          "timestamp": "2025-03-13T11:49:45Z",
-          "metrics": null
-        }
-      }
-    },
-    "huatuo-1k-embedding-similarity-question": {
-      "description": "1k sample using embedding similarity on questions",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "embedding-similarity",
-          "huatuo_format": true,
-          "n_samples": 1000,
-          "column": "Question"
-        },
-        "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 2,
-          "num_epochs": 10,
-          "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.95,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 16
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-embedding-similarity-question_20250313_203451/med_s1k_formatted",
-          "timestamp": "2025-03-13T20:34:59.716164",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-embedding-similarity-question_curation.json"
-        }
-      }
-    },
-    "huatuo-1k-embedding-diversity-question-cluster-10-outlier-5": {
+    "medqa-1k-embedding-diversity-question-cluster-10-outlier-5": {
       "description": "1k sample using embedding diversity on questions with 10% clusters and 5% outliers",
       "config": {
         "model_key": "llama3.1:8b",
@@ -215,11 +95,11 @@
           "outlier_percentage": 5
         },
         "training_params": {
-          "learning_rate": 2e-06,
+          "learning_rate": 5e-06,
           "batch_size": 2,
           "num_epochs": 10,
           "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
+          "warmup_ratio": 0.05,
           "optimizer": {
             "no_decay_params": [
               "bias",
@@ -234,64 +114,42 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-embedding-diversity-question-cluster-10-outlier-5_20250313_183135/med_s1k_formatted",
-          "timestamp": "2025-03-13T18:31:36.697712",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-embedding-diversity-question-cluster-10-outlier-5_curation.json"
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-embedding-diversity-question-cluster-10-outlier-5_20250315_174140/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:41:42.398295",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-embedding-diversity-question-cluster-10-outlier-5_curation.json"
         },
         "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-embedding-diversity-question-cluster-10-outlier-5",
-          "timestamp": "2025-03-13T19:58:01Z",
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-embedding-diversity-question-cluster-10-outlier-5",
+          "timestamp": "2025-03-15T20:40:12Z",
           "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-embedding-diversity-question-cluster-10-outlier-5/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-embedding-diversity-question-cluster-10-outlier-5/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T22:57:04.108404",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-embedding-diversity-question-cluster-10-outlier-5_eval.json"
         }
       }
     },
-    "huatuo-1k-embedding-diversity-cot-cluster-10-outlier-5": {
-      "description": "1k sample using embedding diversity on complex cot with 10% clusters and 5% outliers",
+    "medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5": {
+      "description": "1k sample using embedding diversity on questions with 10% clusters and 5% outliers, ranked by CoT length",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "embedding-diversity",
           "huatuo_format": true,
           "n_samples": 1000,
-          "column": "Complex_CoT",
+          "column": "Question",
           "cluster_percentage": 10,
-          "outlier_percentage": 5
+          "outlier_percentage": 5,
+          "intra_group_ranking": "cot-length"
         },
         "training_params": {
-          "learning_rate": 2e-06,
+          "learning_rate": 5e-06,
           "batch_size": 2,
-          "num_epochs": 10,
+          "num_epochs": 8,
           "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.95,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 16
-        }
-      },
-      "results": {}
-    },
-    "huatuo-1k-difficulty-substring": {
-      "description": "1k sample using difficulty substring filtering",
-      "config": {
-        "model_key": "llama3.1:8b",
-        "curation": {
-          "method": "difficulty-substring",
-          "huatuo_format": true,
-          "n_samples": 1000
-        },
-        "training_params": {
-          "learning_rate": 2e-06,
-          "batch_size": 2,
-          "num_epochs": 10,
-          "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
+          "warmup_ratio": 0.05,
           "optimizer": {
             "no_decay_params": [
               "bias",
@@ -306,32 +164,38 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-difficulty-substring_20250313_171901/med_s1k_formatted",
-          "timestamp": "2025-03-13T17:19:02.788796",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-difficulty-substring_curation.json"
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5_20250315_174300/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:43:02.524140",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5_curation.json"
         },
         "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-difficulty-substring",
-          "timestamp": "2025-03-13T18:14:51Z",
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+          "timestamp": "2025-03-15T20:52:17Z",
           "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T23:05:18.243880",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5_eval.json"
         }
       }
     },
-    "huatuo-1k-novelty-answer": {
-      "description": "1k sample using novelty answer filtering",
+    "medqa-25k": {
+      "description": "Full dataset with all examples",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
-          "method": "novelty-answer",
+          "method": "all",
           "huatuo_format": true,
-          "n_samples": 1000
+          "n_samples": 25371
         },
         "training_params": {
-          "learning_rate": 2e-06,
+          "learning_rate": 3e-06,
           "batch_size": 2,
-          "num_epochs": 10,
+          "num_epochs": 3,
           "weight_decay": 0.1,
-          "warmup_ratio": 0.15,
+          "warmup_ratio": 0.02,
           "optimizer": {
             "no_decay_params": [
               "bias",
@@ -346,14 +210,255 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/huatuo-1k-novelty-answer_20250313_185051/med_s1k_formatted",
-          "timestamp": "2025-03-13T18:50:53.197176",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo-1k-novelty-answer_curation.json"
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-25k_20250315_174228/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:42:34.955957",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k_curation.json"
         },
         "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/huatuo-1k-novelty-answer",
-          "timestamp": "2025-03-13T20:50:46Z",
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-25k",
+          "timestamp": "2025-03-15T22:46:59Z",
           "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T23:09:29.649270",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-step-extract": {
+      "description": "1k uniform random sample with step extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-step-extract_20250315_192248/med_s1k_formatted",
+          "timestamp": "2025-03-15T19:30:21.354810",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-step-extract_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-step-extract",
+          "timestamp": "2025-03-15T21:03:42Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-step-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-step-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T23:04:27.582677",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-step-extract_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-no-cot": {
+      "description": "1k uniform random sample without CoT",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "none"
+        },
+        "training_params": {
+          "learning_rate": 1e-05,
+          "batch_size": 2,
+          "num_epochs": 15,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-no-cot_20250315_174325/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:43:27.257948",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-no-cot_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-no-cot",
+          "timestamp": "2025-03-15T21:09:04Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-no-cot/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-no-cot/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T22:53:15.346068",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-no-cot_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-1-sentence-extract": {
+      "description": "1k uniform random sample with 1-sentence CoT extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "1-sentence"
+        },
+        "training_params": {
+          "learning_rate": 1e-05,
+          "batch_size": 2,
+          "num_epochs": 12,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-1-sentence-extract_20250315_191432/med_s1k_formatted",
+          "timestamp": "2025-03-15T19:16:27.998188",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-1-sentence-extract_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-1-sentence-extract",
+          "timestamp": "2025-03-15T21:15:54Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-1-sentence-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-1-sentence-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T22:53:23.551424",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-1-sentence-extract_eval.json"
+        }
+      }
+    },
+    "medqa-5k-random-no-cot": {
+      "description": "5k uniform random sample without CoT",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 5000,
+          "extract": "none"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 6,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-5k-random-no-cot_20250315_174413/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:44:16.109350",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-5k-random-no-cot_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-5k-random-no-cot",
+          "timestamp": "2025-03-15T21:27:12Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-5k-random-no-cot/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-5k-random-no-cot/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T22:57:54.803816",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-5k-random-no-cot_eval.json"
+        }
+      }
+    },
+    "medqa-10k-random-no-cot": {
+      "description": "10k uniform random sample without CoT",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 10000,
+          "extract": "none"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 4,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-10k-random-no-cot_20250315_173858/med_s1k_formatted",
+          "timestamp": "2025-03-15T17:39:01.587844",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-10k-random-no-cot_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-10k-random-no-cot",
+          "timestamp": "2025-03-15T21:45:44Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-10k-random-no-cot/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-10k-random-no-cot/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-15T22:57:52.050733",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-10k-random-no-cot_eval.json"
         }
       }
     }

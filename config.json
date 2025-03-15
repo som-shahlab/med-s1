@@ -3,7 +3,8 @@
         "base": "llama3.1:8b",
         "huatuo": "huatuo:8b",
         "specialty_labeler": "gemini-2.0-flash",
-        "base_judge": "gemini-2.0-flash"
+        "base_judge": "gemini-2.0-flash",
+        "curation": "gemini-2.0-flash"
     },
     "models": {
         "llama3.1:8b": {

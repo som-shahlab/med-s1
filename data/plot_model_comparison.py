@@ -1,6 +1,11 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import re
+import sys
+sys.path.append('/share/pi/nigam/users/calebwin/med-s1')
+from eval.scorer import calculate_confidence_interval
 
 def load_results(json_path):
     """Load results from the results.json file"""
@@ -51,60 +56,122 @@ def get_model_metrics(model_data):
     if not metrics:
         return None
     
-    # Calculate weighted average across datasets
-    total_examples = sum(data['total_examples'] for data in metrics.values())
-    weighted_acc = sum(data['accuracy'] * data['total_examples'] for data in metrics.values()) / total_examples
+    # Calculate simple average across datasets (not weighted by size)
+    avg_acc = sum(data['accuracy'] for data in metrics.values()) / len(metrics)
     
-    # Calculate weighted CIs (weight each dataset's CI by its size)
-    weighted_lower = sum(data['ci_lower'] * data['total_examples'] for data in metrics.values()) / total_examples
-    weighted_upper = sum(data['ci_upper'] * data['total_examples'] for data in metrics.values()) / total_examples
+    # Calculate weighted confidence intervals based on accuracy
+    # Create a combined binary array for bootstrap
+    all_results = []
+    for data in metrics.values():
+        # Create binary array for this dataset
+        accuracy = data['accuracy']
+        total = data['total_examples']
+        correct_count = int(round(accuracy * total))
+        dataset_results = np.zeros(total)
+        dataset_results[:correct_count] = 1
+        np.random.shuffle(dataset_results)
+        all_results.append(dataset_results)
+    
+    # Combine all results
+    combined_results = np.concatenate(all_results)
+    
+    # Calculate CI on combined results
+    lower, upper = calculate_confidence_interval(combined_results)
     
     # Add overall metrics
+    total_examples = sum(data['total_examples'] for data in metrics.values())
     metrics['Overall'] = {
-        'accuracy': weighted_acc,
-        'ci_lower': weighted_lower,
-        'ci_upper': weighted_upper,
+        'accuracy': avg_acc,
+        'ci_lower': float(lower),
+        'ci_upper': float(upper),
         'total_examples': total_examples
     }
     
     return metrics
 
-def calculate_improvements(tuned_metrics, base_metrics):
+def calculate_improvements(model_metrics, base_metrics):
     """Calculate percentage improvements over base model"""
+    if not base_metrics:
+        print("Warning: Base metrics not available for improvement calculation")
+        return {}
+    
     return {
-        dataset: ((tuned_metrics[dataset]['accuracy'] - base_metrics[dataset]['accuracy']) * 100)
-        for dataset in tuned_metrics.keys()
+        dataset: ((model_metrics[dataset]['accuracy'] - base_metrics[dataset]['accuracy']) * 100)
+        for dataset in model_metrics.keys() if dataset in base_metrics
     }
 
 def plot_comparison(results_data, output_path):
     """Create bar plot comparing model performances with confidence intervals"""
-    # Modern, pleasing color palette
+    # Modern, pleasing color palette - extended for more models
     colors = [
-        '#4B88A2',  # Muted blue
+        '#4B88A2',  # Muted blue (base)
         '#BB4430',  # Rust red
         '#2D5D7B',  # Deep blue
-        '#2D5D7B',  # Deep blue
-        '#2D5D7B',  # Deep blue
-        '#D68C45',   # Warm orange
-        '#D68C45'   # Warm orange
+        '#6B5B95',  # Purple
+        '#88B04B',  # Green
+        '#D68C45',  # Warm orange
+        '#F7CAC9',  # Pink
+        '#92A8D1',  # Light blue
+        '#955251',  # Burgundy
+        '#B565A7',  # Magenta
+        '#009B77',  # Jungle green
+        '#DD4124',  # Vermilion
+        '#D65076',  # Raspberry
+        '#45B8AC',  # Turquoise
     ]
     
-    # Models to compare
-    # models = ['base', 'random-1k', 'med-s1-1k-tuned', 'med-s1-5k', 'med-s1-25k', 'huatuo', 'huatuo-eval-250']
-    # model_names = ['Base', 'Random-1k', 'Med-S1-1k', 'Med-S1-5k', 'Med-S1-25k', 'huatuo-eval-250']
-    # Temporarily:
-    models = ['base', 'random-1k', 'med-s1-1k-tuned']  # Only showing base, random-1k, med-s1-1k
-    model_names = ['Base', 'Random-1k', 'Med-S1-1k']
+    # Find all models with eval results
+    models = []
+    model_names = []
+    
+    # Ensure 'base' is first if it exists
+    if 'base' in results_data and results_data['base'].get('results', {}).get('eval', {}):
+        models.append('base')
+        model_names.append('Base')
+    
+    # Add all other models with eval results
+    for model_key in results_data:
+        if model_key != 'base' and results_data[model_key].get('results', {}).get('eval', {}):
+            models.append(model_key)
+            # Create a display name by capitalizing and replacing hyphens with spaces
+            display_name = model_key.replace('-', ' ').title()
+            model_names.append(display_name)
+    
+    print(f"Found {len(models)} models with evaluation results: {models}")
+    
+    if not models:
+        print("No models with evaluation results found!")
+        return
     
     # Get metrics for each model
     metrics = {}
     for model in models:
-        if model in results_data:
-            metrics[model] = get_model_metrics(results_data[model])
+        model_metrics = get_model_metrics(results_data[model])
+        if model_metrics:
+            metrics[model] = model_metrics
     
-    # Datasets to plot (including Overall)
-    datasets = ['MedMCQA_validation', 'MedQA_USLME_test', 'PubMedQA_test', 
-                'MMLU-Pro_Medical_test', 'GPQA_Medical_test', 'Overall']
+    # Find common datasets across all models
+    all_datasets = set()
+    for model_metrics in metrics.values():
+        all_datasets.update(model_metrics.keys())
+    
+    # Ensure we include these important datasets if they exist in any model
+    important_datasets = ['MedMCQA_validation', 'MedQA_USLME_test', 'PubMedQA_test',
+                         'MMLU-Pro_Medical_test', 'GPQA_Medical_test', 'Overall']
+    
+    # Filter to datasets that exist in all models, prioritizing important ones
+    datasets = [d for d in important_datasets if d in all_datasets]
+    
+    # Add any other datasets that weren't in our priority list
+    other_datasets = sorted([d for d in all_datasets if d not in important_datasets and d != 'Overall'])
+    datasets.extend(other_datasets)
+    
+    # Ensure Overall is last
+    if 'Overall' in datasets and datasets[-1] != 'Overall':
+        datasets.remove('Overall')
+        datasets.append('Overall')
+    
+    # Create display names for all datasets
     dataset_display_names = {
         'MedMCQA_validation': 'MedMCQA',
         'MedQA_USLME_test': 'USMLE',
@@ -114,50 +181,83 @@ def plot_comparison(results_data, output_path):
         'Overall': 'Overall'
     }
     
-    # Calculate improvements over base model for med-s1-1k-tuned
-    improvements = calculate_improvements(metrics['med-s1-1k-tuned'], metrics['base'])
+    # Add any missing datasets to the display names dictionary
+    for dataset in datasets:
+        if dataset not in dataset_display_names:
+            # Create a display name by removing underscores and test/validation suffixes
+            display_name = dataset.replace('_', ' ')
+            display_name = re.sub(r'_(test|validation)$', '', display_name)
+            dataset_display_names[dataset] = display_name
+    
+    # Get base metrics for improvement calculation
+    base_metrics = metrics.get('base', None)
+    
+    # Calculate improvements over base model for all models (if base exists)
+    improvements = {}
+    if base_metrics:
+        for model in models:
+            if model != 'base' and model in metrics:
+                improvements[model] = calculate_improvements(metrics[model], base_metrics)
     
     # Plotting
-    fig, ax = plt.subplots(figsize=(16, 8))  # Slightly wider to accommodate Overall
+    fig, ax = plt.subplots(figsize=(max(16, 10 + len(models) * 0.5), 8))  # Adjust width based on number of models
     
     # Set width of bars and positions of the bars
-    bar_width = 0.15
+    bar_width = min(0.15, 0.8 / len(models))  # Adjust bar width based on number of models
     r = np.arange(len(datasets))
     
     # Create bars with confidence intervals
-    for i, (model, name, color) in enumerate(zip(models, model_names, colors)):
+    for i, (model, name, color) in enumerate(zip(models, model_names, colors[:len(models)])):
+        if model not in metrics:
+            continue
+            
         model_metrics = metrics[model]
         
-        # Extract values and confidence intervals
-        values = [model_metrics[dataset]['accuracy'] * 100 for dataset in datasets]
-        ci_lower = [model_metrics[dataset]['ci_lower'] * 100 for dataset in datasets]
-        ci_upper = [model_metrics[dataset]['ci_upper'] * 100 for dataset in datasets]
+        # Extract values and confidence intervals, handling missing datasets
+        values = []
+        ci_lower = []
+        ci_upper = []
+        
+        for dataset in datasets:
+            if dataset in model_metrics:
+                values.append(model_metrics[dataset]['accuracy'] * 100)
+                ci_lower.append(model_metrics[dataset]['ci_lower'] * 100)
+                ci_upper.append(model_metrics[dataset]['ci_upper'] * 100)
+            else:
+                # Use NaN for missing datasets
+                values.append(float('nan'))
+                ci_lower.append(float('nan'))
+                ci_upper.append(float('nan'))
         
         # Calculate yerr for error bars
-        yerr_lower = [v - l for v, l in zip(values, ci_lower)]
-        yerr_upper = [u - v for v, u in zip(values, ci_upper)]
+        yerr_lower = [max(0, v - l) if not np.isnan(v) else 0 for v, l in zip(values, ci_lower)]
+        yerr_upper = [max(0, u - v) if not np.isnan(v) else 0 for v, u in zip(values, ci_upper)]
         yerr = [yerr_lower, yerr_upper]
         
         # Create bars
-        bars = ax.bar(r + i * bar_width, values, bar_width, 
+        bars = ax.bar(r + i * bar_width, values, bar_width,
                      label=name, color=color, alpha=0.85)
         
         # Add error bars
         ax.errorbar(r + i * bar_width, values, yerr=yerr,
-                   fmt='none', color='#333333', capsize=3, 
+                   fmt='none', color='#333333', capsize=3,
                    capthick=1, linewidth=1, alpha=0.5)
         
-        # Add improvement percentages above med-s1-1k-tuned bars
-        if model == 'med-s1-1k-tuned':
+        # Add improvement percentages above non-base model bars
+        if model != 'base' and model in improvements:
+            model_improvements = improvements[model]
             for idx, rect in enumerate(bars):
-                height = rect.get_height()
-                improvement = improvements[datasets[idx]]
-                ax.text(rect.get_x() + rect.get_width()/2., height + 0.5,
-                       f'+{improvement:.1f}%',
-                       ha='center', va='bottom',
-                       color='#2D5D7B',
-                       fontweight='bold',
-                       fontsize=10)
+                dataset = datasets[idx]
+                if dataset in model_improvements:
+                    height = rect.get_height()
+                    improvement = model_improvements[dataset]
+                    if not np.isnan(height) and not np.isnan(improvement):
+                        ax.text(rect.get_x() + rect.get_width()/2., height + 0.5,
+                               f'+{improvement:.1f}%',
+                               ha='center', va='bottom',
+                               color='#2D5D7B',
+                               fontweight='bold',
+                               fontsize=10)
     
     # Add vertical line before Overall
     ax.axvline(x=len(datasets)-1.5, color='gray', linestyle='--', alpha=0.3)
@@ -201,44 +301,64 @@ def plot_comparison(results_data, output_path):
 
 def main():
     # Load and plot results
-    results = load_results('med-s1/results.json')
+    results_path = os.environ.get('RESULTS_JSON', 'med-s1/results.json')
+    print(f"Loading results from {results_path}")
+    results = load_results(results_path)
     plot_comparison(results, 'med-s1/data/model_comparison.png')
     
-    # Print detailed improvements
-    print("\nDetailed improvements of Med-S1-1k over base model:")
-    base_metrics = get_model_metrics(results['base'])
-    tuned_metrics = get_model_metrics(results['med-s1-1k-tuned'])
-    improvements = calculate_improvements(tuned_metrics, base_metrics)
+    # Find models with evaluation results
+    models_with_eval = []
+    for model_key, model_data in results.items():
+        if model_data.get('results', {}).get('eval', {}):
+            models_with_eval.append(model_key)
     
-    dataset_display = {
-        'MedMCQA_validation': 'MedMCQA',
-        'MedQA_USLME_test': 'USMLE',
-        'PubMedQA_test': 'PubMedQA',
-        'MMLU-Pro_Medical_test': 'MMLU-Med',
-        'GPQA_Medical_test': 'GPQA',
-        'Overall': 'Overall (Weighted)'
-    }
+    # Get base metrics if available
+    base_metrics = None
+    if 'base' in results and results['base'].get('results', {}).get('eval', {}):
+        base_metrics = get_model_metrics(results['base'])
     
-    for dataset, improvement in improvements.items():
-        display_name = dataset_display[dataset]
-        base = base_metrics[dataset]['accuracy'] * 100
-        tuned = tuned_metrics[dataset]['accuracy'] * 100
-        if dataset == 'Overall':
-            print("\nWeighted average across all datasets:")
-        print(f"{display_name:15}: {base:.1f}% → {tuned:.1f}% ({improvement:+.1f}%)")
+    # Print detailed improvements for all models compared to base
+    if base_metrics:
+        print("\nDetailed improvements over base model:")
+        
+        dataset_display = {
+            'MedMCQA_validation': 'MedMCQA',
+            'MedQA_USLME_test': 'USMLE',
+            'PubMedQA_test': 'PubMedQA',
+            'MMLU-Pro_Medical_test': 'MMLU-Med',
+            'GPQA_Medical_test': 'GPQA',
+            'Overall': 'Overall (Simple Average)'
+        }
+        
+        for model in models_with_eval:
+            if model == 'base':
+                continue
+                
+            model_metrics = get_model_metrics(results[model])
+            if not model_metrics:
+                continue
+                
+            improvements = calculate_improvements(model_metrics, base_metrics)
+            
+            print(f"\n{model} improvements:")
+            for dataset, improvement in improvements.items():
+                display_name = dataset_display.get(dataset, dataset)
+                base = base_metrics[dataset]['accuracy'] * 100
+                model_acc = model_metrics[dataset]['accuracy'] * 100
+                print(f"{display_name:15}: {base:.1f}% → {model_acc:.1f}% ({improvement:+.1f}%)")
 
     # Print average accuracy and CI for all models
     print("\nAverage accuracy and CI for all models:")
-    for model, model_data in results.items():
-        metrics = get_model_metrics(model_data)
-        if metrics:
+    for model in sorted(models_with_eval):
+        metrics = get_model_metrics(results[model])
+        if metrics and 'Overall' in metrics:
             overall_metrics = metrics['Overall']
             if 'accuracy' in overall_metrics:
                 accuracy = overall_metrics['accuracy'] * 100
                 ci_lower = overall_metrics['ci_lower'] * 100
                 ci_upper = overall_metrics['ci_upper'] * 100
-                print(f"{model:15}: Accuracy = {accuracy:.1f}%, CI = [{ci_lower:.1f}%, {ci_upper:.1f}%]")
+                print(f"{model:20}: Accuracy = {accuracy:.1f}%, CI = [{ci_lower:.1f}%, {ci_upper:.1f}%]")
             else:
-                print(f"{model:15}: Overall accuracy not available")
+                print(f"{model:20}: Overall accuracy not available")
 if __name__ == "__main__":
     main()

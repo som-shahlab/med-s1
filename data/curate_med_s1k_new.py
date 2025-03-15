@@ -39,6 +39,8 @@ from curation_methods.advanced import (
     check_novelty_answer_prerequisites,
     check_embedding_prerequisites
 )
+from curation_methods.ngram_difficulty import ngram_difficulty_curation
+from curation_methods.step_extraction import apply_step_extraction
 
 def setup_logging():
     """Configure logging with consistent format"""
@@ -169,6 +171,10 @@ async def main():
     elif curation_method == "difficulty-substring":
         # For "difficulty-substring" method, always use CPU and load directly
         df = difficulty_substring_curation(experiment_config, n_samples)
+        
+    elif curation_method == "difficulty-n-gram":
+        # For "difficulty-n-gram" method, use n-gram based difficulty scoring
+        df = ngram_difficulty_curation(experiment_config, n_samples)
     
     elif curation_method == "novelty-answer":
         # For "novelty-answer" method, need filtered dataset and embeddings
@@ -228,6 +234,12 @@ async def main():
     
     # Create experiment directory
     os.makedirs(os.path.dirname(paths['filtered']), exist_ok=True)
+    
+    # Apply extraction if configured
+    extract_method = experiment_config.get("curation", {}).get("extract", "")
+    if extract_method != "":
+        logging.info(f"Applying {extract_method} extraction to selected examples")
+        df = await apply_step_extraction(df, experiment_config)
     
     # Save filtered dataset with all examples and their filtering status
     df.to_parquet(paths['filtered'])

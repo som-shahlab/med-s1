@@ -145,9 +145,16 @@ def get_results(res_path):
     # Convert to structured format with confidence intervals
     metrics = {}
     for dataset, values in raw_metrics.items():
+        # Determine which count to use for CI calculation based on which was used for accuracy
+        head_match_score = values[1] / values[2]
+        tail_match_score = values[3] / values[2]
+        
+        # Use the same count that was used for the accuracy calculation
+        correct_count = values[1] if head_match_score >= tail_match_score else values[3]
+        
         # Create binary array for bootstrap
         results = np.zeros(values[2])  # total_examples
-        results[:values[1]] = 1  # num_correct ones
+        results[:correct_count] = 1  # num_correct ones
         np.random.shuffle(results)  # Randomize for bootstrap
         
         # Calculate CI
@@ -156,7 +163,7 @@ def get_results(res_path):
         metrics[dataset] = {
             "accuracy": values[0],
             "accuracy_ci": [float(lower), float(upper)],
-            "num_correct": values[1],
+            "num_correct": correct_count,
             "total_examples": values[2],
             "num_answered": values[3]
         }

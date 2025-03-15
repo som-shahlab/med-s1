@@ -18,24 +18,35 @@ def preprocess_text(text: str) -> str:
     text = text.replace("  ", " ")
     return text
 
-def format_chat_template(question: str, thinking: str, answer: str, model_name: str, tokenizer, huatuo_format: bool = False) -> str:
+def format_chat_template(question: str, thinking: str, answer: str, model_name: str, tokenizer, huatuo_format: bool = False, extract: str = None) -> str:
     """Format example using appropriate chat template based on model"""
     # Add Answer: prefix if needed
     if not huatuo_format and "Answer:" not in answer:
         answer = "Answer: " + answer
-        
-    # Format assistant content based on format flag
-    if huatuo_format:
-        # HuatuoGPT format with ## markers
-        assistant_content = f"## Thinking\n\n{thinking}\n\n## Final Response\n\n{answer}"
+    
+    # Check if we should skip the thinking part (no-cot mode)
+    if extract == "none":
+        # Skip the thinking part entirely
+        if huatuo_format:
+            assistant_content = f"## Final Response\n\n{answer}"
+        else:
+            if "Llama" in model_name:
+                assistant_content = f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
+            else:  # Qwen
+                assistant_content = f"<|im_start|>answer\n{answer}"
     else:
-        # Default format with model-specific markers
-        if "Llama" in model_name:
-            assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
-                              f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
-        else:  # Qwen
-            assistant_content = f"<|im_start|>think\n{thinking}\n" + \
-                              f"<|im_start|>answer\n{answer}"
+        # Format assistant content based on format flag
+        if huatuo_format:
+            # HuatuoGPT format with ## markers
+            assistant_content = f"## Thinking\n\n{thinking}\n\n## Final Response\n\n{answer}"
+        else:
+            # Default format with model-specific markers
+            if "Llama" in model_name:
+                assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
+                                  f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
+            else:  # Qwen
+                assistant_content = f"<|im_start|>think\n{thinking}\n" + \
+                                  f"<|im_start|>answer\n{answer}"
     
     # Apply chat template consistently
     return tokenizer.apply_chat_template([
@@ -62,7 +73,15 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
     
     # Check formatting mode from config
     huatuo_format = experiment_config["curation"].get("huatuo_format", False)
+    extract = experiment_config["curation"].get("extract", None)
+    
     logging.info(f"Formatting mode: {'HuatuoGPT-style' if huatuo_format else 'default'}")
+    if extract == "none":
+        logging.info("Skipping CoT/Thinking section (no-cot mode)")
+    elif extract == "step":
+        logging.info("Using step-by-step extracted CoT")
+    elif extract == "1-sentence":
+        logging.info("Using 1-sentence extracted CoT")
     if huatuo_format:
         logging.info("Using '## Thinking' and '## Final Response' markers")
     else:
@@ -83,14 +102,15 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
         thinking = preprocess_text(row['Complex_CoT']) if pd.notna(row['Complex_CoT']) else ""
         answer = preprocess_text(row['Response'])
         
-        # Format using chat template with huatuo_format flag
+        # Format using chat template with huatuo_format flag and extract parameter
         text = format_chat_template(
             question=question,
             thinking=thinking,
             answer=answer,
             model_name=model_name,
             tokenizer=tokenizer,
-            huatuo_format=huatuo_format
+            huatuo_format=huatuo_format,
+            extract=extract
         )
         formatted_data.append({"text": text})
     

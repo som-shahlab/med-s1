@@ -47,14 +47,22 @@ def select_device(experiment_name: str, results_json_path: str, data_dir: str) -
     logging.info(f"Checking for filtered dataset: {filtered_dataset_path}")
     logging.info(f"Checking for embeddings directory: {embeddings_dir_path}")
     
+    # Get curation config
+    curation_config = config.get("curation", {})
+    
     # Simple methods that always use CPU
     if curation_method in ["all", "random"]:
         logging.info(f"Method '{curation_method}' always uses CPU")
         return "cpu"
         
-    # Difficulty-substring method - always uses CPU
-    elif curation_method == "difficulty-substring":
+    # Difficulty-based methods - always use CPU
+    elif curation_method in ["difficulty-substring", "difficulty-n-gram"]:
         logging.info(f"Method '{curation_method}' always uses CPU (loads dataset directly)")
+        return "cpu"
+        
+    # Check for step extraction - always use CPU
+    elif "extract" in curation_config and curation_config["extract"] == "step":
+        logging.info(f"Method with step extraction always uses CPU")
         return "cpu"
     
     # S1 method - check for filtered dataset

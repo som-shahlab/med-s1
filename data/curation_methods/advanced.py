@@ -292,6 +292,9 @@ def embedding_diversity_curation(df: pd.DataFrame, config: Dict, n_samples: int)
     2. Select OP% * n outliers (points furthest from their centroids)
     3. Evenly sample from remaining clusters to reach n samples
     
+    If intra_group_ranking is set to "cot-length", samples within each cluster
+    are ranked by the length of their Complex_CoT instead of random sampling.
+    
     Args:
         df: Input dataframe with all examples
         config: Curation configuration
@@ -322,6 +325,11 @@ def embedding_diversity_curation(df: pd.DataFrame, config: Dict, n_samples: int)
     
     # Get parameters from config
     curation_params = config.get("curation", {})
+    
+    # Check if we should rank by CoT length within groups
+    intra_group_ranking = curation_params.get("intra_group_ranking", "random")
+    if intra_group_ranking == "cot-length":
+        logging.info("Using CoT length for intra-group ranking")
     
     # Determine column to use for embeddings
     column = curation_params.get("column", "Complex_CoT")
@@ -394,7 +402,24 @@ def embedding_diversity_curation(df: pd.DataFrame, config: Dict, n_samples: int)
         # Sample from this cluster
         to_sample = min(cluster_points[cluster], len(cluster_indices))
         if to_sample > 0:
-            sampled = random.sample(cluster_indices, to_sample)
+            if intra_group_ranking == "cot-length":
+                # Rank by CoT length (descending)
+                cluster_cot_lengths = []
+                for idx in cluster_indices:
+                    cot_text = df.loc[idx, 'Complex_CoT']
+                    # Calculate length (character count) if CoT exists
+                    length = len(cot_text) if pd.notna(cot_text) else 0
+                    cluster_cot_lengths.append((idx, length))
+                
+                # Sort by CoT length (descending)
+                cluster_cot_lengths.sort(key=lambda x: x[1], reverse=True)
+                
+                # Take the top N examples with longest CoT
+                sampled = [idx for idx, _ in cluster_cot_lengths[:to_sample]]
+            else:
+                # Default: random sampling
+                sampled = random.sample(cluster_indices, to_sample)
+            
             selected_indices.update(sampled)
     
     # If we still need more samples, take from remaining points

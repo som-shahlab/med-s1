@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from jinja2 import Template
 from transformers import AutoTokenizer
-from scorer import get_results, score, match_choice
+from scorer import get_results, score, match_choice, calculate_confidence_interval
 from typing import List, Dict, Tuple, Any, Optional
 from datetime import datetime
 from collections import Counter
@@ -249,11 +249,20 @@ async def process_gpqa_with_multiple_runs(
         # Get all outputs from runs
         outputs = [run["output"] for run in result["runs"]]
         
-        # Get all parsed answers
+        # Get all parsed answers and calculate accuracy for each run
         answers = []
+        run_accuracies = []
         for output in outputs:
             ans, ans_type = match_choice(output, result["options"])
-            answers.append(ans[-1])  # Use the last answer (most likely the final answer)
+            last_answer = ans[-1]  # Use the last answer (most likely the final answer)
+            answers.append(last_answer)
+            # Calculate accuracy for this run (1 if correct, 0 if incorrect)
+            is_correct = (last_answer.lower() == result["answer_idx"].lower())
+            run_accuracies.append(1 if is_correct else 0)
+        
+        # Store run accuracies and calculate average
+        result["run_accuracies"] = run_accuracies
+        result["average_accuracy"] = sum(run_accuracies) / len(run_accuracies)
         
         # Count occurrences of each answer
         answer_counts = Counter(answers)
@@ -387,12 +396,25 @@ def prepare_data(args, experiment):
     
     return input_data, gpqa_data, non_gpqa_data
 
-def get_query_prompt(args):
-    """Get the appropriate query prompt based on args."""
+def get_query_prompt(args, experiment=None):
+    """Get the appropriate query prompt based on args and experiment config."""
+    # Check if experiment config has a prompting approach set to "step"
+    step_prompt = False
+    if experiment and "config" in experiment:
+        step_prompt = experiment["config"].get("prompting", "") == "step"
+    
     if args.test_time_scaling or args.strict_prompt:
-        return "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'.\n{question}\n{option_str}"
+        base_prompt = "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'."
+        if step_prompt:
+            return f"{base_prompt}\n{{question}}\n{{option_str}}\n\nLet's think step by step."
+        else:
+            return f"{base_prompt}\n{{question}}\n{{option_str}}"
     else:
-        return "Please answer the following multiple-choice question:\n{question}\n{option_str}"
+        base_prompt = "Please answer the following multiple-choice question:"
+        if step_prompt:
+            return f"{base_prompt}\n{{question}}\n{{option_str}}\n\nLet's think step by step."
+        else:
+            return f"{base_prompt}\n{{question}}\n{{option_str}}"
 
 async def run_test_time_scaling(args, engine, tokenizer, input_data, template, experiment):
     """Run test time scaling evaluation."""
@@ -425,7 +447,7 @@ async def run_test_time_scaling(args, engine, tokenizer, input_data, template, e
         reasoning_approaches=reasoning_approaches
     )
 
-async def run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt):
+async def run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt, experiment=None):
     """Run standard evaluation with optional GPQA multiple runs."""
     results = []
     
@@ -534,6 +556,34 @@ def save_and_score_results(args, final_results, model_path):
     else:
         # Original scoring
         metrics = get_results(path_to_output)
+        
+        # For GPQA, calculate average accuracy across runs
+        gpqa_results = [r for r in final_results if r.get('source') == 'GPQA_Medical_test' and 'average_accuracy' in r]
+        if gpqa_results:
+            # Calculate average accuracy across all GPQA examples
+            gpqa_avg_accuracy = sum(r['average_accuracy'] for r in gpqa_results) / len(gpqa_results)
+            
+            # If GPQA_Medical_test exists in metrics, update its accuracy
+            if 'GPQA_Medical_test' in metrics:
+                print(f"\nUpdating GPQA_Medical_test accuracy with average of {len(gpqa_results)} examples across {args.gpqa_repeats} runs")
+                print(f"Original accuracy (majority vote): {metrics['GPQA_Medical_test']['accuracy']:.4f}")
+                print(f"New accuracy (average of runs): {gpqa_avg_accuracy:.4f}")
+                
+                # Store both accuracies
+                metrics['GPQA_Medical_test']['majority_vote_accuracy'] = metrics['GPQA_Medical_test']['accuracy']
+                metrics['GPQA_Medical_test']['accuracy'] = gpqa_avg_accuracy
+                
+                # Recalculate confidence interval for the average accuracy
+                # Create binary array for bootstrap
+                total_runs = len(gpqa_results) * args.gpqa_repeats
+                correct_runs = int(round(gpqa_avg_accuracy * total_runs))
+                results_array = np.zeros(total_runs)
+                results_array[:correct_runs] = 1
+                np.random.shuffle(results_array)
+                
+                # Calculate CI
+                lower, upper = calculate_confidence_interval(results_array)
+                metrics['GPQA_Medical_test']['accuracy_ci'] = [float(lower), float(upper)]
     
     # Save detailed metrics with schema
     metrics_file = os.path.join(args.path_to_output_dir, f"{task_name}_metrics.json")
@@ -701,13 +751,13 @@ async def main_async():
     input_data, gpqa_data, non_gpqa_data = prepare_data(args, experiment)
     
     # Get query prompt
-    query_prompt = get_query_prompt(args)
+    query_prompt = get_query_prompt(args, experiment)
     
     # Run evaluation
     if args.test_time_scaling:
         final_results = await run_test_time_scaling(args, engine, tokenizer, input_data, template, experiment)
     else:
-        final_results = await run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt)
+        final_results = await run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt, experiment)
     
     # Save and score results
     path_to_output, metrics_file, metrics, approaches = save_and_score_results(args, final_results, model_path)
