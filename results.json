@@ -18,6 +18,21 @@
         }
       }
     },
+    "base-step-prompt": {
+      "description": "Base model with step-by-step prompting",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "prompting": "step"
+      },
+      "results": {
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-step-prompt/Llama-3.1-8B-Instructeval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-step-prompt/Llama-3.1-8B-Instructeval_data_metrics.json",
+          "timestamp": "2025-03-15T05:51:41.888151",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-step-prompt_eval.json"
+        }
+      }
+    },
     "huatuo": {
       "description": "Pre-trained HuatuoGPT medical model",
       "config": {
@@ -285,7 +300,7 @@
           "extract": "none"
         },
         "training_params": {
-          "learning_rate": 1e-05,
+          "learning_rate": 5e-06,
           "batch_size": 2,
           "num_epochs": 15,
           "weight_decay": 0.1,
@@ -310,13 +325,13 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-no-cot",
-          "timestamp": "2025-03-15T21:09:04Z",
+          "timestamp": "2025-03-15T23:51:24Z",
           "metrics": null
         },
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-no-cot/best_modeleval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-no-cot/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-15T22:53:15.346068",
+          "timestamp": "2025-03-15T23:56:47.782596",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-no-cot_eval.json"
         }
       }

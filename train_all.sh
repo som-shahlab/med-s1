@@ -10,6 +10,9 @@ sbatch train/sft_carina.sh medqa-1k-random
 sbatch train/sft_carina.sh medqa-1k-embedding-diversity-question-cluster-10-outlier-5
 sbatch train/sft_carina.sh medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
 sbatch train/sft_carina.sh medqa-1k-random-step-extract
+
+
+# Not converging:
 sbatch train/sft_carina.sh medqa-1k-random-no-cot
 sbatch train/sft_carina.sh medqa-1k-random-1-sentence-extract
 sbatch train/sft_carina.sh medqa-5k-random-no-cot

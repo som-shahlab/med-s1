@@ -41,6 +41,16 @@ class SFTTrainer:
         self.best_model_state = None
         self.should_stop = False
         
+        # Set validation frequency (default to every 0.1 epochs if not specified)
+        self.validation_steps = getattr(config, 'validation_steps', None)
+        if self.validation_steps is None:
+            # Default to validating roughly every 10% of an epoch
+            # Will be properly calculated after dataloader is created
+            self.validation_frequency = 0.1
+        else:
+            # Use the specified number of steps directly
+            self.validation_frequency = None
+        
         if self.accelerator.is_main_process:
             wandb.init(
                 project="med-s1",
@@ -170,6 +180,32 @@ class SFTTrainer:
         # Calculate final training steps
         self.num_training_steps = int(dataloader_length * num_epochs) // grad_acc_steps // world_size
         num_warmup_steps = int(self.num_training_steps * self.config.warmup_ratio)
+        
+        # Calculate validation steps if using frequency-based validation
+        if self.validation_frequency is not None and self.has_validation:
+            # Calculate steps per epoch (accounting for gradient accumulation and distributed training)
+            steps_per_epoch = dataloader_length // grad_acc_steps // world_size
+            
+            # Adaptive validation frequency based on dataset size
+            # For very small datasets, validate less frequently (minimum 2 times per epoch)
+            # For large datasets, validate more frequently (up to 10 times per epoch)
+            if steps_per_epoch < 20:
+                # Small dataset: validate at most 2-3 times per epoch
+                target_validations_per_epoch = min(2, max(1, steps_per_epoch // 2))
+            elif steps_per_epoch < 100:
+                # Medium dataset: validate 3-5 times per epoch
+                target_validations_per_epoch = min(5, max(3, steps_per_epoch // 20))
+            else:
+                # Large dataset: validate up to 10 times per epoch
+                target_validations_per_epoch = min(10, max(5, steps_per_epoch // 50))
+            
+            # Calculate steps between validations
+            self.validation_steps = max(1, steps_per_epoch // target_validations_per_epoch)
+            
+            if self.accelerator.is_main_process:
+                actual_frequency = self.validation_steps / steps_per_epoch if steps_per_epoch > 0 else 0
+                logger.info(f"  Validation frequency: Every {self.validation_steps} steps")
+                logger.info(f"  Approximately {1/actual_frequency:.1f} validations per epoch")
 
         # Create scheduler
         self.lr_scheduler = get_cosine_schedule_with_warmup(
@@ -341,13 +377,17 @@ class SFTTrainer:
         completed_steps = 0
         starting_epoch = 0
         
-        # Log early stopping configuration if enabled
-        if self.config.early_stopping and self.accelerator.is_main_process:
-            logger.info("\nEarly Stopping Configuration:")
-            logger.info(f"  Enabled: {self.config.early_stopping}")
-            logger.info(f"  Patience: {self.config.early_stopping_patience}")
-            logger.info(f"  Threshold: {self.config.early_stopping_threshold}")
-            logger.info(f"  Metric: {self.config.early_stopping_metric}")
+        # Log validation and early stopping configuration
+        if self.accelerator.is_main_process:
+            logger.info("\nValidation Configuration:")
+            logger.info(f"  Validation Steps: {self.validation_steps}")
+            
+            if self.config.early_stopping:
+                logger.info("\nEarly Stopping Configuration:")
+                logger.info(f"  Enabled: {self.config.early_stopping}")
+                logger.info(f"  Patience: {self.config.early_stopping_patience}")
+                logger.info(f"  Threshold: {self.config.early_stopping_threshold}")
+                logger.info(f"  Metric: {self.config.early_stopping_metric}")
 
         for epoch in range(starting_epoch, self.config.num_train_epochs):
             self.model.train()
@@ -387,39 +427,71 @@ class SFTTrainer:
                             'train_loss': train_loss,
                             'train_accuracy': acc,
                             'learning_rate': self.lr_scheduler.get_last_lr()[0],
-                            'epoch': epoch,
+                            'epoch': epoch + (step / len(self.train_dataloader)),  # Fractional epoch
                             'step': completed_steps,
                         })
+                    
+                    # Run validation at specified intervals
+                    if self.has_validation and completed_steps % self.validation_steps == 0:
+                        val_loss, val_acc = self.validate()
+                        if self.accelerator.is_main_process:
+                            logger.info(f"Step {completed_steps} Validation - Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}")
+                            wandb.log({
+                                'val_loss': val_loss,
+                                'val_accuracy': val_acc,
+                                'epoch': epoch + (step / len(self.train_dataloader)),  # Fractional epoch
+                                'step': completed_steps,
+                            })
+                        
+                        # Check early stopping criteria
+                        if self.config.early_stopping:
+                            should_stop = self.check_early_stopping(val_loss, val_acc)
+                            
+                            # Save best model if this is the best performance so far
+                            if self.early_stopping_counter == 0 and self.accelerator.is_main_process:
+                                self.save_checkpoint(epoch, is_best=True)
+                            
+                            # Broadcast early stopping decision to all processes
+                            should_stop = self.accelerator.gather(torch.tensor([should_stop], device=self.accelerator.device)).any().item()
+                            
+                            if should_stop:
+                                if self.accelerator.is_main_process:
+                                    logger.info("Early stopping triggered, stopping training")
+                                break
 
                 if completed_steps >= self.num_training_steps:
                     break
 
-            # Run validation if available
+            # Run validation at the end of each epoch (in addition to step-based validation)
             if self.has_validation:
-                val_loss, val_acc = self.validate()
-                if self.accelerator.is_main_process:
-                    logger.info(f"Validation - Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}")
-                    wandb.log({
-                        'val_loss': val_loss,
-                        'val_accuracy': val_acc,
-                        'epoch': epoch,
-                    })
-                
-                # Check early stopping criteria if validation is available and early stopping is enabled
-                if self.config.early_stopping:
-                    should_stop = self.check_early_stopping(val_loss, val_acc)
+                # Only run end-of-epoch validation if we haven't just done it
+                # (which could happen if the last step triggered validation)
+                if completed_steps % self.validation_steps != 0:
+                    val_loss, val_acc = self.validate()
+                    if self.accelerator.is_main_process:
+                        logger.info(f"End of epoch {epoch} validation - Loss: {val_loss:.4f}, Accuracy: {val_acc:.4f}")
+                        wandb.log({
+                            'val_loss': val_loss,
+                            'val_accuracy': val_acc,
+                            'epoch': epoch + 1.0,  # End of epoch
+                            'step': completed_steps,
+                        })
                     
-                    # Save best model if this is the best performance so far
-                    if self.early_stopping_counter == 0 and self.accelerator.is_main_process:
-                        self.save_checkpoint(epoch, is_best=True)
-                    
-                    # Broadcast early stopping decision to all processes
-                    should_stop = self.accelerator.gather(torch.tensor([should_stop], device=self.accelerator.device)).any().item()
-                    
-                    if should_stop:
-                        if self.accelerator.is_main_process:
-                            logger.info("Early stopping triggered, stopping training")
-                        break
+                    # Check early stopping criteria
+                    if self.config.early_stopping:
+                        should_stop = self.check_early_stopping(val_loss, val_acc)
+                        
+                        # Save best model if this is the best performance so far
+                        if self.early_stopping_counter == 0 and self.accelerator.is_main_process:
+                            self.save_checkpoint(epoch, is_best=True)
+                        
+                        # Broadcast early stopping decision to all processes
+                        should_stop = self.accelerator.gather(torch.tensor([should_stop], device=self.accelerator.device)).any().item()
+                        
+                        if should_stop:
+                            if self.accelerator.is_main_process:
+                                logger.info("Early stopping triggered, stopping training")
+                            break
             
             # Save intermediate checkpoint
             self.save_checkpoint(epoch)

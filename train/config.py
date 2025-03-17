@@ -33,6 +33,10 @@ class TrainingConfig:
     seed: int = field(default=42)
     debug: bool = field(default=False)  # Explicitly set default to False
     max_ckpts: int = field(default=2)
+    validation_steps: Optional[int] = field(
+        default=None,
+        metadata={"help": "Number of steps between validation runs. If None, validates every 10% of an epoch"}
+    )
     
     # Early stopping parameters
     early_stopping: bool = field(default=False)

@@ -1,55 +1,55 @@
 {
   "summary": {
     "MedMCQA_validation": {
-      "accuracy": 0.5169573643410853,
+      "accuracy": 0.5588662790697675,
       "accuracy_ci": [
-        0.5009629360465117,
-        0.5324733527131782
+        0.5428779069767442,
+        0.5738977713178294
       ],
-      "num_correct": 2134,
+      "num_correct": 2307,
       "total_examples": 4128,
-      "num_answered": 2134
+      "num_answered": 2307
     },
     "MedQA_USLME_test": {
-      "accuracy": 0.5476947535771065,
+      "accuracy": 0.6216216216216216,
       "accuracy_ci": [
-        0.5214626391096979,
-        0.575516693163752
+        0.5961844197138315,
+        0.6462837837837837
       ],
-      "num_correct": 689,
+      "num_correct": 782,
       "total_examples": 1258,
-      "num_answered": 689
+      "num_answered": 782
     },
     "PubMedQA_test": {
-      "accuracy": 0.7386018237082067,
+      "accuracy": 0.7416413373860182,
       "accuracy_ci": [
-        0.7112462006079028,
-        0.7700101317122594
+        0.7152988855116514,
+        0.7659574468085106
       ],
-      "num_correct": 729,
+      "num_correct": 732,
       "total_examples": 987,
-      "num_answered": 729
+      "num_answered": 732
     },
     "MMLU-Pro_Medical_test": {
-      "accuracy": 0.5286372613561554,
+      "accuracy": 0.5562870309414089,
       "accuracy_ci": [
-        0.5036208031599737,
-        0.554312047399605
+        0.5312705727452272,
+        0.5819618169848585
       ],
-      "num_correct": 803,
+      "num_correct": 845,
       "total_examples": 1519,
-      "num_answered": 803
+      "num_answered": 840
     },
     "GPQA_Medical_test": {
-      "accuracy": 0.394054054054054,
+      "accuracy": 0.43135135135135155,
       "accuracy_ci": [
-        0.37350000000000005,
-        0.4172972972972973
+        0.40864864864864864,
+        0.4540540540540541
       ],
-      "num_correct": 158,
+      "num_correct": 173,
       "total_examples": 370,
-      "num_answered": 153,
-      "majority_vote_accuracy": 0.42702702702702705
+      "num_answered": 173,
+      "majority_vote_accuracy": 0.46756756756756757
     }
   }
 }
