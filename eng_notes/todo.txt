@@ -82,7 +82,6 @@ See @/med-s1/results_v2.json and how we've defined experiments. Let's make a res
 - medqa-1k-random
 - medqa-1k-embedding-diversity-question-cluster-10-outlier-5
 - medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
-- medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
 - medqa-25k
 - medqa-1k-random-step-extract
 - medqa-1k-random-no-cot
@@ -100,3 +99,17 @@ medqa-1k-random-1-sentence-extract should be similar to step-extract except here
 
 Now let's focus on hyperparameter configuration. We can use ideas in prior work like LIMA, LIMO, s1, and HuaTuo-o1 the first 3 of which train on 1k-length datasets. But we should first know roughly how many tokens we'd actually be training on for each experiment. Make a file analyze_tokens.py which goes through all the experiments in results.json and looks at the result of curation (see @/med-s1/data/curate_med_s1k_new.py for how we generate a curated.parquet, filered.parquet, and formatted HuggingFace dataset) to basically go through the curated dataset and determine how many reasoning+answer tokens are there (using tokenizer of the base model that is fine-tuned) and determine min, max, average (per sample), and total. We can then use this to determine how to set hyperparameters.
 TODO: analyze token counts + read LIMA, LIMO, s1, HuaTuo-o1 to arrive at hyperparameter configurations.
+
+Case reports:
+
+See how we read in base data for training and eval:
+* Training - `load_dataset("FreedomIntelligence/medical-o1-reasoning-SFT", "en", split="train")` (n=~25k)
+* Eval - `--path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json` (n=~10k)
+
+These both are respectively the huatuo-sft and huatuo-eval datasets as we will call them.
+
+Let's update config.json to specify train_datasets and eval_datasets that map from dataset name to either a location or a HF path.
+Then let's update all experiments in results.json to specify datasets: {train: <train_dataset_name>, eval: <eval_dataset_name>}.
+We should then update sft.py and eval.py to look at these to determine what dataset to load in.
+
+Then let's define 2 new datasets: multicare-sft and multicare-eval.

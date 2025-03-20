@@ -231,7 +231,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-25k",
-          "timestamp": "2025-03-15T22:46:59Z",
+          "timestamp": "2025-03-18T19:20:35Z",
           "metrics": null
         },
         "eval": {
@@ -372,7 +372,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-1-sentence-extract",
-          "timestamp": "2025-03-15T21:15:54Z",
+          "timestamp": "2025-03-18T17:59:26Z",
           "metrics": null
         },
         "eval": {
@@ -419,7 +419,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-5k-random-no-cot",
-          "timestamp": "2025-03-15T21:27:12Z",
+          "timestamp": "2025-03-18T18:13:55Z",
           "metrics": null
         },
         "eval": {
@@ -466,7 +466,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-10k-random-no-cot",
-          "timestamp": "2025-03-15T21:45:44Z",
+          "timestamp": "2025-03-18T18:28:42Z",
           "metrics": null
         },
         "eval": {
