@@ -81,9 +81,52 @@ def get_output_dir() -> str:
         raise ValueError("MED_S1K_OUTPUT environment variable not set")
     return output_dir
 
-def load_base_dataset() -> pd.DataFrame:
+def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
     """Load the base dataset and initialize metadata columns"""
-    dataset = load_dataset("FreedomIntelligence/medical-o1-reasoning-SFT", "en", split="train")
+    # Get dataset name from experiment config
+    dataset_name = experiment_config.get("datasets", {}).get("curate")
+    
+    if not dataset_name:
+        logging.warning("No dataset specified in experiment config, using default")
+        dataset = load_dataset("FreedomIntelligence/medical-o1-reasoning-SFT", "en", split="train")
+    else:
+        # Get dataset config from config.json
+        if dataset_name not in config.get("train_datasets", {}):
+            raise ValueError(f"Dataset {dataset_name} not found in config.json")
+        
+        dataset_config = config["train_datasets"][dataset_name]
+        
+        # Load dataset based on config
+        if "hf_path" in dataset_config:
+            # Load from Hugging Face
+            hf_path = dataset_config["hf_path"]
+            hf_config = dataset_config.get("hf_config", None)
+            hf_split = dataset_config.get("hf_split", "train")
+            
+            logging.info(f"Loading dataset {dataset_name} from {hf_path}")
+            dataset = load_dataset(hf_path, hf_config, split=hf_split)
+        elif "file_path" in dataset_config:
+            # Load from local file
+            file_path = dataset_config["file_path"]
+            # Replace environment variables
+            file_path = file_path.replace("${MED_S1_DIR}", os.environ.get("MED_S1_DIR", ""))
+            
+            logging.info(f"Loading dataset {dataset_name} from {file_path}")
+            # Determine file type and load accordingly
+            if file_path.endswith(".json"):
+                with open(file_path, "r") as f:
+                    data = json.load(f)
+                dataset = Dataset.from_dict(data)
+            elif file_path.endswith(".parquet"):
+                dataset = Dataset.from_parquet(file_path)
+            elif os.path.isdir(file_path):
+                dataset = load_from_disk(file_path)
+            else:
+                raise ValueError(f"Unsupported file format for {file_path}")
+        else:
+            raise ValueError(f"Dataset {dataset_name} has no hf_path or file_path")
+    
+    # Convert to DataFrame and initialize metadata columns
     df = pd.DataFrame(dataset)
     df['filter_status'] = 'kept'
     df['filter_stage'] = None
@@ -135,7 +178,7 @@ async def main():
             df = pd.read_parquet(filtered_path)
             logging.info(f"Loaded existing dataset from {filtered_path}")
         else:
-            df = load_base_dataset()
+            df = load_base_dataset(experiment_config, config)
         df = full_dataset(df, experiment_config)
     
     elif curation_method == "random":

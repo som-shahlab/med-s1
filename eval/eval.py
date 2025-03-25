@@ -17,7 +17,7 @@ from collections import Counter
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', type=str, required=True, help='Name of experiment from results.json')
-    parser.add_argument('--path_to_eval_json', type=str, required=True, help='Path to the evaluation data')
+    parser.add_argument('--path_to_eval_json', type=str, required=False, help='Path to the evaluation data (optional, will use dataset from config if not provided)')
     parser.add_argument('--path_to_output_dir', type=str, default='./results', help='Path to the output directory')
     parser.add_argument('--max_new_tokens', type=int, default=2000, help='Maximum number of new tokens to generate')
     parser.add_argument('--max_tokens', type=int, default=-1, help='Maximum number of tokens to generate. If -1, no truncation is performed')
@@ -282,7 +282,45 @@ async def process_gpqa_with_multiple_runs(
     
     return gpqa_results
 
-def get_model_path_from_results(experiment_name: str) -> str:
+def get_eval_dataset_path(experiment_name: str) -> str:
+    """Get the evaluation dataset path from config.json based on experiment name."""
+    results_json = os.environ.get('RESULTS_JSON')
+    if not results_json:
+        raise ValueError("RESULTS_JSON environment variable not set")
+        
+    with open(results_json, "r") as f:
+        results = json.load(f)
+    
+    if experiment_name not in results.get("experiments", {}):
+        raise ValueError(f"Experiment {experiment_name} not found in results.json")
+        
+    experiment = results["experiments"][experiment_name]
+    
+    # Get dataset name from experiment config
+    dataset_name = experiment.get("config", {}).get("datasets", {}).get("eval")
+    if not dataset_name:
+        raise ValueError(f"No evaluation dataset specified in experiment config for {experiment_name}")
+    
+    # Load config.json to get the dataset path
+    med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+    with open(os.path.join(med_s1_dir, 'config.json'), 'r') as f:
+        config = json.load(f)
+    
+    if dataset_name not in config.get("eval_datasets", {}):
+        raise ValueError(f"Dataset {dataset_name} not found in config.json")
+    
+    dataset_config = config["eval_datasets"][dataset_name]
+    
+    # Get file path from dataset config
+    if "file_path" in dataset_config:
+        file_path = dataset_config["file_path"]
+        # Replace environment variables
+        file_path = file_path.replace("${MED_S1_DIR}", med_s1_dir)
+        return file_path
+    else:
+        raise ValueError(f"Dataset {dataset_name} has no file_path")
+
+def get_model_path_from_results(experiment_name: str) -> tuple:
     """Get the model path from results.json based on experiment name."""
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
@@ -724,6 +762,11 @@ async def main_async():
 
     # Get model path from results.json
     model_path, experiment = get_model_path_from_results(args.experiment_name)
+
+    # If path_to_eval_json is not provided, get it from config
+    if not args.path_to_eval_json:
+        args.path_to_eval_json = get_eval_dataset_path(args.experiment_name)
+        print(f"Using evaluation dataset from config: {args.path_to_eval_json}")
 
     # Initialize model
     print(f"\nInitializing model: {model_path}")

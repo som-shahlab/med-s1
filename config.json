@@ -19,17 +19,31 @@
             "max_length": 128000,
             "pricing": {
                 "input": 0.15,
-                "output": 0.60
+                "output": 0.6
             }
         },
         "gemini-2.0-flash": {
             "max_length": 128000,
             "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
             "pricing": {
-                "input": 0.10,
-                "output": 0.40,
+                "input": 0.1,
+                "output": 0.4,
                 "rpm": 2000
             }
+        }
+    },
+    "train_datasets": {
+        "huatuo-sft": {
+            "hf_path": "FreedomIntelligence/medical-o1-reasoning-SFT",
+            "hf_config": "en",
+            "hf_split": "train",
+            "description": "HuatuoGPT SFT dataset with ~25k examples"
+        }
+    },
+    "eval_datasets": {
+        "huatuo-eval": {
+            "file_path": "${MED_S1_DIR}/eval/data/eval_data.json",
+            "description": "HuatuoGPT evaluation dataset with ~10k examples"
         }
     },
     "curation": {

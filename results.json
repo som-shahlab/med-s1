@@ -5,7 +5,11 @@
       "config": {
         "model_key": "llama3.1:8b",
         "curation": null,
-        "training_params": null
+        "training_params": null,
+        "datasets": {
+          "curate": null,
+          "eval": "huatuo-eval"
+        }
       },
       "results": {
         "curation": null,
@@ -22,7 +26,11 @@
       "description": "Base model with step-by-step prompting",
       "config": {
         "model_key": "llama3.1:8b",
-        "prompting": "step"
+        "prompting": "step",
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
       },
       "results": {
         "eval": {
@@ -38,7 +46,11 @@
       "config": {
         "model_key": "huatuo:8b",
         "curation": null,
-        "training_params": null
+        "training_params": null,
+        "datasets": {
+          "curate": null,
+          "eval": "huatuo-eval"
+        }
       },
       "results": {
         "curation": null,
@@ -76,6 +88,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -125,6 +141,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -175,6 +195,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -221,6 +245,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -237,7 +265,7 @@
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modeleval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-15T23:09:29.649270",
+          "timestamp": "2025-03-20T02:56:57.087364",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k_eval.json"
         }
       }
@@ -268,6 +296,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -315,6 +347,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -362,6 +398,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -409,6 +449,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -425,7 +469,7 @@
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-5k-random-no-cot/best_modeleval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-5k-random-no-cot/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-15T22:57:54.803816",
+          "timestamp": "2025-03-20T02:48:45.125184",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-5k-random-no-cot_eval.json"
         }
       }
@@ -456,6 +500,10 @@
             "adam_epsilon": 1e-08
           },
           "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
         }
       },
       "results": {
@@ -472,7 +520,7 @@
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-10k-random-no-cot/best_modeleval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-10k-random-no-cot/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-15T22:57:52.050733",
+          "timestamp": "2025-03-20T02:48:55.758592",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-10k-random-no-cot_eval.json"
         }
       }
