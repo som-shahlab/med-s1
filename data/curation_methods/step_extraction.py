@@ -1,5 +1,5 @@
 """
-Step extraction curation methods for the med-s1k dataset.
+Step extraction and clinical formatting methods for the med-s1k dataset.
 """
 
 import pandas as pd
@@ -11,6 +11,12 @@ import asyncio
 import re
 from typing import Dict, Optional, List, Tuple
 from utils.openai_utils import get_model_response
+from .clinical_formatting import (
+    transform_to_list,
+    transform_to_markdown,
+    transform_to_step_evidence,
+    transform_to_soap
+)
 
 # Get MED_S1_DIR from environment
 MED_S1_DIR = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
@@ -163,25 +169,69 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     curation_config = config.get("curation", {})
     extract_method = curation_config.get("extract")
     
-    if extract_method in ["step", "1-sentence"]:
-        logging.info(f"Applying {extract_method} extraction to selected examples")
-        
-        # Directly await the transform function since we're already in an async context
-        with open(os.path.join(MED_S1_DIR, "config.json"), 'r') as config_file:
-            full_config = json.load(config_file)
-        
-        # Pass the extract_type parameter to transform_cot_to_steps
-        df = await transform_cot_to_steps(df, full_config, extract_type=extract_method)
-        
-        # Log the first example after transformation for debugging
-        selected_df = df[df['selected_for_training']]
-        if len(selected_df) > 0:
-            first_example = selected_df.iloc[0]
-            logging.info(f"First example after {extract_method} extraction:")
-            if 'Complex_CoT_orig' in first_example and pd.notna(first_example['Complex_CoT_orig']):
-                logging.info(f"Original CoT length: {len(str(first_example['Complex_CoT_orig']))}")
-            if pd.notna(first_example['Complex_CoT']):
-                logging.info(f"Transformed CoT length: {len(str(first_example['Complex_CoT']))}")
-                logging.info(f"First 100 chars: {str(first_example['Complex_CoT'])[:100]}...")
+    # Load full config
+    with open(os.path.join(MED_S1_DIR, "config.json"), 'r') as config_file:
+        full_config = json.load(config_file)
+    
+    # Get model key for transformations
+    model_key = full_config.get("model_choices", {}).get("curation",
+                full_config.get("model_choices", {}).get("base_judge", "gemini-2.0-flash"))
+    
+    if model_key not in full_config.get("models", {}):
+        logging.warning(f"Model key '{model_key}' not found in config. Using gemini-2.0-flash as fallback.")
+        model_key = "gemini-2.0-flash"
+    
+    # Handle different extraction methods
+    if extract_method == "step":
+        logging.info("Applying step-by-step extraction")
+        df = await transform_cot_to_steps(df, full_config, extract_type="step")
+    
+    elif extract_method == "1-sentence":
+        logging.info("Applying one-sentence extraction")
+        df = await transform_cot_to_steps(df, full_config, extract_type="1-sentence")
+    
+    elif extract_method == "list":
+        logging.info("Applying list extraction")
+        selected_df = df[df['selected_for_training']].copy()
+        for idx, row in selected_df.iterrows():
+            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
+                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
+                df.loc[idx, 'Complex_CoT'] = await transform_to_list(row['Complex_CoT'], model_key)
+    
+    elif extract_method == "markdown":
+        logging.info("Applying markdown extraction")
+        selected_df = df[df['selected_for_training']].copy()
+        for idx, row in selected_df.iterrows():
+            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
+                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
+                df.loc[idx, 'Complex_CoT'] = await transform_to_markdown(row['Complex_CoT'], model_key)
+    
+    elif extract_method == "step-evidence":
+        logging.info("Applying step-evidence extraction")
+        selected_df = df[df['selected_for_training']].copy()
+        for idx, row in selected_df.iterrows():
+            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
+                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
+                df.loc[idx, 'Complex_CoT'] = await transform_to_step_evidence(row['Complex_CoT'], model_key)
+    
+    elif extract_method in ["soap", "soapie", "isbar", "pomr"]:
+        format_type = extract_method.upper()
+        logging.info(f"Applying {format_type} note extraction")
+        selected_df = df[df['selected_for_training']].copy()
+        for idx, row in selected_df.iterrows():
+            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
+                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
+                df.loc[idx, 'Complex_CoT'] = await transform_to_soap(row['Complex_CoT'], model_key, format_type)
+    
+    # Log the first example after transformation for debugging
+    selected_df = df[df['selected_for_training']]
+    if len(selected_df) > 0:
+        first_example = selected_df.iloc[0]
+        logging.info(f"First example after {extract_method} extraction:")
+        if 'Complex_CoT_orig' in first_example and pd.notna(first_example['Complex_CoT_orig']):
+            logging.info(f"Original CoT length: {len(str(first_example['Complex_CoT_orig']))}")
+        if pd.notna(first_example['Complex_CoT']):
+            logging.info(f"Transformed CoT length: {len(str(first_example['Complex_CoT']))}")
+            logging.info(f"First 100 chars: {str(first_example['Complex_CoT'])[:100]}...")
     
     return df

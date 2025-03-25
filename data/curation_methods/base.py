@@ -3,7 +3,7 @@ Base curation methods for the med-s1k dataset.
 """
 
 import pandas as pd
-import random
+import numpy as np
 import logging
 from datetime import datetime
 from typing import Dict, Optional
@@ -23,23 +23,36 @@ def full_dataset(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     df['selected_for_training'] = True
     return df
 
-def random_sample_dataset(df: pd.DataFrame, n_samples: int) -> pd.DataFrame:
+def random_sample_dataset(df: pd.DataFrame, n_samples: int, seed: Optional[int] = None) -> pd.DataFrame:
     """
-    Randomly sample n examples from dataset.
+    Randomly sample n examples from dataset with deterministic ordering.
     
     Args:
         df: Input dataframe with all examples
         n_samples: Number of examples to sample
+        seed: Random seed for reproducibility (uses global numpy seed if None)
         
     Returns:
         DataFrame with randomly sampled examples selected for training
     """
     if n_samples >= len(df):
+        logging.info(f"Requested samples ({n_samples}) >= dataset size ({len(df)}), using full dataset")
         df['selected_for_training'] = True
         return df
     
-    # Random sample
-    sampled_indices = random.sample(range(len(df)), n_samples)
+    # Use local random state if seed provided
+    if seed is not None:
+        rng = np.random.RandomState(seed)
+        logging.info(f"Using provided random seed: {seed}")
+    else:
+        rng = np.random.RandomState()
+        logging.info("Using global numpy random state")
+    
+    # Random sample with deterministic ordering
+    all_indices = np.arange(len(df))
+    sampled_indices = rng.choice(all_indices, size=n_samples, replace=False)
+    sampled_indices.sort()  # Sort for deterministic ordering
+    
     df['selected_for_training'] = df.index.isin(sampled_indices)
     
     # Mark unselected examples (preserve all rows)
@@ -47,7 +60,9 @@ def random_sample_dataset(df: pd.DataFrame, n_samples: int) -> pd.DataFrame:
     df.loc[~df['selected_for_training'], 'filter_stage'] = 'random'
     df.loc[~df['selected_for_training'], 'filter_reason'] = 'not_selected_in_sampling'
     
+    # Log sampling details
     logging.info(f"Randomly sampled {n_samples} examples from {len(df)} total examples")
+    logging.info(f"First 5 sampled indices: {sampled_indices[:5]}")
     return df
 
 def quality_filter(df: pd.DataFrame, config: Dict, tokenizer) -> pd.DataFrame:

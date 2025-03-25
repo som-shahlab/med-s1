@@ -134,9 +134,35 @@ def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
     df['selected_for_training'] = False
     return df
 
+def set_random_seeds(seed=42):
+    """Set random seeds for reproducibility across all libraries"""
+    random.seed(seed)
+    np.random.seed(seed)
+    # Set seeds for other libraries that might be used
+    try:
+        import torch
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+    except ImportError:
+        pass
+    
+    try:
+        import tensorflow as tf
+        tf.random.set_seed(seed)
+    except ImportError:
+        pass
+    
+    # Set Python hash seed
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", required=True, help="Name of experiment from results.json")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
     args = parser.parse_args()
     
     # Setup logging and load configs
@@ -144,9 +170,9 @@ async def main():
     config = load_config()
     experiment_config = load_experiment_config(args.experiment)
     
-    # Set random seed
-    random.seed(42)
-    np.random.seed(42)
+    # Set all random seeds before any data loading or processing
+    set_random_seeds(args.seed)
+    logging.info(f"Set random seed to {args.seed}")
     
     # Get tokenizer for length checks
     model_name = config["models"][config["model_choices"]["base"]]["hf_path"]
@@ -187,8 +213,8 @@ async def main():
             df = pd.read_parquet(filtered_path)
             logging.info(f"Loaded existing dataset from {filtered_path}")
         else:
-            df = load_base_dataset()
-        df = random_sample_dataset(df, n_samples)
+            df = load_base_dataset(experiment_config, config)
+        df = random_sample_dataset(df, n_samples, seed=args.seed)
     
     elif curation_method == "s1":
         # For "s1" method, process with S1 pipeline
@@ -198,26 +224,29 @@ async def main():
             df = await process_s1_dataset(
                 df, config, tokenizer, n_samples,
                 specialty_weights, safe_experiment_name,
-                output_dir, None  # No need to run pipeline again
+                output_dir, None,  # No need to run pipeline again
+                seed=args.seed
             )
         else:
             df = load_base_dataset()
             df = await process_s1_dataset(
                 df, config, tokenizer, n_samples,
                 specialty_weights, safe_experiment_name,
-                output_dir, run_pipeline
+                output_dir, run_pipeline,
+                seed=args.seed
             )
+
             # Save processed dataset for future use
             os.makedirs(os.path.dirname(filtered_path), exist_ok=True)
             df.to_parquet(filtered_path)
     
     elif curation_method == "difficulty-substring":
         # For "difficulty-substring" method, always use CPU and load directly
-        df = difficulty_substring_curation(experiment_config, n_samples)
+        df = difficulty_substring_curation(experiment_config, n_samples, seed=args.seed)
         
     elif curation_method == "difficulty-n-gram":
         # For "difficulty-n-gram" method, use n-gram based difficulty scoring
-        df = ngram_difficulty_curation(experiment_config, n_samples)
+        df = ngram_difficulty_curation(experiment_config, n_samples, seed=args.seed)
     
     elif curation_method == "novelty-answer":
         # For "novelty-answer" method, need filtered dataset and embeddings
@@ -226,11 +255,12 @@ async def main():
             logging.info(f"Loaded existing dataset from {filtered_path}")
         else:
             # Create and save filtered dataset first
-            df = load_base_dataset()
+            df = load_base_dataset(experiment_config, config)
             df = await process_s1_dataset(
                 df, config, tokenizer, n_samples,
                 specialty_weights, safe_experiment_name,
-                output_dir, run_pipeline
+                output_dir, run_pipeline,
+                seed=args.seed
             )
             os.makedirs(os.path.dirname(filtered_path), exist_ok=True)
             df.to_parquet(filtered_path)
@@ -241,7 +271,7 @@ async def main():
             raise ValueError("base_model_response column not found in dataset. This is required for novelty-answer curation.")
         
         # Apply novelty-answer curation
-        df = novelty_answer_curation(df, experiment_config, n_samples)
+        df = novelty_answer_curation(df, experiment_config, n_samples, seed=args.seed)
     
     elif curation_method in ["embedding-similarity", "embedding-diversity"]:
         # For embedding methods, need dataset with embeddings
@@ -249,7 +279,7 @@ async def main():
             df = pd.read_parquet(filtered_path)
             logging.info(f"Loaded existing dataset from {filtered_path}")
         else:
-            df = load_base_dataset()
+            df = load_base_dataset(experiment_config, config)
         
         # Get column from config
         curation_params = experiment_config.get("curation", {})
@@ -265,10 +295,9 @@ async def main():
         
         # Apply appropriate embedding method
         if curation_method == "embedding-similarity":
-            df = embedding_similarity_curation(df, experiment_config, n_samples)
+            df = embedding_similarity_curation(df, experiment_config, n_samples, seed=args.seed)
         else:  # embedding-diversity
-            df = embedding_diversity_curation(df, experiment_config, n_samples)
-    
+            df = embedding_diversity_curation(df, experiment_config, n_samples, seed=args.seed)
     else:
         raise ValueError(f"Unknown curation method: {curation_method}")
     
@@ -294,7 +323,8 @@ async def main():
     
     # Save formatted dataset for training (with validation split)
     train_dataset, validation_dataset = format_for_training(
-        df[df['selected_for_training']], config, experiment_config, args.experiment, validation_split=0.1
+        df[df['selected_for_training']], config, experiment_config, args.experiment,
+        validation_split=0.1, seed=args.seed
     )
     
     # Create paths for train and validation datasets
