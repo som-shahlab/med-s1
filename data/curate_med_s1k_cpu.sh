@@ -2,9 +2,9 @@
 #SBATCH --job-name=med-s1-curate
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.err
-#SBATCH --cpus-per-task=28
-#SBATCH --mem=64GB
-#SBATCH --time=06:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=20GB
+#SBATCH --time=02:00:00
 #SBATCH --account=nigam
 
 # Source configuration first to get environment variables

@@ -70,16 +70,6 @@ IMPORTANT: Start directly with markdown content. Do not include any meta-text or
     
     result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
     
-    # Basic markdown validation/cleanup
-    if result:
-        # Ensure sections start with ##
-        if not result.startswith('#'):
-            result = f"## Analysis\n{result}"
-            
-        # Fix common markdown formatting issues
-        result = re.sub(r'\n\s*\n\s*\n+', '\n\n', result)  # Remove excess newlines
-        result = re.sub(r'(?<!\n)#', '\n#', result)  # Ensure headings start on new lines
-        
     return result
 
 async def transform_to_step_evidence(cot: str, model_key: str) -> str:
@@ -90,10 +80,9 @@ You are an expert medical educator. Transform this reasoning trace into clear st
 Each step should:
 1. Have a clear title (## Step N: Title)
 2. Include the main reasoning
-3. Add "Evidence:" section with:
-   - Similar clinical cases
-   - Relevant research findings
-   - Practice guidelines
+3. Add evidence section (**Evidence:**) with either:
+   - Similar case
+   - Relevant literature
 4. Maintain medical accuracy
 
 Here's the reasoning trace:
@@ -116,6 +105,70 @@ IMPORTANT: Start directly with "## Step 1:" without any introduction.
         # Ensure evidence sections are properly formatted
         result = re.sub(r'(?<!#)#\s*Evidence:', '\n### Evidence:', result)
         
+    return result
+
+async def transform_to_steps(cot: str, model_key: str, extract_type: str = "step") -> str:
+    """Transform reasoning trace into steps or a 1-sentence summary."""
+    if extract_type == "step":
+        prompt = """
+You are an expert medical educator. Your task is to transform the following chain of thought reasoning into a clear, step-by-step format.
+
+Each step should:
+1. Be numbered and have a clear title (e.g., "## Step 1: Assess the patient's condition")
+2. Include all content of the original reasoning
+3. Be organized in a logical sequence
+4. Maintain all medical accuracy and details from the original text
+
+Here's the chain of thought reasoning to transform:
+
+{cot}
+
+IMPORTANT: Your response must start directly with "## Step 1:" without any introduction or preamble. Do not include any text before the first step.
+"""
+    else:  # 1-sentence
+        prompt = """
+You are an expert medical educator. Your task is to transform the following chain of thought reasoning into a single, comprehensive sentence.
+
+The sentence should:
+1. Capture the key reasoning steps and logic from the original text
+2. Be concise but complete, covering the main diagnostic process
+3. Maintain all medical accuracy from the original text
+4. Be no longer than 80 words
+
+Here's the chain of thought reasoning to transform:
+
+{cot}
+
+IMPORTANT: Your response must be EXACTLY ONE SENTENCE. Do not include any introduction, explanation, or multiple sentences. Start directly with the sentence and end with a period. Do not include any text before or after the sentence.
+"""
+
+    from utils.openai_utils import get_model_response
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+
+    # Post-process the result based on extraction type
+    if result:
+        if extract_type == "step":
+            # Check if "## Step 1:" exists in the string and clip to that point
+            step1_match = re.search(r'## Step 1:', result)
+            if step1_match:
+                result = result[step1_match.start():]
+            else:
+                logging.warning(f"Step extraction did not produce expected format. Raw result: {result[:100]}...")
+        else:  # 1-sentence
+            # Basic cleanup for the 1-sentence result
+            result = result.strip()
+            
+            # Remove any extra newlines or multiple spaces
+            result = re.sub(r'\s+', ' ', result)
+            
+            # If it's too long, truncate with ellipsis
+            if len(result) > 700:
+                result = result[:697] + "..."
+                
+            # Ensure it ends with a period
+            if not result.endswith('.'):
+                result = result + '.'
+
     return result
 
 async def transform_to_note(cot: str, model_key: str) -> str:
@@ -223,12 +276,12 @@ Transform this medical reasoning into a POMR note with these sections:
 """
     }
 
-    prompt = f"""
+    prompt = """
 You are an expert medical educator. Transform this medical reasoning trace into a {format_type} clinical note.
 
 The note should:
 1. Follow this structure:
-{format_prompts[format_type]}
+{format_structure}
 2. Be comprehensive but concise
 3. Maintain all medical accuracy
 4. Use appropriate medical terminology
@@ -241,7 +294,11 @@ IMPORTANT: Start directly with the first section heading (##). Do not include an
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(
+        format_type=format_type,
+        format_structure=format_prompts[format_type],
+        cot=cot
+    ), model=model_key, max_tokens=4096)
     
     # Ensure proper formatting
     if result:

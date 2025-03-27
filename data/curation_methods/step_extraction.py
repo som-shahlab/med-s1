@@ -3,226 +3,110 @@ Step extraction and clinical formatting methods for the med-s1k dataset.
 """
 
 import pandas as pd
-import numpy as np
 import os
 import json
 import logging
 import asyncio
-import re
-from typing import Dict, Optional, List, Tuple
-from utils.openai_utils import get_model_response
+from typing import Dict
 from .clinical_formatting import (
     transform_to_list,
     transform_to_markdown,
     transform_to_step_evidence,
-    transform_to_note
+    transform_to_note,
+    transform_to_steps
 )
 
 # Get MED_S1_DIR from environment
 MED_S1_DIR = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
 
-async def transform_cot_to_steps(df: pd.DataFrame, config: Dict, extract_type: str = "step") -> pd.DataFrame:
+async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_method: str, transform_func, **kwargs):
     """
-    Transform Complex_CoT column to organize it into steps or a 1-sentence summary.
-    
+    Applies a given transformation function to the selected examples in batches.
+
     Args:
-        df: Input dataframe with selected examples
-        config: Curation configuration
-        extract_type: Type of extraction to perform ("step" or "1-sentence")
-        
+        df: Input dataframe.
+        config: Curation configuration.
+        extract_method: Name of the extraction method (for logging).
+        transform_func: Asynchronous function to apply for transformation.
+        **kwargs: Additional keyword arguments to pass to transform_func.
+
     Returns:
-        DataFrame with transformed Complex_CoT column and original preserved in Complex_CoT_orig
+        DataFrame with transformed Complex_CoT column.
     """
-    logging.info(f"Starting {extract_type} extraction for {len(df[df['selected_for_training']])} selected examples...")
-    
-    # First, add Complex_CoT_orig column to the entire dataframe
+    logging.info(f"Applying {extract_method} extraction")
+
+    # First, add Complex_CoT_orig column to the entire dataframe if it doesn't exist
     if 'Complex_CoT_orig' not in df.columns:
         df['Complex_CoT_orig'] = df['Complex_CoT']
         logging.info("Added Complex_CoT_orig column to preserve original content")
-    
-    # Only process selected examples
+
     selected_df = df[df['selected_for_training']].copy()
-    
-    # Define the prompt based on extraction type
-    if extract_type == "step":
-        prompt_template = """
-You are an expert medical educator. Your task is to transform the following chain of thought reasoning into a clear, step-by-step format.
-
-Each step should:
-1. Be numbered and have a clear title (e.g., "## Step 1: Assess the patient's condition")
-2. Include all content of the original reasoning
-3. Be organized in a logical sequence
-4. Maintain all medical accuracy and details from the original text
-
-Here's the chain of thought reasoning to transform:
-
-{cot}
-
-IMPORTANT: Your response must start directly with "## Step 1:" without any introduction or preamble. Do not include any text before the first step.
-"""
-    else:  # 1-sentence
-        prompt_template = """
-You are an expert medical educator. Your task is to transform the following chain of thought reasoning into a single, comprehensive sentence.
-
-The sentence should:
-1. Capture the key reasoning steps and logic from the original text
-2. Be concise but complete, covering the main diagnostic process
-3. Maintain all medical accuracy from the original text
-4. Be no longer than 80 words
-
-Here's the chain of thought reasoning to transform:
-
-{cot}
-
-IMPORTANT: Your response must be EXACTLY ONE SENTENCE. Do not include any introduction, explanation, or multiple sentences. Start directly with the sentence and end with a period. Do not include any text before or after the sentence.
-"""
-    
-    # Process in batches to avoid rate limits
     batch_size = 10
     total_batches = (len(selected_df) + batch_size - 1) // batch_size
-    
+
     for i in range(0, len(selected_df), batch_size):
         batch = selected_df.iloc[i:i+batch_size]
-        batch_idx = batch.index
-        
         logging.info(f"Processing batch {i//batch_size + 1}/{total_batches} ({len(batch)} examples)")
-        
-        # Process each example in the batch
+
         tasks = []
         for idx, row in batch.iterrows():
             if pd.isna(row['Complex_CoT']) or not row['Complex_CoT'].strip():
                 continue
-                
-            prompt = prompt_template.format(cot=row['Complex_CoT'])
-            # Use "base_judge" as fallback if "curation" is not defined
             model_key = config.get("model_choices", {}).get("curation", config.get("model_choices", {}).get("base_judge", "gemini-2.0-flash"))
-            
-            # Check if model_key exists in config["models"]
             if model_key not in config.get("models", {}):
                 logging.warning(f"Model key '{model_key}' not found in config. Using gemini-2.0-flash as fallback.")
                 model_key = "gemini-2.0-flash"
-                
-            tasks.append(get_model_response(prompt, model=model_key, max_tokens=4096))
-        
-        # Wait for all tasks to complete
+            tasks.append(transform_func(row['Complex_CoT'], model_key, **kwargs))
+
         batch_results = await asyncio.gather(*tasks)
-        
-        # Update the dataframe with the results
+
         result_idx = 0
         for idx, row in batch.iterrows():
             if pd.isna(row['Complex_CoT']) or not row['Complex_CoT'].strip():
                 continue
-                
             if batch_results[result_idx] is not None:
-                # Post-process the result based on extraction type
                 result = batch_results[result_idx]
-                
-                # Log the raw result for debugging
-                logging.info(f"Raw {extract_type} extraction result: {result[:100]}...")
-                
-                if extract_type == "step":
-                    # Check if "## Step 1:" exists in the string and clip to that point
-                    step1_match = re.search(r'## Step 1:', result)
-                    if step1_match:
-                        result = result[step1_match.start():]
-                    else:
-                        logging.warning(f"Step extraction did not produce expected format. Raw result: {result[:100]}...")
-                else:  # 1-sentence
-                    # Just basic cleanup for the 1-sentence result
-                    result = result.strip()
-                    
-                    # Remove any extra newlines or multiple spaces
-                    result = re.sub(r'\s+', ' ', result)
-                    
-                    # If it's too long, truncate with ellipsis
-                    if len(result) > 700:
-                        result = result[:697] + "..."
-                        
-                    # Ensure it ends with a period
-                    if not result.endswith('.'):
-                        result = result + '.'
-                    
-                    logging.info(f"Processed 1-sentence result: {result}")
-                
-                # Update the Complex_CoT column with the transformed format
+                logging.info(f"Raw {extract_method} extraction result: {result[:100]}...")
                 df.loc[idx, 'Complex_CoT'] = result
-                
-                # No need to set Complex_CoT_orig again as it's already set for the entire dataframe
-            
             result_idx += 1
-    
-    logging.info(f"Completed {extract_type} extraction for {len(selected_df)} examples")
+
+    logging.info(f"Completed {extract_method} extraction for {len(selected_df)} examples")
     return df
 
 async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     """
     Apply extraction to the selected examples based on the extract method.
-    
+
     Args:
         df: Input dataframe with selected examples
         config: Curation configuration
-        
+
     Returns:
         DataFrame with transformed Complex_CoT column based on extraction method
     """
     # Check extraction method
     curation_config = config.get("curation", {})
     extract_method = curation_config.get("extract")
-    
+
     # Load full config
     with open(os.path.join(MED_S1_DIR, "config.json"), 'r') as config_file:
         full_config = json.load(config_file)
-    
-    # Get model key for transformations
-    model_key = full_config.get("model_choices", {}).get("curation",
-                full_config.get("model_choices", {}).get("base_judge", "gemini-2.0-flash"))
-    
-    if model_key not in full_config.get("models", {}):
-        logging.warning(f"Model key '{model_key}' not found in config. Using gemini-2.0-flash as fallback.")
-        model_key = "gemini-2.0-flash"
-    
-    # Handle different extraction methods
+
     if extract_method == "step":
-        logging.info("Applying step-by-step extraction")
-        df = await transform_cot_to_steps(df, full_config, extract_type="step")
-    
+        df = await _apply_extraction_method(df, full_config, "step", transform_to_steps, extract_type="step")
     elif extract_method == "1-sentence":
-        logging.info("Applying one-sentence extraction")
-        df = await transform_cot_to_steps(df, full_config, extract_type="1-sentence")
-    
+        df = await _apply_extraction_method(df, full_config, "1-sentence", transform_to_steps, extract_type="1-sentence")
     elif extract_method == "list":
-        logging.info("Applying list extraction")
-        selected_df = df[df['selected_for_training']].copy()
-        for idx, row in selected_df.iterrows():
-            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
-                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
-                df.loc[idx, 'Complex_CoT'] = await transform_to_list(row['Complex_CoT'], model_key)
-    
+        df = await _apply_extraction_method(df, full_config, "list", transform_to_list)
     elif extract_method == "markdown":
-        logging.info("Applying markdown extraction")
-        selected_df = df[df['selected_for_training']].copy()
-        for idx, row in selected_df.iterrows():
-            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
-                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
-                df.loc[idx, 'Complex_CoT'] = await transform_to_markdown(row['Complex_CoT'], model_key)
-    
+        df = await _apply_extraction_method(df, full_config, "markdown", transform_to_markdown)
     elif extract_method == "step-evidence":
-        logging.info("Applying step-evidence extraction")
-        selected_df = df[df['selected_for_training']].copy()
-        for idx, row in selected_df.iterrows():
-            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
-                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
-                df.loc[idx, 'Complex_CoT'] = await transform_to_step_evidence(row['Complex_CoT'], model_key)
-    
+        df = await _apply_extraction_method(df, full_config, "step-evidence", transform_to_step_evidence)
     elif extract_method in ["note", "soap", "soapie", "isbar", "pomr"]:
-        format_type = extract_method.upper()
-        logging.info(f"Applying {format_type} note extraction")
-        selected_df = df[df['selected_for_training']].copy()
-        for idx, row in selected_df.iterrows():
-            if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
-                df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
-                df.loc[idx, 'Complex_CoT'] = await transform_to_note(row['Complex_CoT'], model_key)
-    
+        df = await _apply_extraction_method(df, full_config, extract_method.upper(), transform_to_note)
+    else:
+        logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
+
     # Log the first example after transformation for debugging
     selected_df = df[df['selected_for_training']]
     if len(selected_df) > 0:
@@ -233,5 +117,5 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
         if pd.notna(first_example['Complex_CoT']):
             logging.info(f"Transformed CoT length: {len(str(first_example['Complex_CoT']))}")
             logging.info(f"First 100 chars: {str(first_example['Complex_CoT'])[:100]}...")
-    
+
     return df
