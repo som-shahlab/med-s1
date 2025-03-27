@@ -1,3 +1,7 @@
+"""
+OpenAI and Gemini API utilities with caching and retry logic.
+"""
+
 import json
 import os
 import pandas as pd
@@ -6,7 +10,8 @@ import logging
 import time
 import random
 import asyncio
-from functools import partial
+import re
+from functools import partial, lru_cache
 from openai import OpenAI, AsyncOpenAI
 from google import genai
 from google.genai import types
@@ -17,11 +22,16 @@ logging.getLogger().setLevel(logging.WARNING)
 # Global clients for reuse
 _openai_client = None
 _gemini_client = None
+_config = None
 
+@lru_cache(maxsize=1)
 def load_config() -> Dict:
     """Load configuration from config.json"""
-    with open("config.json", "r") as f:
-        return json.load(f)
+    global _config
+    if _config is None:
+        with open("config.json", "r") as f:
+            _config = json.load(f)
+    return _config
 
 def get_client(model: str):
     """Get or create API client"""
@@ -46,14 +56,22 @@ def get_client(model: str):
             )
         return _gemini_client
 
+# Cache for model responses
+response_cache = {}
+
 async def get_model_response(
     prompt: str,
     model: str,
-    max_retries: int = 3,
-    initial_retry_delay: float = 0.1,  # Start with 100ms delay
+    max_retries: int = 5,
+    initial_retry_delay: float = 1.0,
     max_tokens=500
 ) -> Optional[str]:
-    """Get response from model API with exponential backoff"""
+    """Get response from model API with exponential backoff and caching"""
+    # Check cache first
+    cache_key = f"{model}:{prompt}"
+    if cache_key in response_cache:
+        return response_cache[cache_key]
+
     client = get_client(model)
     
     for attempt in range(max_retries):
@@ -65,7 +83,7 @@ async def get_model_response(
                     temperature=0.1,
                     max_tokens=max_tokens
                 )
-                return response.choices[0].message.content
+                result = response.choices[0].message.content
             else:  # Gemini models
                 contents = [
                     types.Content(
@@ -99,20 +117,24 @@ async def get_model_response(
                     ]
                 )
                 
-                # Collect streaming response
-                response_text = ""
-                for chunk in client.models.generate_content_stream(
+                # Handle streaming response without async for
+                stream = client.models.generate_content_stream(
                     model="gemini-2.0-flash-001",
                     contents=contents,
                     config=generate_config
-                ):
+                )
+                chunks = []
+                for chunk in stream:
                     if chunk.text:
-                        response_text += chunk.text
-                return response_text
+                        chunks.append(chunk.text)
+                result = "".join(chunks)
+
+            # Cache successful response
+            response_cache[cache_key] = result
+            return result
 
         except Exception as e:
             if attempt < max_retries - 1:
-                # Exponential backoff with jitter
                 delay = initial_retry_delay * (2 ** attempt) * (0.5 + random.random())
                 logging.warning(f"API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
                 await asyncio.sleep(delay)
@@ -144,6 +166,14 @@ Are these answers equivalent in meaning? Explain your reasoning and end with a s
     
     return is_correct, reasoning
 
+# Pre-compile regex patterns
+SPECIALTY_NUMBER_PATTERNS = [
+    re.compile(r'(\d+)\s*$'),  # Number at the end
+    re.compile(r'answer is (\d+)'),  # "answer is X"
+    re.compile(r'Therefore.*?(\d+)'),  # "Therefore... X"
+    re.compile(r'specialty.*?(\d+)')  # "specialty... X"
+]
+
 async def label_specialty(question: str, specialties_df) -> Optional[str]:
     """Use model to label question with medical specialty"""
     # Create a formatted list of specialties
@@ -169,18 +199,9 @@ Analyze the question and select the most relevant specialty or subspecialty. Exp
     if response is None:
         return None
         
-    # Extract final number with retry logic and better parsing
     def extract_specialty_number(text: str) -> Optional[int]:
-        # Try different patterns
-        patterns = [
-            r'(\d+)\s*$',  # Number at the end
-            r'answer is (\d+)',  # "answer is X"
-            r'Therefore.*?(\d+)',  # "Therefore... X"
-            r'specialty.*?(\d+)',  # "specialty... X"
-        ]
-        
-        for pattern in patterns:
-            if match := re.search(pattern, text, re.IGNORECASE):
+        for pattern in SPECIALTY_NUMBER_PATTERNS:
+            if match := pattern.search(text, re.IGNORECASE):
                 try:
                     return int(match.group(1)) - 1
                 except ValueError:
@@ -195,7 +216,6 @@ Analyze the question and select the most relevant specialty or subspecialty. Exp
                     return specialties[specialty_idx]
             
             if attempt < max_retries:
-                # Retry with more explicit prompt
                 response = await get_model_response(
                     prompt + "\n\nIMPORTANT: Your response MUST end with a single number corresponding to your choice.",
                     model=model

@@ -1,5 +1,5 @@
 """
-Clinical formatting methods for transforming medical reasoning traces into various formats.
+Clinical formatting methods for transforming chain of thought reasonings into various formats.
 """
 
 import re
@@ -51,7 +51,7 @@ IMPORTANT: Start directly with the bullet points. Do not include any introductio
 async def transform_to_markdown(cot: str, model_key: str) -> str:
     """Transform reasoning trace into a markdown document."""
     prompt = """
-You are an expert medical educator. Transform this medical reasoning trace into a well-structured markdown document.
+You are an expert medical educator. Transform this chain of thought reasoning into a well-structured markdown document.
 
 The document should:
 1. Use appropriate markdown headings (##, ###)
@@ -183,7 +183,7 @@ async def transform_to_note(cot: str, model_key: str) -> str:
     """
     # First determine the most appropriate format
     format_selection_prompt = """
-You are an expert medical educator. Analyze this medical reasoning trace and determine the most appropriate clinical note format.
+You are an expert medical educator. Analyze this chain of thought reasoning and determine the most appropriate clinical note format.
 
 Choose from:
 1. SOAP - Subjective, Objective, Assessment, Plan
@@ -207,29 +207,29 @@ Here's the reasoning trace:
         format_type = "SOAP"  # Default to SOAP if invalid response
     format_prompts = {
         "SOAP": """
-Transform this medical reasoning into a SOAP note with these sections:
+Transform this chain of thought reasoning into a SOAP note with these sections:
 ## Subjective
-- Patient-reported symptoms and history
+- Reported symptoms and history
 
 ## Objective
 - Observable findings and test results
 
 ## Assessment
-- Clinical evaluation and diagnosis
+- Evaluation and diagnosis
 
 ## Plan
 - Treatment strategy and follow-up
 """,
         "SOAPIE": """
-Transform this medical reasoning into a SOAPIE note with these sections:
+Transform this chain of thought reasoning into a SOAPIE note with these sections:
 ## Subjective
-- Patient-reported symptoms and history
+- Reported symptoms and history
 
 ## Objective
 - Observable findings and test results
 
 ## Assessment
-- Clinical evaluation and diagnosis
+- Evaluation and diagnosis
 
 ## Plan
 - Treatment strategy
@@ -241,48 +241,49 @@ Transform this medical reasoning into a SOAPIE note with these sections:
 - Effectiveness of interventions
 """,
         "ISBAR": """
-Transform this medical reasoning into an ISBAR note with these sections:
+Transform this chain of thought reasoning into an ISBAR note with these sections:
 ## Identification
-- Patient and provider identification
+- Who you are, your role, where you are and why you are
+communicating
 
 ## Situation
-- Current clinical situation
+- What is happening at the moment
 
 ## Background
-- Relevant clinical context
+- What are the issues that led up to this situation
 
 ## Assessment
-- Clinical assessment
+- What do you believe the problem is
 
 ## Recommendation
-- Suggested actions
+- What should be done to correct this situation
 """,
         "POMR": """
-Transform this medical reasoning into a POMR note with these sections:
+Transform this reasoning into a POMR note with these sections:
 ## Database
-- Comprehensive patient information
+- What data was available
 
 ## Problem List
-- All medical issues
+- What problems were identified
 
 ## Initial Plans
-- Interventions for each problem
+- What plans or interventions were proposed
 
 ## Progress Notes
-- Ongoing documentation
+- Any ongoing or future steps
 
 ## Final Summary
-- Discharge or final status
+- Final status
 """
     }
 
     prompt = """
-You are an expert medical educator. Transform this medical reasoning trace into a {format_type} clinical note.
+You are an expert medical educator. Transform this chain of thought reasoning into a {format_type} clinical note.
 
 The note should:
 1. Follow this structure:
 {format_structure}
-2. Be comprehensive but concise
+2. Be comprehensive
 3. Maintain all medical accuracy
 4. Use appropriate medical terminology
 

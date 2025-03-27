@@ -128,6 +128,12 @@ def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
     
     # Convert to DataFrame and initialize metadata columns
     df = pd.DataFrame(dataset)
+    
+    # Sort by Question to ensure deterministic ordering across runs
+    # This is critical for reproducibility when random sampling
+    logging.info("Sorting dataset by Question for deterministic ordering")
+    df = df.sort_values('Question', ascending=True).reset_index(drop=True)
+    
     df['filter_status'] = 'kept'
     df['filter_stage'] = None
     df['filter_reason'] = None

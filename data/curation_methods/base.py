@@ -27,8 +27,12 @@ def random_sample_dataset(df: pd.DataFrame, n_samples: int, seed: Optional[int] 
     """
     Randomly sample n examples from dataset with deterministic ordering.
     
+    Note: This function assumes the input DataFrame has a deterministic ordering
+    (e.g., sorted by a stable key like 'Question'). This is critical for
+    reproducibility as the random sampling uses DataFrame indices.
+    
     Args:
-        df: Input dataframe with all examples
+        df: Input dataframe with all examples (must have deterministic ordering)
         n_samples: Number of examples to sample
         seed: Random seed for reproducibility (uses global numpy seed if None)
         
