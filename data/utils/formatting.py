@@ -55,7 +55,7 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
     ], tokenize=False)
 
 def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict, experiment_name: str, 
-                       validation_split: float = 0.1) -> Tuple[Dataset, Optional[Dataset]]:
+                       validation_split: float = 0.1, seed: int = 42) -> Tuple[Dataset, Optional[Dataset]]:
     """
     Format data for training with sft.py.
     
@@ -119,7 +119,7 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
     
     # Create train/validation split if requested
     if validation_split > 0.0:
-        split_dataset = dataset.train_test_split(test_size=validation_split, shuffle=True, seed=42)
+        split_dataset = dataset.train_test_split(test_size=validation_split, shuffle=True, seed=seed)
         train_dataset = split_dataset["train"]
         validation_dataset = split_dataset["test"]
         logging.info(f"Split dataset into {len(train_dataset)} train and {len(validation_dataset)} validation examples")

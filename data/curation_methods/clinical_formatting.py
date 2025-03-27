@@ -118,15 +118,40 @@ IMPORTANT: Start directly with "## Step 1:" without any introduction.
         
     return result
 
-async def transform_to_soap(cot: str, model_key: str, format_type: str = "SOAP") -> str:
+async def transform_to_note(cot: str, model_key: str) -> str:
     """
-    Transform reasoning trace into clinical note format.
+    Transform reasoning trace into the most appropriate clinical note format.
+    First determines the best format (SOAP, SOAPIE, ISBAR, or POMR) based on the content,
+    then transforms it accordingly.
     
     Args:
         cot: The reasoning trace to transform
         model_key: The model to use for transformation
-        format_type: One of "SOAP", "SOAPIE", "ISBAR", "POMR"
     """
+    # First determine the most appropriate format
+    format_selection_prompt = """
+You are an expert medical educator. Analyze this medical reasoning trace and determine the most appropriate clinical note format.
+
+Choose from:
+1. SOAP - Subjective, Objective, Assessment, Plan
+2. SOAPIE - Subjective, Objective, Assessment, Plan, Implementation, Evaluation
+3. ISBAR - Identification, Situation, Background, Assessment, Recommendation
+4. POMR - Database, Problem List, Initial Plans, Progress Notes, Final Summary
+
+Return ONLY the format name (SOAP, SOAPIE, ISBAR, or POMR) without any explanation.
+
+Here's the reasoning trace:
+
+{cot}
+"""
+    from utils.openai_utils import get_model_response
+    
+    format_type = await get_model_response(format_selection_prompt.format(cot=cot), model=model_key, max_tokens=10)
+    format_type = format_type.strip().upper()
+    
+    # Validate format type
+    if format_type not in ["SOAP", "SOAPIE", "ISBAR", "POMR"]:
+        format_type = "SOAP"  # Default to SOAP if invalid response
     format_prompts = {
         "SOAP": """
 Transform this medical reasoning into a SOAP note with these sections:

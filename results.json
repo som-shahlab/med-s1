@@ -524,6 +524,162 @@
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-10k-random-no-cot_eval.json"
         }
       }
+    },
+    "medqa-1k-random-note-extract": {
+      "description": "1k uniform random sample with auto-determined clinical note format extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 100,
+          "extract": "note"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-note-extract_20250327_162429/med_s1k_formatted",
+          "timestamp": "2025-03-27T16:29:25.039393",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-note-extract_curation.json"
+        },
+        "training": null,
+        "eval": null
+      }
+    },
+    "medqa-1k-random-list-extract": {
+      "description": "1k uniform random sample with bullet-point list extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 100,
+          "extract": "list"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": null
+      }
+    },
+    "medqa-1k-random-markdown-extract": {
+      "description": "1k uniform random sample with markdown document extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 100,
+          "extract": "markdown"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": null
+      }
+    },
+    "medqa-1k-random-evidence-extract": {
+      "description": "1k uniform random sample with auto-determined clinical note format extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 100,
+          "extract": "note"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": null
+      }
     }
   }
 }

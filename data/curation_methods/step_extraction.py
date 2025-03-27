@@ -15,7 +15,7 @@ from .clinical_formatting import (
     transform_to_list,
     transform_to_markdown,
     transform_to_step_evidence,
-    transform_to_soap
+    transform_to_note
 )
 
 # Get MED_S1_DIR from environment
@@ -214,14 +214,14 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
                 df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
                 df.loc[idx, 'Complex_CoT'] = await transform_to_step_evidence(row['Complex_CoT'], model_key)
     
-    elif extract_method in ["soap", "soapie", "isbar", "pomr"]:
+    elif extract_method in ["note", "soap", "soapie", "isbar", "pomr"]:
         format_type = extract_method.upper()
         logging.info(f"Applying {format_type} note extraction")
         selected_df = df[df['selected_for_training']].copy()
         for idx, row in selected_df.iterrows():
             if pd.notna(row['Complex_CoT']) and row['Complex_CoT'].strip():
                 df.loc[idx, 'Complex_CoT_orig'] = row['Complex_CoT']
-                df.loc[idx, 'Complex_CoT'] = await transform_to_soap(row['Complex_CoT'], model_key, format_type)
+                df.loc[idx, 'Complex_CoT'] = await transform_to_note(row['Complex_CoT'], model_key)
     
     # Log the first example after transformation for debugging
     selected_df = df[df['selected_for_training']]

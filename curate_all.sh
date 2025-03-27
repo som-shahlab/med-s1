@@ -15,3 +15,8 @@ bash curate_med_s1k.sh medqa-1k-random-no-cot # (*)
 bash curate_med_s1k.sh medqa-1k-random-1-sentence-extract # (*)
 bash curate_med_s1k.sh medqa-5k-random-no-cot
 bash curate_med_s1k.sh medqa-10k-random-no-cot
+
+bash curate_med_s1k.sh medqa-1k-random-evidence-extract
+bash curate_med_s1k.sh medqa-1k-random-markdown-extract
+bash curate_med_s1k.sh medqa-1k-random-list-extract
+bash curate_med_s1k.sh medqa-1k-random-note-extract
