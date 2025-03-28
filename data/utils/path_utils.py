@@ -51,6 +51,8 @@ def update_results_json(results_json_path: str, experiment_name: str, stage: str
         results = json.load(f)
     
     # Update experiment results
+    if "results" not in results["experiments"][experiment_name]:
+        results["experiments"][experiment_name]["results"] = {}
     if stage not in results["experiments"][experiment_name]["results"]:
         results["experiments"][experiment_name]["results"][stage] = {}
     

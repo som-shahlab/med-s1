@@ -84,21 +84,51 @@ async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_metho
 
 async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     """
-    Apply extraction to the selected examples based on the extract method.
+    Apply extraction and optional perturbation to the selected examples.
 
     Args:
         df: Input dataframe with selected examples
         config: Curation configuration
 
     Returns:
-        DataFrame with transformed Complex_CoT column based on extraction method
+        DataFrame with transformed Complex_CoT column based on extraction method and perturbation
     """
-    # Check extraction method
+    # Check extraction method and perturbation
     curation_config = config.get("curation", {})
     extract_method = curation_config.get("extract")
+    perturbation = curation_config.get("perturbation", {})
+    perturbation_type = perturbation.get("type")
+    perturbation_rate = perturbation.get("rate")
 
     # Load cached config
     full_config = load_full_config()
+
+    # If perturbation is specified, we need step extraction
+    if perturbation and extract_method != "step":
+        logging.warning("Perturbation requires step extraction. Forcing extract_method to 'step'")
+        extract_method = "step"
+
+    # Check if we can reuse existing step extraction
+    if perturbation:
+        results_json = os.environ.get('RESULTS_JSON')
+        if results_json:
+            with open(results_json, 'r') as f:
+                results = json.load(f)
+            
+            # Look for matching experiment without perturbation
+            for exp_name, exp_data in results['experiments'].items():
+                exp_config = exp_data.get('config', {}).get('curation', {})
+                if (exp_config.get('method') == curation_config.get('method') and
+                    exp_config.get('n_samples') == curation_config.get('n_samples') and
+                    exp_config.get('extract') == 'step' and
+                    not exp_config.get('perturbation')):
+                    
+                    # Found matching experiment, try to load its filtered dataset
+                    filtered_path = exp_data.get('paths', {}).get('filtered')
+                    if filtered_path and os.path.exists(filtered_path):
+                        logging.info(f"Reusing step extraction from {exp_name}")
+                        df = pd.read_parquet(filtered_path)
+                        break
 
     # Apply appropriate transformation
     if extract_method == "step":
@@ -115,6 +145,18 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
         df = await _apply_extraction_method(df, full_config, extract_method.upper(), transform_to_note)
     else:
         logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
+
+    # Apply perturbation if specified
+    if perturbation_type:
+        from .perturbation import apply_perturbation
+        
+        # Get model key for LLM-based perturbations
+        model_key = None
+        if perturbation_type in ["collapse_consecutive", "answer"]:
+            model_key = full_config.get("model_choices", {}).get("curation",
+                        full_config.get("model_choices", {}).get("base_judge", "gemini-2.0-flash"))
+        
+        df = await apply_perturbation(df, full_config, perturbation_type, perturbation_rate, model_key)
 
     # Log the first example after transformation for debugging
     selected_df = df[df['selected_for_training']]

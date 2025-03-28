@@ -304,8 +304,8 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-step-extract_20250327_231721/med_s1k_formatted",
-          "timestamp": "2025-03-27T23:20:50.011116",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-step-extract_20250327_232841/med_s1k_formatted",
+          "timestamp": "2025-03-28T00:18:51.109687",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-step-extract_curation.json"
         },
         "training": {
@@ -559,8 +559,8 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-note-extract_20250327_184550/med_s1k_formatted",
-          "timestamp": "2025-03-27T19:31:43.248121",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-note-extract_20250328_003819/med_s1k_formatted",
+          "timestamp": "2025-03-28T01:55:01.385586",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-note-extract_curation.json"
         },
         "training": null,
@@ -601,8 +601,8 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-list-extract_20250327_232123/med_s1k_formatted",
-          "timestamp": "2025-03-27T23:24:51.676470",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-list-extract_20250328_001916/med_s1k_formatted",
+          "timestamp": "2025-03-28T00:37:58.484094",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-list-extract_curation.json"
         },
         "training": null,
@@ -685,12 +685,492 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-evidence-extract_20250327_231721/med_s1k_formatted",
-          "timestamp": "2025-03-27T23:20:49.956401",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-evidence-extract_20250327_232935/med_s1k_formatted",
+          "timestamp": "2025-03-28T01:02:53.354538",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-evidence-extract_curation.json"
         },
         "training": null,
         "eval": null
+      }
+    },
+    "medqa-1k-random-collapse-33": {
+      "description": "1k random sample with 33% collapse consecutive steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "collapse_consecutive",
+            "rate": 0.33
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-collapse-66": {
+      "description": "1k random sample with 66% collapse consecutive steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "collapse_consecutive",
+            "rate": 0.66
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-collapse-100": {
+      "description": "1k random sample with 100% collapse consecutive steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "collapse_consecutive",
+            "rate": 1.0
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-skip-33": {
+      "description": "1k random sample with 33% skip steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "skip",
+            "rate": 0.33
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-skip-66": {
+      "description": "1k random sample with 66% skip steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "skip",
+            "rate": 0.66
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-skip-100": {
+      "description": "1k random sample with 100% skip steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "skip",
+            "rate": 1.0
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-shuffle-33": {
+      "description": "1k random sample with 33% shuffle steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 0.33
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-shuffle-66": {
+      "description": "1k random sample with 66% shuffle steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 0.66
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-shuffle-100": {
+      "description": "1k random sample with 100% shuffle steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 1.0
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-irrelevant-33": {
+      "description": "1k random sample with 33% add irrelevant steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "add_irrelevant",
+            "rate": 0.33
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-irrelevant-66": {
+      "description": "1k random sample with 66% add irrelevant steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "add_irrelevant",
+            "rate": 0.66
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-irrelevant-100": {
+      "description": "1k random sample with 100% add irrelevant steps perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "add_irrelevant",
+            "rate": 1.0
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-random-wrong-answer": {
+      "description": "1k random sample with wrong answer perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "answer"
+          }
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 8,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "huatuo-sft",
+          "eval": "huatuo-eval"
+        }
       }
     }
   }
