@@ -23,6 +23,43 @@ def renumber_steps(steps: List[str]) -> str:
         result += f"## Step {i}:{step}\n\n"
     return result.strip()
 
+async def restore_reasoning(cot: str, model_key: str) -> str:
+    """Restore a perturbed reasoning trace to high-quality step-by-step format."""
+    from utils.openai_utils import get_model_response
+    
+    restore_prompt = f"""
+You are an expert medical educator. Your task is to improve this low-quality medical reasoning trace and extract a high-quality step-by-step reasoning trace.
+
+The reasoning trace may have issues like:
+- Missing or skipped steps
+- Shuffled or out of order steps
+- Irrelevant or redundant steps
+- Merged or collapsed steps
+
+Your task is to:
+1. Analyze the reasoning
+2. Identify the key logical steps
+3. Create a clear, step-by-step reasoning trace
+4. Format with step headings (## Step N:)
+5. Ensure medical accuracy and completeness
+
+Here's the low-quality reasoning trace:
+
+{cot}
+
+IMPORTANT: Return ONLY the improved step-by-step reasoning trace, starting directly with "## Step 1:". Do not include any introduction or explanation.
+"""
+    result = await get_model_response(restore_prompt, model=model_key, max_tokens=4096)
+    
+    # Ensure proper formatting
+    if result:
+        # Start with first step
+        step1_match = re.search(r'## Step 1:', result)
+        if step1_match:
+            result = result[step1_match.start():]
+            
+    return result
+
 async def collapse_consecutive_steps(cot: str, rate: float, model_key: str) -> str:
     """Collapse consecutive steps into single steps."""
     from utils.openai_utils import get_model_response
@@ -45,7 +82,7 @@ async def collapse_consecutive_steps(cot: str, rate: float, model_key: str) -> s
         
         # Create prompt to merge steps
         merge_prompt = f"""
-Merge these two consecutive steps into a single concise step (<80 words) that preserves the key reasoning:
+Merge these two consecutive steps into a single concise step (<80 words) that preserves the key medical reasoning:
 
 Step 1: {steps[idx]}
 
@@ -139,7 +176,8 @@ async def wrong_answer(cot: str, model_key: str, question: str, correct_response
     
     # Create prompt to generate wrong answer
     wrong_answer_prompt = f"""
-Given this question and correct answer, generate a categorically wrong but plausible-sounding final step and response.
+Given this medical question and correct answer, generate a categorically wrong but plausible-sounding final step and response.
+The wrong answer should be clearly incorrect to medical experts but not obviously different in style.
 
 Question: {question}
 
@@ -177,7 +215,8 @@ async def apply_perturbation(
     config: Dict,
     perturbation_type: str,
     rate: Optional[float] = None,
-    model_key: Optional[str] = None
+    model_key: Optional[str] = None,
+    restore: bool = False
 ) -> pd.DataFrame:
     """Apply perturbation to the selected examples."""
     logging.info(f"Applying {perturbation_type} perturbation")
@@ -200,24 +239,20 @@ async def apply_perturbation(
         if pd.isna(cot) or not cot.strip():
             continue
             
+        # Store original CoT before perturbation
+        df.loc[idx, 'Complex_CoT_orig'] = cot
+            
+        # Apply perturbation
         if perturbation_type == "collapse_consecutive":
             result = await collapse_consecutive_steps(cot, rate, model_key)
-            if result:
-                df.loc[idx, 'Complex_CoT'] = result
         elif perturbation_type == "skip":
             result = await skip_steps(cot, rate)
-            if result:
-                df.loc[idx, 'Complex_CoT'] = result
         elif perturbation_type == "shuffle":
             result = await shuffle_steps(cot, rate)
-            if result:
-                df.loc[idx, 'Complex_CoT'] = result
         elif perturbation_type == "add_irrelevant":
             # Remove current CoT from other_cots
             current_other_cots = [c for c in other_cots if c != cot]
             result = await add_irrelevant_steps(cot, rate, current_other_cots)
-            if result:
-                df.loc[idx, 'Complex_CoT'] = result
         elif perturbation_type == "answer":
             result, new_response = await wrong_answer(
                 cot, model_key,
@@ -227,5 +262,20 @@ async def apply_perturbation(
             if result:
                 df.loc[idx, 'Complex_CoT'] = result
                 df.loc[idx, 'Response'] = new_response
+            continue
+        else:
+            raise ValueError(f"Unknown perturbation type: {perturbation_type}")
+            
+        if result:
+            # Store perturbed CoT
+            df.loc[idx, 'Complex_CoT_perturbed'] = result
+            
+            # If restore is True, restore the perturbed CoT
+            if restore:
+                restored = await restore_reasoning(result, model_key)
+                if restored:
+                    df.loc[idx, 'Complex_CoT'] = restored
+            else:
+                df.loc[idx, 'Complex_CoT'] = result
             
     return df

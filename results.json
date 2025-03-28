@@ -260,7 +260,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-step-extract",
-          "timestamp": "2025-03-28T06:08:07Z",
+          "timestamp": "2025-03-28T14:48:03Z",
           "metrics": null
         },
         "eval": {
@@ -482,7 +482,11 @@
           "timestamp": "2025-03-28T01:55:01.385586",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-note-extract_curation.json"
         },
-        "training": null,
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-note-extract",
+          "timestamp": "2025-03-28T15:48:03Z",
+          "metrics": null
+        },
         "eval": null
       }
     },
@@ -505,7 +509,11 @@
           "timestamp": "2025-03-28T00:37:58.484094",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-list-extract_curation.json"
         },
-        "training": null,
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-list-extract",
+          "timestamp": "2025-03-28T15:31:32Z",
+          "metrics": null
+        },
         "eval": null
       }
     },
@@ -528,7 +536,11 @@
           "timestamp": "2025-03-27T23:20:50.069471",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-markdown-extract_curation.json"
         },
-        "training": null,
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-markdown-extract",
+          "timestamp": "2025-03-28T15:18:42Z",
+          "metrics": null
+        },
         "eval": null
       }
     },
@@ -551,7 +563,11 @@
           "timestamp": "2025-03-28T01:02:53.354538",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-evidence-extract_curation.json"
         },
-        "training": null,
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-evidence-extract",
+          "timestamp": "2025-03-28T15:04:10Z",
+          "metrics": null
+        },
         "eval": null
       }
     },
@@ -787,6 +803,234 @@
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
       }
+    }
+  },
+  "medqa-1k-random-collapse-33-restore": {
+    "description": "1k random sample with 33% collapse consecutive steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "collapse_consecutive",
+          "rate": 0.33
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-collapse-66-restore": {
+    "description": "1k random sample with 66% collapse consecutive steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "collapse_consecutive",
+          "rate": 0.66
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-collapse-100-restore": {
+    "description": "1k random sample with 100% collapse consecutive steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "collapse_consecutive",
+          "rate": 1.0
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-skip-33-restore": {
+    "description": "1k random sample with 33% skip steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "skip",
+          "rate": 0.33
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-skip-66-restore": {
+    "description": "1k random sample with 66% skip steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "skip",
+          "rate": 0.66
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-skip-100-restore": {
+    "description": "1k random sample with 100% skip steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "skip",
+          "rate": 1.0
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-shuffle-33-restore": {
+    "description": "1k random sample with 33% shuffle steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "shuffle",
+          "rate": 0.33
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-shuffle-66-restore": {
+    "description": "1k random sample with 66% shuffle steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "shuffle",
+          "rate": 0.66
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-shuffle-100-restore": {
+    "description": "1k random sample with 100% shuffle steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "shuffle",
+          "rate": 1.0
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-irrelevant-33-restore": {
+    "description": "1k random sample with 33% add irrelevant steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "add_irrelevant",
+          "rate": 0.33
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-irrelevant-66-restore": {
+    "description": "1k random sample with 66% add irrelevant steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "add_irrelevant",
+          "rate": 0.66
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
+    }
+  },
+  "medqa-1k-random-irrelevant-100-restore": {
+    "description": "1k random sample with 100% add irrelevant steps perturbation and restoration",
+    "config": {
+      "model_key": "llama3.1:8b",
+      "curation": {
+        "method": "random",
+        "huatuo_format": true,
+        "n_samples": 1000,
+        "extract": "step",
+        "perturbation": {
+          "type": "add_irrelevant",
+          "rate": 1.0
+        },
+        "restore": true
+      },
+      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+      "datasets": "same as base-step-prompt"
     }
   }
 }

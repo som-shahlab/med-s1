@@ -2,7 +2,7 @@
 #SBATCH --job-name=med-s1-train
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
-#SBATCH --partition=nigam-a100
+#SBATCH --partition=nigam-h100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=28
@@ -87,21 +87,19 @@ echo "Creating logs directory..."
 mkdir -p "${MED_S1_DIR}/logs"
 
 # Extract training parameters
-training_params=$(echo "$resolved_config" | jq -r '.training_params')
-learning_rate=$(echo "$training_params" | jq -r '.learning_rate')
-batch_size=$(echo "$training_params" | jq -r '.batch_size')
-base_batch_size=$(echo "$training_params" | jq -r '.base_batch_size')
-num_epochs=$(echo "$training_params" | jq -r '.num_epochs')
-grad_acc=$(echo "$training_params" | jq -r '.gradient_accumulation_steps')
-base_grad_acc=$(echo "$training_params" | jq -r '.base_gradient_accumulation_steps')
-weight_decay=$(echo "$training_params" | jq -r '.weight_decay')
-warmup_ratio=$(echo "$training_params" | jq -r '.warmup_ratio')
+learning_rate=$(echo "$resolved_config" | jq -r '.training_params.learning_rate')
+batch_size=$(echo "$resolved_config" | jq -r '.training_params.batch_size')
+base_batch_size=$(echo "$resolved_config" | jq -r '.training_params.base_batch_size')
+num_epochs=$(echo "$resolved_config" | jq -r '.training_params.num_epochs')
+grad_acc=$(echo "$resolved_config" | jq -r '.training_params.gradient_accumulation_steps')
+base_grad_acc=$(echo "$resolved_config" | jq -r '.training_params.base_gradient_accumulation_steps')
+weight_decay=$(echo "$resolved_config" | jq -r '.training_params.weight_decay')
+warmup_ratio=$(echo "$resolved_config" | jq -r '.training_params.warmup_ratio')
 
 # Extract optimizer parameters
-optimizer=$(echo "$training_params" | jq -r '.optimizer')
-adam_beta1=$(echo "$optimizer" | jq -r '.adam_beta1')
-adam_beta2=$(echo "$optimizer" | jq -r '.adam_beta2')
-adam_epsilon=$(echo "$optimizer" | jq -r '.adam_epsilon')
+adam_beta1=$(echo "$resolved_config" | jq -r '.training_params.optimizer.adam_beta1')
+adam_beta2=$(echo "$resolved_config" | jq -r '.training_params.optimizer.adam_beta2')
+adam_epsilon=$(echo "$resolved_config" | jq -r '.training_params.optimizer.adam_epsilon')
 
 # Get total batch size
 total_batch_size=$(echo "$resolved_config" | jq -r '.total_batch_size')

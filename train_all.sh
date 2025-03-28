@@ -18,3 +18,17 @@ sbatch train/sft_carina.sh medqa-1k-random-1-sentence-extract
 sbatch train/sft_carina.sh medqa-5k-random-no-cot
 sbatch train/sft_carina.sh medqa-10k-random-no-cot
 sbatch train/sft_carina.sh medqa-25k
+
+# Ablations
+sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-step-extract
+sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-evidence-extract
+sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-markdown-extract
+sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-list-extract
+sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-note-extract
+
+# Run these commands after job 89838 completes
+sbatch train/sft_carina.sh medqa-1k-random-step-extract
+sbatch train/sft_carina.sh medqa-1k-random-evidence-extract
+sbatch train/sft_carina.sh medqa-1k-random-markdown-extract
+sbatch train/sft_carina.sh medqa-1k-random-list-extract
+sbatch train/sft_carina.sh medqa-1k-random-note-extract
