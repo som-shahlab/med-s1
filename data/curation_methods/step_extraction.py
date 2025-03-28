@@ -109,6 +109,7 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
         extract_method = "step"
 
     # Check if we can reuse existing step extraction
+    existing_extraction = False
     if perturbation:
         results_json = os.environ.get('RESULTS_JSON')
         if results_json:
@@ -128,23 +129,25 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
                     if filtered_path and os.path.exists(filtered_path):
                         logging.info(f"Reusing step extraction from {exp_name}")
                         df = pd.read_parquet(filtered_path)
+                        existing_extraction = True
                         break
 
     # Apply appropriate transformation
-    if extract_method == "step":
-        df = await _apply_extraction_method(df, full_config, "step", transform_to_steps, extract_type="step")
-    elif extract_method == "1-sentence":
-        df = await _apply_extraction_method(df, full_config, "1-sentence", transform_to_steps, extract_type="1-sentence")
-    elif extract_method == "list":
-        df = await _apply_extraction_method(df, full_config, "list", transform_to_list)
-    elif extract_method == "markdown":
-        df = await _apply_extraction_method(df, full_config, "markdown", transform_to_markdown)
-    elif extract_method == "step-evidence":
-        df = await _apply_extraction_method(df, full_config, "step-evidence", transform_to_step_evidence)
-    elif extract_method in ["note", "soap", "soapie", "isbar", "pomr"]:
-        df = await _apply_extraction_method(df, full_config, extract_method.upper(), transform_to_note)
-    else:
-        logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
+    if not existing_extraction:
+        if extract_method == "step":
+            df = await _apply_extraction_method(df, full_config, "step", transform_to_steps, extract_type="step")
+        elif extract_method == "1-sentence":
+            df = await _apply_extraction_method(df, full_config, "1-sentence", transform_to_steps, extract_type="1-sentence")
+        elif extract_method == "list":
+            df = await _apply_extraction_method(df, full_config, "list", transform_to_list)
+        elif extract_method == "markdown":
+            df = await _apply_extraction_method(df, full_config, "markdown", transform_to_markdown)
+        elif extract_method == "step-evidence":
+            df = await _apply_extraction_method(df, full_config, "step-evidence", transform_to_step_evidence)
+        elif extract_method in ["note", "soap", "soapie", "isbar", "pomr"]:
+            df = await _apply_extraction_method(df, full_config, extract_method.upper(), transform_to_note)
+        else:
+            logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
 
     # Apply perturbation if specified
     if perturbation_type:

@@ -49,16 +49,24 @@ fi
 echo "Sourcing config.sh..."
 source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
-# Get experiment config from results.json
-config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
+# Get experiment config and parameters using Python script
+echo "Resolving experiment configuration..."
+resolved_config=$(python "${MED_S1_DIR}/eval/resolve_eval_config.py" \
+    "$experiment_name" \
+    --results-json "$RESULTS_JSON")
 
-if [ "$config" = "null" ]; then
-    echo "Error: Experiment '$experiment_name' not found in $RESULTS_JSON"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to resolve configuration"
     exit 1
 fi
 
+# Extract values from resolved config
+config=$(echo "$resolved_config" | jq -r '.config')
+model_key=$(echo "$resolved_config" | jq -r '.model_key')
+model_path=$(echo "$resolved_config" | jq -r '.model_path')
+
 # Check if test_time_scaling is enabled in config
-config_test_time_scaling=$(jq -r ".experiments[\"$experiment_name\"].config.test_time_scaling" "$RESULTS_JSON")
+config_test_time_scaling=$(echo "$resolved_config" | jq -r '.test_time_scaling')
 if [ "$config_test_time_scaling" = "true" ]; then
     echo "Enabling test time scaling from config"
     test_time_scaling=true

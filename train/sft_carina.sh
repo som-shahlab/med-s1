@@ -2,7 +2,7 @@
 #SBATCH --job-name=med-s1-train
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
-#SBATCH --partition=nigam-h100
+#SBATCH --partition=nigam-a100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=28
@@ -64,69 +64,47 @@ fi
 echo "Sourcing config.sh..."
 source "config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
-# Get experiment config from results.json
-echo "Reading experiment configuration..."
-config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")
+# Get experiment config and parameters using Python script
+echo "Resolving experiment configuration..."
+resolved_config=$(python "${MED_S1_DIR}/train/resolve_config.py" \
+    "$experiment_name" \
+    --results-json "$RESULTS_JSON" \
+    --num-gpus "$NUM_GPUS" \
+    --scale-down-mem 1)
 
-if [ "$config" = "null" ]; then
-    echo "Error: Experiment '$experiment_name' not found in $RESULTS_JSON"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to resolve configuration"
     exit 1
 fi
 
-# Get model info
-model_key=$(jq -r ".model_key" <<< "$config")
+# Extract values from resolved config
+config=$(echo "$resolved_config" | jq -r '.config')
+model_key=$(echo "$config" | jq -r '.model_key')
 model=$(jq -r ".models[\"$model_key\"].hf_path" < "${MED_S1_DIR}/config.json")
 
 # Create logs directory
 echo "Creating logs directory..."
 mkdir -p "${MED_S1_DIR}/logs"
 
-# Get training params with defaults
-echo "Extracting training parameters..."
+# Extract training parameters
+training_params=$(echo "$resolved_config" | jq -r '.training_params')
+learning_rate=$(echo "$training_params" | jq -r '.learning_rate')
+batch_size=$(echo "$training_params" | jq -r '.batch_size')
+base_batch_size=$(echo "$training_params" | jq -r '.base_batch_size')
+num_epochs=$(echo "$training_params" | jq -r '.num_epochs')
+grad_acc=$(echo "$training_params" | jq -r '.gradient_accumulation_steps')
+base_grad_acc=$(echo "$training_params" | jq -r '.base_gradient_accumulation_steps')
+weight_decay=$(echo "$training_params" | jq -r '.weight_decay')
+warmup_ratio=$(echo "$training_params" | jq -r '.warmup_ratio')
 
-# Required parameters (no defaults)
-SCALE_DOWN_MEM_USAGE=1
-learning_rate=$(jq -r ".training_params.learning_rate" <<< "$config")
-base_batch_size=$(jq -r ".training_params.batch_size" <<< "$config")
-batch_size=$(( base_batch_size / $SCALE_DOWN_MEM_USAGE )) # Scale down batch_size
-num_epochs=$(jq -r ".training_params.num_epochs" <<< "$config")
-echo "Batch size: $batch_size"
-echo "Base batch size: $base_batch_size"
-echo "Scale down mem usage: $SCALE_DOWN_MEM_USAGE"
+# Extract optimizer parameters
+optimizer=$(echo "$training_params" | jq -r '.optimizer')
+adam_beta1=$(echo "$optimizer" | jq -r '.adam_beta1')
+adam_beta2=$(echo "$optimizer" | jq -r '.adam_beta2')
+adam_epsilon=$(echo "$optimizer" | jq -r '.adam_epsilon')
 
-# Scale gradient accumulation steps to maintain the same total batch size
-# Original config assumes 4 GPUs, so we scale by 4/NUM_GPUS
-base_grad_acc=$(jq -r ".training_params.gradient_accumulation_steps" <<< "$config")
-grad_acc=$(( base_grad_acc * SCALE_DOWN_MEM_USAGE * 4 / $NUM_GPUS )) # Scale up grad_acc, also considering SCALE_DOWN_MEM_USAGE
-echo "Scaling gradient accumulation steps: $base_grad_acc (base) * $SCALE_DOWN_MEM_USAGE * 4 / $NUM_GPUS = $grad_acc"
-
-# Validate required parameters
-if [ "$learning_rate" = "null" ] || [ "$batch_size" = "null" ] || [ "$num_epochs" = "null" ] || [ "$base_grad_acc" = "null" ]; then
-    echo "Error: Missing required training parameters in results.json"
-    echo "Required parameters:"
-    echo "  learning_rate: $learning_rate"
-    echo "  batch_size: $batch_size"
-    echo "  num_epochs: $num_epochs"
-    echo "  gradient_accumulation_steps (base): $base_grad_acc"
-    echo "  gradient_accumulation_steps (scaled): $grad_acc"
-    exit 1
-fi
-
-# Verify batch size configuration matches paper
-total_batch_size=$((batch_size * NUM_GPUS * grad_acc))
-if [ "$total_batch_size" -ne 128 ]; then
-    echo "Warning: Total batch size ($total_batch_size) does not match paper (128)"
-    echo "Check batch_size ($batch_size), NUM_GPUS ($NUM_GPUS), and gradient_accumulation_steps ($grad_acc)"
-fi
-
-# Optional parameters with defaults
-weight_decay=$(jq -r ".training_params.weight_decay // \"0.1\"" <<< "$config")
-warmup_ratio=$(jq -r ".training_params.warmup_ratio // \"0.05\"" <<< "$config")
-
-# Get optimizer params
-adam_beta1=$(jq -r ".training_params.optimizer.adam_beta1 // \"0.9\"" <<< "$config")
-adam_beta2=$(jq -r ".training_params.optimizer.adam_beta2 // \"0.95\"" <<< "$config")
-adam_epsilon=$(jq -r ".training_params.optimizer.adam_epsilon // \"1e-8\"" <<< "$config")
+# Get total batch size
+total_batch_size=$(echo "$resolved_config" | jq -r '.total_batch_size')
 
 # Print training configuration
 echo -e "\nTraining Configuration:"

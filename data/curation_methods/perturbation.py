@@ -45,7 +45,7 @@ async def collapse_consecutive_steps(cot: str, rate: float, model_key: str) -> s
         
         # Create prompt to merge steps
         merge_prompt = f"""
-Merge these two consecutive steps into a single concise step (<80 words) that preserves the key medical reasoning:
+Merge these two consecutive steps into a single concise step (<80 words) that preserves the key reasoning:
 
 Step 1: {steps[idx]}
 
@@ -139,8 +139,7 @@ async def wrong_answer(cot: str, model_key: str, question: str, correct_response
     
     # Create prompt to generate wrong answer
     wrong_answer_prompt = f"""
-Given this medical question and correct answer, generate a categorically wrong but plausible-sounding final step and response.
-The wrong answer should be clearly incorrect to medical experts but not obviously different in style.
+Given this question and correct answer, generate a categorically wrong but plausible-sounding final step and response.
 
 Question: {question}
 
