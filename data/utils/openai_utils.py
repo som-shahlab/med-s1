@@ -117,17 +117,13 @@ async def get_model_response(
                     ]
                 )
                 
-                # Handle streaming response without async for
-                stream = client.models.generate_content_stream(
-                    model="gemini-2.0-flash-001",
+                # Use async generate_content for complete response
+                response = await client.aio.models.generate_content(
+                    model=model,
                     contents=contents,
                     config=generate_config
                 )
-                chunks = []
-                for chunk in stream:
-                    if chunk.text:
-                        chunks.append(chunk.text)
-                result = "".join(chunks)
+                result = response.text
 
             # Cache successful response
             response_cache[cache_key] = result

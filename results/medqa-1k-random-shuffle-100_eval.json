@@ -1,0 +1,54 @@
+{
+  "summary": {
+    "MedMCQA_validation": {
+      "accuracy": 0.5637112403100775,
+      "accuracy_ci": [
+        0.5494125484496124,
+        0.5787306201550387
+      ],
+      "num_correct": 2327,
+      "total_examples": 4128,
+      "num_answered": 2325
+    },
+    "MedQA_USLME_test": {
+      "accuracy": 0.6454689984101749,
+      "accuracy_ci": [
+        0.6184419713831478,
+        0.6733108108108108
+      ],
+      "num_correct": 812,
+      "total_examples": 1258,
+      "num_answered": 812
+    },
+    "PubMedQA_test": {
+      "accuracy": 0.7659574468085106,
+      "accuracy_ci": [
+        0.7396149949341438,
+        0.7923252279635258
+      ],
+      "num_correct": 756,
+      "total_examples": 987,
+      "num_answered": 752
+    },
+    "MMLU-Pro_Medical_test": {
+      "accuracy": 0.5911784068466096,
+      "accuracy_ci": [
+        0.5661619486504279,
+        0.615552995391705
+      ],
+      "num_correct": 898,
+      "total_examples": 1519,
+      "num_answered": 894
+    },
+    "GPQA_Medical_test": {
+      "accuracy": 0.4864864864864865,
+      "accuracy_ci": [
+        0.43513513513513513,
+        0.5324324324324324
+      ],
+      "num_correct": 180,
+      "total_examples": 370,
+      "num_answered": 180
+    }
+  }
+}

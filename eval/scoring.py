@@ -1,11 +1,16 @@
 import os
 import json
 import random
+import sys
 import numpy as np
 from typing import Dict, List, Tuple, Optional
 from scorer import get_results, score, match_choice, calculate_confidence_interval
 from utils import print_indented
 from datetime import datetime
+
+med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+sys.path.insert(0, med_s1_dir)
+from data.utils.path_utils import update_results_json as update_json
 
 def score_test_time_scaling(args, final_results, path_to_output):
     """Score results for test time scaling evaluation."""
@@ -61,6 +66,47 @@ def score_test_time_scaling(args, final_results, path_to_output):
     
     return metrics, approaches
 
+def calculate_mixed_runs_ci(all_results: List[Dict], gpqa_results: List[Dict], n_iterations: int = 1000) -> Tuple[float, float]:
+    """Calculate confidence interval for mixed runs data (GPQA with multiple runs, others with single run)."""
+    bootstrapped_means = []
+    
+    # Group non-GPQA results by source
+    dataset_results = {}
+    for result in all_results:
+        if result.get('source') != 'GPQA_Medical_test':
+            source = result.get('source', 'unknown')
+            if source not in dataset_results:
+                dataset_results[source] = []
+            dataset_results[source].append(result)
+    
+    # For each bootstrap iteration
+    for _ in range(n_iterations):
+        sampled_accuracies = []
+        
+        # Sample from each non-GPQA dataset
+        for dataset_name, results in dataset_results.items():
+            if results:  # Skip empty datasets
+                # Sample with replacement at dataset level
+                sampled = np.random.choice(len(results), size=len(results), replace=True)
+                # Calculate accuracy for this sample
+                correct = sum(1 for idx in sampled if results[idx]['ans'][0].lower() == results[idx]['answer_idx'].lower())
+                sampled_accuracies.append(correct / len(sampled))
+        
+        # Sample GPQA results (which already have averaged accuracies)
+        if gpqa_results:
+            sampled_gpqa = np.random.choice(len(gpqa_results), size=len(gpqa_results), replace=True)
+            gpqa_acc = np.mean([gpqa_results[i]['average_accuracy'] for i in sampled_gpqa])
+            sampled_accuracies.append(gpqa_acc)
+        
+        # Calculate mean across all datasets
+        if sampled_accuracies:
+            bootstrapped_means.append(np.mean(sampled_accuracies))
+    
+    # Calculate confidence interval
+    lower = float(np.percentile(bootstrapped_means, 2.5))
+    upper = float(np.percentile(bootstrapped_means, 97.5))
+    return lower, upper
+
 def score_standard_evaluation(path_to_output, final_results, args):
     """Score results for standard evaluation."""
     metrics = get_results(path_to_output)
@@ -81,17 +127,12 @@ def score_standard_evaluation(path_to_output, final_results, args):
             metrics['GPQA_Medical_test']['majority_vote_accuracy'] = metrics['GPQA_Medical_test']['accuracy']
             metrics['GPQA_Medical_test']['accuracy'] = gpqa_avg_accuracy
             
-            # Recalculate confidence interval for the average accuracy
-            # Create binary array for bootstrap
-            total_runs = len(gpqa_results) * args.gpqa_repeats
-            correct_runs = int(round(gpqa_avg_accuracy * total_runs))
-            results_array = np.zeros(total_runs)
-            results_array[:correct_runs] = 1
-            np.random.shuffle(results_array)
+            # Calculate CI using the new mixed runs approach
+            with open(path_to_output, 'r') as f:
+                all_results = json.load(f)
             
-            # Calculate CI
-            lower, upper = calculate_confidence_interval(results_array)
-            metrics['GPQA_Medical_test']['accuracy_ci'] = [float(lower), float(upper)]
+            lower, upper = calculate_mixed_runs_ci(all_results, gpqa_results)
+            metrics['GPQA_Medical_test']['accuracy_ci'] = [lower, upper]
     
     return metrics
 
@@ -196,17 +237,11 @@ def save_and_score_results(args, final_results, model_path):
     
     return path_to_output, metrics_file, metrics, approaches
 
-def update_results_json(args, path_to_output, metrics_file, metrics, approaches=None):
+def update_results_json(args, path_to_output, metrics_file, metrics, approaches=None, final_results=None):
     """Update results.json with evaluation results."""
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
-    
-    # Import path_utils for updating results.json
-    import sys
-    med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
-    sys.path.append(os.path.join(med_s1_dir, 'data'))
-    from utils.path_utils import update_results_json as update_json
     
     # Create paths dict for update_results_json
     paths = {
@@ -218,7 +253,7 @@ def update_results_json(args, path_to_output, metrics_file, metrics, approaches=
     stats = {"summary": metrics}
     
     # Add test time scaling specific data if applicable
-    if args.test_time_scaling and approaches:
+    if args.test_time_scaling and approaches and final_results:
         # Calculate average reasoning tokens for each approach
         reasoning_tokens = {}
         for approach in approaches:

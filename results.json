@@ -90,19 +90,19 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random_20250315_174440/med_s1k_formatted",
-          "timestamp": "2025-03-15T17:44:42.688674",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random_20250329_021551/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:15:53.392216",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random",
-          "timestamp": "2025-03-15T20:31:04Z",
+          "timestamp": "2025-03-29T05:18:27Z",
           "metrics": null
         },
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modeleval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-15T22:43:39.265496",
+          "timestamp": "2025-03-29T19:23:30.544018",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random_eval.json"
         }
       }
@@ -254,19 +254,19 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-step-extract_20250327_232841/med_s1k_formatted",
-          "timestamp": "2025-03-28T00:18:51.109687",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-step-extract_20250329_021551/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:16:46.842031",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-step-extract_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-step-extract",
-          "timestamp": "2025-03-28T14:48:03Z",
+          "timestamp": "2025-03-29T06:25:00Z",
           "metrics": null
         },
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-step-extract/best_modeleval_data.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-step-extract/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-15T23:04:27.582677",
+          "timestamp": "2025-03-29T19:25:31.670696",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-step-extract_eval.json"
         }
       }
@@ -478,16 +478,21 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-note-extract_20250328_003819/med_s1k_formatted",
-          "timestamp": "2025-03-28T01:55:01.385586",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-note-extract_20250329_021551/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:17:12.436077",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-note-extract_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-note-extract",
-          "timestamp": "2025-03-28T15:48:03Z",
+          "timestamp": "2025-03-29T06:57:06Z",
           "metrics": null
         },
-        "eval": null
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-note-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-note-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:36:40.380198",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-note-extract_eval.json"
+        }
       }
     },
     "medqa-1k-random-list-extract": {
@@ -505,16 +510,21 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-list-extract_20250328_001916/med_s1k_formatted",
-          "timestamp": "2025-03-28T00:37:58.484094",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-list-extract_20250329_021549/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:16:20.762996",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-list-extract_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-list-extract",
-          "timestamp": "2025-03-28T15:31:32Z",
+          "timestamp": "2025-03-29T05:29:52Z",
           "metrics": null
         },
-        "eval": null
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-list-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-list-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:39:55.646475",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-list-extract_eval.json"
+        }
       }
     },
     "medqa-1k-random-markdown-extract": {
@@ -532,16 +542,21 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-markdown-extract_20250327_231721/med_s1k_formatted",
-          "timestamp": "2025-03-27T23:20:50.069471",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-markdown-extract_20250329_021549/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:17:58.043964",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-markdown-extract_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-markdown-extract",
-          "timestamp": "2025-03-28T15:18:42Z",
+          "timestamp": "2025-03-29T07:13:28Z",
           "metrics": null
         },
-        "eval": null
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-markdown-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-markdown-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:39:12.957447",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-markdown-extract_eval.json"
+        }
       }
     },
     "medqa-1k-random-evidence-extract": {
@@ -559,16 +574,21 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-evidence-extract_20250327_232935/med_s1k_formatted",
-          "timestamp": "2025-03-28T01:02:53.354538",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-evidence-extract_20250329_021549/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:17:07.267179",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-evidence-extract_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-evidence-extract",
-          "timestamp": "2025-03-28T15:04:10Z",
+          "timestamp": "2025-03-29T06:41:44Z",
           "metrics": null
         },
-        "eval": null
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-evidence-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-evidence-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:31:51.177710",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-evidence-extract_eval.json"
+        }
       }
     },
     "medqa-1k-random-collapse-33": {
@@ -587,6 +607,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-collapse-33_20250329_105304/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:53:45.957687",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-33_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-collapse-33",
+          "timestamp": "2025-03-29T11:13:39Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-33/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-33/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:52:50.832745",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-33_eval.json"
+        }
       }
     },
     "medqa-1k-random-collapse-66": {
@@ -605,6 +643,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-collapse-66_20250329_105304/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:53:54.105800",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-66_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-collapse-66",
+          "timestamp": "2025-03-29T11:28:50Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-66/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-66/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:00:29.117394",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-66_eval.json"
+        }
       }
     },
     "medqa-1k-random-collapse-100": {
@@ -623,6 +679,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-collapse-100_20250329_105304/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:56:32.398973",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-100_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-collapse-100",
+          "timestamp": "2025-03-29T11:39:37Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-100/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-100/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:54:55.120295",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-100_eval.json"
+        }
       }
     },
     "medqa-1k-random-skip-33": {
@@ -641,6 +715,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-skip-33_20250329_105304/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:53:07.162615",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-33_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-skip-33",
+          "timestamp": "2025-03-29T11:50:22Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-33/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-33/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:04:37.797610",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-33_eval.json"
+        }
       }
     },
     "medqa-1k-random-skip-66": {
@@ -659,6 +751,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-skip-66_20250329_104212/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:42:16.609707",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-66_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-skip-66",
+          "timestamp": "2025-03-29T12:00:59Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-66/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-66/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:02:14.728632",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-66_eval.json"
+        }
       }
     },
     "medqa-1k-random-skip-100": {
@@ -677,6 +787,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-skip-100_20250329_105304/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:53:07.492311",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-100_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-skip-100",
+          "timestamp": "2025-03-29T12:11:17Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-100/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-100/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:00:16.566462",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-100_eval.json"
+        }
       }
     },
     "medqa-1k-random-shuffle-33": {
@@ -695,6 +823,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-shuffle-33_20250329_105309/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:53:12.719368",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-33_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-shuffle-33",
+          "timestamp": "2025-03-29T12:26:55Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-33/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-33/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:16:02.936914",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-33_eval.json"
+        }
       }
     },
     "medqa-1k-random-shuffle-66": {
@@ -713,6 +859,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-shuffle-66_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:37:52.965456",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-66_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-shuffle-66",
+          "timestamp": "2025-03-29T12:42:34Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-66/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-66/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:16:33.612785",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-66_eval.json"
+        }
       }
     },
     "medqa-1k-random-shuffle-100": {
@@ -731,6 +895,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-shuffle-100_20250329_105309/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:53:12.859020",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-100_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-shuffle-100",
+          "timestamp": "2025-03-29T12:58:13Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-100/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-100/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:15:56.968734",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-100_eval.json"
+        }
       }
     },
     "medqa-1k-random-irrelevant-33": {
@@ -749,6 +931,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-irrelevant-33_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:02.889691",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-33_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-irrelevant-33",
+          "timestamp": "2025-03-29T13:15:36Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-33/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-33/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:21:08.456701",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-33_eval.json"
+        }
       }
     },
     "medqa-1k-random-irrelevant-66": {
@@ -767,6 +967,24 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-irrelevant-66_20250329_103750/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:00.376226",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-66_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-irrelevant-66",
+          "timestamp": "2025-03-29T13:34:44Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-66/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-66/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:34:47.179099",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-66_eval.json"
+        }
       }
     },
     "medqa-1k-random-irrelevant-100": {
@@ -785,10 +1003,28 @@
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-irrelevant-100_20250329_103750/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:00.402399",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-100_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-irrelevant-100",
+          "timestamp": "2025-03-29T13:58:44Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-100/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-100/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:40:43.009995",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-100_eval.json"
+        }
       }
     },
-    "medqa-1k-random-wrong-answer": {
-      "description": "1k random sample with wrong answer perturbation",
+    "medqa-1k-random-wrong-answer-33": {
+      "description": "1k random sample with 33% wrong answer perturbation",
       "config": {
         "model_key": "llama3.1:8b",
         "curation": {
@@ -797,240 +1033,643 @@
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
-            "type": "answer"
+            "type": "answer",
+            "rate": 0.33
           }
         },
         "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
         "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-wrong-answer-33_20250329_103750/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:04.042223",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-wrong-answer-33_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-wrong-answer-33",
+          "timestamp": "2025-03-29T14:13:26Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-wrong-answer-33/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-wrong-answer-33/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:30:38.471130",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-wrong-answer-33_eval.json"
+        }
       }
-    }
-  },
-  "medqa-1k-random-collapse-33-restore": {
-    "description": "1k random sample with 33% collapse consecutive steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "collapse_consecutive",
-          "rate": 0.33
+    },
+    "medqa-1k-random-wrong-answer-66": {
+      "description": "1k random sample with 66% wrong answer perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "answer",
+            "rate": 0.66
+          }
         },
-        "restore": true
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
       },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-collapse-66-restore": {
-    "description": "1k random sample with 66% collapse consecutive steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "collapse_consecutive",
-          "rate": 0.66
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-wrong-answer-66_20250329_103750/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:11.969368",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-wrong-answer-66_curation.json"
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-collapse-100-restore": {
-    "description": "1k random sample with 100% collapse consecutive steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "collapse_consecutive",
-          "rate": 1.0
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-wrong-answer-66",
+          "timestamp": "2025-03-29T14:28:19Z",
+          "metrics": null
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-skip-33-restore": {
-    "description": "1k random sample with 33% skip steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "skip",
-          "rate": 0.33
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-wrong-answer-66/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-wrong-answer-66/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:34:22.576229",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-wrong-answer-66_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-decision-tree-extract": {
+      "description": "1k uniform random sample with decision tree extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "decision-tree"
         },
-        "restore": true
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
       },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-skip-66-restore": {
-    "description": "1k random sample with 66% skip steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "skip",
-          "rate": 0.66
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-decision-tree-extract_20250329_021551/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:16:39.316197",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-decision-tree-extract_curation.json"
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-skip-100-restore": {
-    "description": "1k random sample with 100% skip steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "skip",
-          "rate": 1.0
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-decision-tree-extract",
+          "timestamp": "2025-03-29T06:10:32Z",
+          "metrics": null
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-shuffle-33-restore": {
-    "description": "1k random sample with 33% shuffle steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "shuffle",
-          "rate": 0.33
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-decision-tree-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-decision-tree-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:54:04.193307",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-decision-tree-extract_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-qa-extract": {
+      "description": "1k uniform random sample with Q&A extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "qa"
         },
-        "restore": true
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
       },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-shuffle-66-restore": {
-    "description": "1k random sample with 66% shuffle steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "shuffle",
-          "rate": 0.66
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-qa-extract_20250329_021551/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:16:41.420492",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-qa-extract_curation.json"
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-shuffle-100-restore": {
-    "description": "1k random sample with 100% shuffle steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "shuffle",
-          "rate": 1.0
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-qa-extract",
+          "timestamp": "2025-03-29T05:41:49Z",
+          "metrics": null
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-irrelevant-33-restore": {
-    "description": "1k random sample with 33% add irrelevant steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "add_irrelevant",
-          "rate": 0.33
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-qa-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-qa-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:47:07.663123",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-qa-extract_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-socratic-extract": {
+      "description": "1k uniform random sample with Socratic dialogue extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "socratic"
         },
-        "restore": true
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
       },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-irrelevant-66-restore": {
-    "description": "1k random sample with 66% add irrelevant steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "add_irrelevant",
-          "rate": 0.66
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-socratic-extract_20250329_021551/med_s1k_formatted",
+          "timestamp": "2025-03-29T02:16:48.700795",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-socratic-extract_curation.json"
         },
-        "restore": true
-      },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
-    }
-  },
-  "medqa-1k-random-irrelevant-100-restore": {
-    "description": "1k random sample with 100% add irrelevant steps perturbation and restoration",
-    "config": {
-      "model_key": "llama3.1:8b",
-      "curation": {
-        "method": "random",
-        "huatuo_format": true,
-        "n_samples": 1000,
-        "extract": "step",
-        "perturbation": {
-          "type": "add_irrelevant",
-          "rate": 1.0
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-socratic-extract",
+          "timestamp": "2025-03-29T05:57:05Z",
+          "metrics": null
         },
-        "restore": true
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-socratic-extract/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-socratic-extract/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T19:49:47.357761",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-socratic-extract_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-wrong-answer-100": {
+      "description": "1k random sample with 100% wrong answer perturbation",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "answer",
+            "rate": 1.0
+          }
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
       },
-      "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
-      "datasets": "same as base-step-prompt"
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-wrong-answer-100_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:39:05.433347",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-wrong-answer-100_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-wrong-answer-100",
+          "timestamp": "2025-03-29T14:43:43Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-wrong-answer-100/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-wrong-answer-100/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:45:52.057739",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-wrong-answer-100_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-collapse-33-restore": {
+      "description": "1k random sample with 33% collapse consecutive steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "collapse_consecutive",
+            "rate": 0.33
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-collapse-33-restore_20250329_102633/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:28:46.823111",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-33-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-collapse-33-restore",
+          "timestamp": "2025-03-29T15:00:58Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-33-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-33-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:51:31.489003",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-33-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-collapse-66-restore": {
+      "description": "1k random sample with 66% collapse consecutive steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "collapse_consecutive",
+            "rate": 0.66
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-collapse-66-restore_20250329_102633/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:29:33.557850",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-66-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-collapse-66-restore",
+          "timestamp": "2025-03-29T15:18:01Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-66-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-66-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:51:12.407473",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-66-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-collapse-100-restore": {
+      "description": "1k random sample with 100% collapse consecutive steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "collapse_consecutive",
+            "rate": 1.0
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-collapse-100-restore_20250329_102633/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:30:16.805901",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-100-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-collapse-100-restore",
+          "timestamp": "2025-03-29T15:34:50Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-100-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-collapse-100-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T20:54:21.641498",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-collapse-100-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-skip-33-restore": {
+      "description": "1k random sample with 33% skip steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "skip",
+            "rate": 0.33
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-skip-33-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:39:10.446304",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-33-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-skip-33-restore",
+          "timestamp": "2025-03-29T15:52:13Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-33-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-33-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:03:42.457796",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-33-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-skip-66-restore": {
+      "description": "1k random sample with 66% skip steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "skip",
+            "rate": 0.66
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-skip-66-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:58.724759",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-66-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-skip-66-restore",
+          "timestamp": "2025-03-29T16:09:11Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-66-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-66-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:07:14.466359",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-66-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-skip-100-restore": {
+      "description": "1k random sample with 100% skip steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "skip",
+            "rate": 1.0
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-skip-100-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:38:49.201317",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-100-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-skip-100-restore",
+          "timestamp": "2025-03-29T16:25:53Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-100-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-skip-100-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:05:56.610970",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-skip-100-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-shuffle-33-restore": {
+      "description": "1k random sample with 33% shuffle steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 0.33
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-shuffle-33-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:39:07.022556",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-33-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-shuffle-33-restore",
+          "timestamp": "2025-03-29T16:43:49Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-33-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-33-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:13:09.077454",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-33-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-shuffle-66-restore": {
+      "description": "1k random sample with 66% shuffle steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 0.66
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-shuffle-66-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:39:01.423377",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-66-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-shuffle-66-restore",
+          "timestamp": "2025-03-29T17:01:02Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-66-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-66-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:22:02.541539",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-66-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-shuffle-100-restore": {
+      "description": "1k random sample with 100% shuffle steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 1.0
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-shuffle-100-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:39:00.349231",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-100-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-shuffle-100-restore",
+          "timestamp": "2025-03-29T17:17:30Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-100-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-shuffle-100-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:23:53.643851",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-shuffle-100-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-irrelevant-33-restore": {
+      "description": "1k random sample with 33% add irrelevant steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "add_irrelevant",
+            "rate": 0.33
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-irrelevant-33-restore_20250329_103749/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:39:16.872397",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-33-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-irrelevant-33-restore",
+          "timestamp": "2025-03-29T17:35:21Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-33-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-33-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:28:05.645486",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-33-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-irrelevant-66-restore": {
+      "description": "1k random sample with 66% add irrelevant steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "add_irrelevant",
+            "rate": 0.66
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-irrelevant-66-restore_20250329_102712/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:28:46.112100",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-66-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-irrelevant-66-restore",
+          "timestamp": "2025-03-29T18:47:40Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-66-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-66-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:34:11.331002",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-66-restore_eval.json"
+        }
+      }
+    },
+    "medqa-1k-random-irrelevant-100-restore": {
+      "description": "1k random sample with 100% add irrelevant steps perturbation and restoration",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "add_irrelevant",
+            "rate": 1.0
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-random-irrelevant-100-restore_20250329_102712/med_s1k_formatted",
+          "timestamp": "2025-03-29T10:29:09.928329",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-100-restore_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-random-irrelevant-100-restore",
+          "timestamp": "2025-03-29T19:08:58Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-100-restore/best_modeleval_data.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random-irrelevant-100-restore/best_modeleval_data_metrics.json",
+          "timestamp": "2025-03-29T21:43:47.912423",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-100-restore_eval.json"
+        }
+      }
     }
   }
 }

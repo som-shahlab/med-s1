@@ -62,17 +62,68 @@ def load_config() -> Dict:
     with open("/share/pi/nigam/users/calebwin/med-s1/config.json", "r") as f:
         return json.load(f)
 
+def resolve_config_reference(config: Dict, key: str, results: Dict, visited: set = None) -> Dict:
+    """Recursively resolve 'same as' references in config"""
+    if visited is None:
+        visited = set()
+        
+    # Base case: not a reference
+    if not isinstance(config.get(key), str) or not config[key].startswith("same as "):
+        return config.get(key, {})
+        
+    # Get referenced experiment
+    ref_exp = config[key].replace("same as ", "")
+    
+    # Check for circular references
+    if ref_exp in visited:
+        raise ValueError(f"Circular reference detected: {ref_exp}")
+    visited.add(ref_exp)
+    
+    # Get referenced config
+    if ref_exp not in results["experiments"]:
+        raise ValueError(f"Referenced experiment {ref_exp} not found")
+    ref_config = results["experiments"][ref_exp]["config"]
+    
+    # Recursively resolve if the referenced config also has references
+    if isinstance(ref_config.get(key), str) and ref_config[key].startswith("same as "):
+        return resolve_config_reference(ref_config, key, results, visited)
+        
+    return ref_config.get(key, {})
+
 def load_experiment_config(experiment_name: str) -> Dict:
-    """Load experiment configuration from results.json"""
+    """Load experiment configuration from results.json and resolve references"""
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
         
     with open(results_json, "r") as f:
         results = json.load(f)
-    if experiment_name not in results["experiments"]:
+
+    # Handle both old and new format
+    experiments = results.get("experiments", results)
+    if experiment_name not in experiments:
         raise ValueError(f"Experiment {experiment_name} not found in {results_json}")
-    return results["experiments"][experiment_name]["config"]
+    
+    # Get raw config
+    exp_data = experiments[experiment_name]
+    if not isinstance(exp_data, dict) or "config" not in exp_data:
+        raise ValueError(f"Invalid experiment data format for {experiment_name}")
+        
+    config = exp_data["config"]
+    if config is None:
+        raise ValueError(f"Configuration for experiment {experiment_name} is None")
+    
+    # Resolve references for each top-level key
+    resolved_config = {}
+    for key in ["curation", "training_params", "datasets"]:
+        resolved_config[key] = resolve_config_reference(config, key, {"experiments": experiments})
+    
+    # Copy other keys as-is
+    for key in config:
+        if key not in resolved_config:
+            resolved_config[key] = config[key]
+    
+    return resolved_config
 
 def get_output_dir() -> str:
     """Get the output directory from environment"""
@@ -314,9 +365,8 @@ async def main():
     os.makedirs(os.path.dirname(paths['filtered']), exist_ok=True)
     
     # Apply extraction if configured
-    extract_method = experiment_config.get("curation", {}).get("extract", "")
-    if extract_method != "":
-        logging.info(f"Applying {extract_method} extraction to selected examples")
+    if experiment_config.get("curation", {}).get("extract"):
+        logging.info(f"Applying {experiment_config['curation']['extract']} extraction to selected examples")
         df = await apply_step_extraction(df, experiment_config)
     
     # Save filtered dataset with all examples and their filtering status

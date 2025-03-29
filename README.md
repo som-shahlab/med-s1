@@ -1,75 +1,108 @@
-# med-s1 Pipeline
+# med-s1: Medical Reasoning Experiments
 
-The pipeline consists of three stages: curation, training, and evaluation. All experiments are defined in `results.json`, which tracks configuration and results for each stage.
+This project explores various methods for training and evaluating medical reasoning models.
 
-## Setup
+## Overview
 
-```bash
-source config.sh  # Sets HF cache, output dirs, API keys
-```
+The core workflow consists of three stages:
 
-## Experiments
+1.  **Curation:** Selecting and formatting data for training.
+2.  **Training:** Fine-tuning a language model on the curated data.
+3.  **Evaluation:** Assessing the performance of the trained model.
 
-Experiments are defined in `results.json`. Each experiment has:
-- Configuration for curation, training, and evaluation
-- Results and metrics from each stage
-- Consistent path handling using cleaned experiment names
+Experiments are defined and executed through `results.json`. This file specifies the configuration for each experiment, including the model, datasets, training parameters, and curation methods.
 
-Example experiments:
-- med-s1-1k: Current configuration with 1k samples
-- med-s1-5k: Larger dataset with 5k samples
-- med-s1-25k: Full dataset without curation
-- random-1k: Random sampling baseline
-- base: Base LLaMA model without fine-tuning
+## Running Experiments
 
-## Pipeline Stages
+### Batch Scripts
 
-### 1. Curation
+The following batch scripts are provided for running experiments:
 
-The curation pipeline processes medical questions through:
-1. Quality filtering: Remove examples with missing fields and exact 1024 token responses
-2. Difficulty filtering: Remove examples that base model answers correctly
-3. Diversity sampling: Select examples with long chain-of-thought reasoning (≥1000 tokens), balanced across specialties
+*   `curate_all.sh`: Runs the curation stage for all experiments defined in `results.json`.
+*   `train_all.sh`: Runs the training stage for all experiments defined in `results.json`.
+*   `eval_all.sh`: Runs the evaluation stage for all experiments defined in `results.json`.
 
-```bash
-# Run curation for an experiment
-sbatch curate_med_s1k.sh <experiment_name>
-```
+### Individual Commands
 
-Output files in `$MED_S1K_OUTPUT/<experiment_name>/`:
-- `med_s1k_filtered.parquet`: Full dataset with filtering metadata
-- `med_s1k_curated.parquet`: Selected examples only
-- `med_s1k_formatted/`: HuggingFace dataset ready for training
+You can also execute each stage for a single experiment using the following commands:
 
-### 2. Training
+*   **Curation:** `bash curate_med_s1k.sh <experiment_name>`
+*   **Training:** `sbatch train/sft_carina.sh <experiment_name>`
+*   **Evaluation:** `sbatch eval/eval.sh <experiment_name>`
 
-Train models using FSDP (Fully Sharded Data Parallel) and TRL (Transformer Reinforcement Learning):
+Replace `<experiment_name>` with the name of the experiment defined in `results.json`.
 
-```bash
-# Train model for an experiment
-sbatch train/sft_carina.sh <experiment_name>
+### Authentication
 
-# Example:
-bash train/sft_carina.sh med-s1-25k
-```
+For curation, you may need to authenticate with Google Cloud using `gcloud auth application-default login` in order to use the Gemini models.
 
-Models are saved in `$CACHE_DIR/ckpts/<experiment_name>/`. The training uses:
-- TRL's SFTTrainer for efficient fine-tuning
-- FSDP for distributed training across GPUs
-- Automatic checkpointing and state management
-- Consistent experiment-based paths
+### Configuration
 
-### 3. Evaluation
+The `config.sh` file may need to be edited to include your WANDB\_API\_KEY and HUGGING\_FACE\_HUB\_TOKEN.
 
-Evaluate models using vllm for efficient inference:
+### Plotting Results
 
-```bash
-# Run evaluation for an experiment
-sbatch eval/eval.sh <experiment_name>
-```
+The `plot_model_comparison.py` script is used to generate accuracy plots for different methods. This is the final step in the evaluation process.
 
-Outputs in `$CACHE_DIR/eval/<experiment_name>/`:
-- `eval_results.json`: Overall metrics
-- `eval_predictions.jsonl`: Raw model predictions
+## Implementing a New Dataset
 
-This takes ~5 minutes to run on all 8k eval examples in `eval/data/eval_data.json` for an 8B model on 1 H100 with batch_size=1024.
+To implement a new dataset, you need to:
+
+1.  **Add a new entry to the `config.json` file**:
+    *   In the `"train_datasets"` section, define the dataset's properties, such as its Hugging Face path (`hf_path`), configuration (`hf_config`), and split (`hf_split`).
+    *   Example for a MedQA dataset:
+        ```json
+        "medqa": {
+            "hf_path": "path/to/medqa",
+            "hf_config": "subset",
+            "hf_split": "train"
+        }
+        ```
+    *   Alternatively, you can specify a local file path (`file_path`) to a JSON, Parquet, or directory containing a saved Hugging Face Dataset.
+2.  **Modify the curation pipeline (if necessary)**:
+    *   The `curate_med_s1k_new.py` script loads the dataset using the `load_base_dataset` function. This function handles loading datasets from Hugging Face or local files.
+    *   If the dataset requires specific preprocessing or formatting, you may need to modify the `load_base_dataset` function or create a new curation method in the `curation_methods` directory.
+    *   For example, the MedQA dataset is loaded using the `load_base_dataset` function, which reads the dataset from a Hugging Face path specified in `config.json`. The function then initializes metadata columns for filtering and selection.
+3.  **Reference the new dataset in `results.json`**:
+    *   In the experiment configuration, specify the name of the new dataset in the `"datasets"` section under the `"curate"` key.
+
+## Adding a New Reasoning Trace Style Transformation
+
+To add a new reasoning trace style or perturbation, you need to:
+
+1.  Implement the new formatting logic in `clinical_formatting.py`. This file contains functions for transforming chain-of-thought reasoning into various formats.
+2.  Modify the curation pipeline to use the new formatting method.
+3.  If modifying the prompt to improve reasoning trace quality, you can use the `restore` flag in the `results.json` file.
+
+## Adding an Experiment that Finetunes a Different Model
+
+To add an experiment that finetunes a different model, you need to:
+
+1.  **Add a new entry to the `config.json` file**:
+    *   In the `"models"` section, define the model's properties, such as its Hugging Face path (`hf_path`) and `max_length`.
+    *   Example:
+        ```json
+        "my_new_model": {
+            "hf_path": "huggingface/path/to/my_new_model",
+            "max_length": 2048
+        }
+        ```
+2.  **Update `results.json`**:
+    *   In the experiment configuration, specify the name of the new model in the `"config"` section under the `"model_key"` key.
+    *   Example:
+        ```json
+        "my_new_experiment": {
+            "description": "Experiment with my new model",
+            "config": {
+                "model_key": "my_new_model",
+                "datasets": "same as base-step-prompt"
+            }
+        }
+        ```
+3.  **Handle different chat formats (in `data/utils/formatting.py`)**:
+    *   The `format_for_training` function in `data/utils/formatting.py` is responsible for formatting the data for training.
+    *   If the new model has a different chat format, you will need to adjust the prompt formatting in the `format_for_training` function to match the expected input format of the model. This might involve changing the prompt structure, adding special tokens, or modifying the way the input and output are concatenated.
+    *   For example, you might add a conditional statement that checks the `model_name` and applies the appropriate formatting logic based on the model's chat format.
+4.  **Ensure compatibility with `train/sft.py`**:
+    *   The `train/sft.py` script loads the model and tokenizer using `AutoModelForCausalLM` and `AutoTokenizer`. Ensure that the new model is compatible with these classes.
+    *   If the new model requires specific training parameters or configurations, you may need to modify the `train/sft.py` script accordingly.

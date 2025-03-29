@@ -3,6 +3,7 @@
 #SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.out
 #SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-curate-%j.err
 #SBATCH --cpus-per-task=8
+#SBATCH --partition=gpu
 #SBATCH --mem=20GB
 #SBATCH --time=02:00:00
 #SBATCH --account=nigam

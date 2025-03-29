@@ -13,6 +13,37 @@ def load_results(json_path):
         data = json.load(f)
     return data['experiments']
 
+def aggregate_confidence_intervals(metrics):
+    """
+    Aggregate confidence intervals using error propagation theory for unweighted means.
+    
+    For unweighted mean μ = (x₁ + x₂ + ... + xₙ)/n where each xᵢ has CI [xᵢ ± δxᵢ],
+    the standard error of μ is δμ = √(Σ(δxᵢ)²)/n
+    """
+    # Get standard errors from CIs (CI = mean ± 1.96*SE for 95% CI)
+    standard_errors = []
+    for data in metrics.values():
+        if 'ci_upper' in data and 'ci_lower' in data:
+            # Convert CI to standard error
+            ci_range = data['ci_upper'] - data['ci_lower']
+            se = ci_range / (2 * 1.96)  # 1.96 for 95% CI
+            standard_errors.append(se)
+    
+    if not standard_errors:
+        return 0, 0
+    
+    # Calculate aggregated standard error
+    n = len(standard_errors)
+    aggregated_se = np.sqrt(sum(se**2 for se in standard_errors)) / n
+    
+    # Convert back to CI
+    if 'Overall' not in metrics:
+        return 0, 0
+    ci_lower = max(0, metrics['Overall']['accuracy'] - (1.96 * aggregated_se))
+    ci_upper = min(1, metrics['Overall']['accuracy'] + (1.96 * aggregated_se))
+    
+    return float(ci_lower), float(ci_upper)
+
 def get_model_metrics(model_data):
     """Extract accuracies and confidence intervals from model results"""
     if not model_data.get('results', {}).get('eval', {}):
@@ -36,57 +67,55 @@ def get_model_metrics(model_data):
         return None
     
     metrics = {}
+    dataset_accuracies = []
+    dataset_ses = []
+    total_examples = 0
+
     for dataset, data in summary.items():
         if 'total_examples' not in data:
             continue
-        dataset_metrics = {}
-        if 'accuracy' in data:
-            dataset_metrics['accuracy'] = data['accuracy']
+
+        accuracy = data.get('accuracy', 0)
+        ci_lower = data.get('accuracy_ci', [0, 0])[0]
+        ci_upper = data.get('accuracy_ci', [0, 0])[1]
+        total_examples += data['total_examples']
+
+        metrics[dataset] = {
+            'accuracy': accuracy,
+            'ci_lower': ci_lower,
+            'ci_upper': ci_upper,
+            'total_examples': data['total_examples']
+        }
+
+        dataset_accuracies.append(accuracy)
+        if ci_lower != 0 or ci_upper != 0:
+            se = (ci_upper - ci_lower) / (2 * 1.96)
         else:
-            dataset_metrics['accuracy'] = 0  # Default value if accuracy is missing
-        if 'accuracy_ci' in data:
-            dataset_metrics['ci_lower'] = data['accuracy_ci'][0]
-            dataset_metrics['ci_upper'] = data['accuracy_ci'][1]
-        else:
-            dataset_metrics['ci_lower'] = 0
-            dataset_metrics['ci_upper'] = 0
-        dataset_metrics['total_examples'] = data['total_examples']  # Add total examples for weighting
-        metrics[dataset] = dataset_metrics
-    
-    if not metrics:
+            se = 0
+        dataset_ses.append(se)
+
+    if not dataset_accuracies:
         return None
-    
+
     # Calculate simple average across datasets (not weighted by size)
-    avg_acc = sum(data['accuracy'] for data in metrics.values()) / len(metrics)
-    
-    # Calculate weighted confidence intervals based on accuracy
-    # Create a combined binary array for bootstrap
-    all_results = []
-    for data in metrics.values():
-        # Create binary array for this dataset
-        accuracy = data['accuracy']
-        total = data['total_examples']
-        correct_count = int(round(accuracy * total))
-        dataset_results = np.zeros(total)
-        dataset_results[:correct_count] = 1
-        np.random.shuffle(dataset_results)
-        all_results.append(dataset_results)
-    
-    # Combine all results
-    combined_results = np.concatenate(all_results)
-    
-    # Calculate CI on combined results
-    lower, upper = calculate_confidence_interval(combined_results)
-    
+    avg_acc = sum(dataset_accuracies) / len(dataset_accuracies)
+
+    # Calculate aggregated standard error
+    n = len(dataset_ses)
+    aggregated_se = np.sqrt(sum(se**2 for se in dataset_ses)) / n
+
+    # Calculate confidence interval
+    ci_lower = max(0, avg_acc - (1.96 * aggregated_se))
+    ci_upper = min(1, avg_acc + (1.96 * aggregated_se))
+
     # Add overall metrics
-    total_examples = sum(data['total_examples'] for data in metrics.values())
     metrics['Overall'] = {
         'accuracy': avg_acc,
-        'ci_lower': float(lower),
-        'ci_upper': float(upper),
+        'ci_lower': ci_lower,
+        'ci_upper': ci_upper,
         'total_examples': total_examples
     }
-    
+
     return metrics
 
 def calculate_improvements(model_metrics, base_metrics):
@@ -360,5 +389,6 @@ def main():
                 print(f"{model:20}: Accuracy = {accuracy:.1f}%, CI = [{ci_lower:.1f}%, {ci_upper:.1f}%]")
             else:
                 print(f"{model:20}: Overall accuracy not available")
+
 if __name__ == "__main__":
     main()

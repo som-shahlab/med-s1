@@ -9,19 +9,17 @@ from typing import Dict, Optional, List, Tuple
 async def transform_to_list(cot: str, model_key: str) -> str:
     """Transform reasoning trace into a list of axioms."""
     prompt = """
-You are an expert medical educator. Extract the key medical axioms and facts from this reasoning trace as a bullet-point list.
+You are an expert medical educator. Extract the key axioms and facts from this reasoning trace as a bullet-point list.
 
 Each point should:
-1. Be a single, clear medical fact or logical step
+1. Be a single, clear fact or logical step
 2. Start with a bullet point (-)
-3. Be concise but complete
-4. Preserve medical accuracy
 
 Here's the reasoning trace:
 
 {cot}
 
-IMPORTANT: Start directly with the bullet points. Do not include any introduction or explanation.
+IMPORTANT: Start directly with the bullet points. Do not include any text before the first bullet point.
 """
     from utils.openai_utils import get_model_response
     
@@ -55,10 +53,8 @@ You are an expert medical educator. Transform this chain of thought reasoning in
 
 The document should:
 1. Use appropriate markdown headings (##, ###)
-2. Include relevant lists (ordered or unordered)
+2. Include relevant hierarchical lists (ordered or unordered)
 3. Use tables where appropriate
-4. Maintain all medical accuracy
-5. Be organized logically
 
 Here's the reasoning trace:
 
@@ -139,7 +135,7 @@ Here's the chain of thought reasoning to transform:
 
 {cot}
 
-IMPORTANT: Your response must be EXACTLY ONE SENTENCE. Do not include any introduction, explanation, or multiple sentences. Start directly with the sentence and end with a period. Do not include any text before or after the sentence.
+IMPORTANT: Your response must be EXACTLY ONE SENTENCE. Do not include any introduction or multiple sentences. Start directly with the sentence and end with a period. Do not include any text before or after the sentence.
 """
 
     from utils.openai_utils import get_model_response
@@ -171,6 +167,117 @@ IMPORTANT: Your response must be EXACTLY ONE SENTENCE. Do not include any introd
 
     return result
 
+async def transform_to_decision_tree(cot: str, model_key: str) -> str:
+    """Transform reasoning trace into a decision tree format."""
+    prompt = """
+You are an expert medical educator. Transform this chain of thought reasoning into a clear decision tree format.
+
+The decision tree should:
+1. Show the key decision points and logical flow
+2. Use indentation to indicate hierarchy
+3. Use -> to show decision paths
+4. Indicate the decisions taken
+
+Here's the reasoning trace:
+
+{cot}
+
+IMPORTANT: Start directly with the decision tree. Do not include any introduction or explanation.
+"""
+    from utils.openai_utils import get_model_response
+    
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    
+    # Ensure proper formatting
+    if result:
+        # Remove any text before first decision point
+        first_arrow = result.find('->')
+        if first_arrow >= 0:
+            # Find start of line containing first arrow
+            line_start = result.rfind('\n', 0, first_arrow)
+            if line_start >= 0:
+                result = result[line_start+1:]
+            else:
+                result = result
+                
+        # Ensure consistent arrow formatting
+        result = re.sub(r'\s*-+>\s*', ' -> ', result)
+        
+    return result
+
+async def transform_to_qa(cot: str, model_key: str) -> str:
+    """Transform reasoning trace into a Q&A format."""
+    prompt = """
+You are an expert medical educator. Transform this chain of thought reasoning into a sequence of Questions and Answers.
+
+Each Q&A pair should:
+1. Start with "Q:" for questions and "A:" for answers
+2. Be on separate lines
+3. Cover key points from the reasoning
+5. Follow a logical progression
+
+Here's the reasoning trace:
+
+{cot}
+
+IMPORTANT: Start directly with "Q:" without any introduction. Each Q&A should be on its own line.
+"""
+    from utils.openai_utils import get_model_response
+    
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    
+    # Ensure proper formatting
+    if result:
+        # Start with first Q:
+        first_q = result.find('Q:')
+        if first_q >= 0:
+            result = result[first_q:]
+            
+        # Ensure consistent Q/A formatting
+        result = re.sub(r'\n\s*Q:\s*', '\nQ: ', result)
+        result = re.sub(r'\n\s*A:\s*', '\nA: ', result)
+        
+    return result
+
+async def transform_to_socratic(cot: str, model_key: str) -> str:
+    """Transform reasoning trace into a Socratic dialogue."""
+    prompt = """
+You are an expert medical educator. Transform this chain of thought reasoning into a Socratic dialogue between domain experts.
+
+The dialogue should:
+1. Use labeled speakers (e.g., "Cardiologist:", "Neurologist:", etc.)
+2. Put each speaker's contribution on a new line
+3. Use domain-appropriate experts withe fine domain granularity
+4. Follow a logical progression through the reasoning
+5. Use serious and professional language
+
+Here's the reasoning trace:
+
+{cot}
+
+IMPORTANT: Start directly with the first speaker's line. Do not include any introduction.
+"""
+    from utils.openai_utils import get_model_response
+    
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    
+    # Ensure proper formatting
+    if result:
+        # Find first speaker
+        first_colon = result.find(':')
+        if first_colon >= 0:
+            # Find start of line containing first speaker
+            line_start = result.rfind('\n', 0, first_colon)
+            if line_start >= 0:
+                result = result[line_start+1:]
+            else:
+                result = result
+                
+        # Ensure consistent speaker formatting
+        result = re.sub(r'\n\s*([^:\n]+):\s*', r'\n\1: ', result)
+        
+    return result
+
 async def transform_to_note(cot: str, model_key: str) -> str:
     """
     Transform reasoning trace into the most appropriate clinical note format.
@@ -183,7 +290,7 @@ async def transform_to_note(cot: str, model_key: str) -> str:
     """
     # First determine the most appropriate format
     format_selection_prompt = """
-You are an expert medical educator. Analyze this chain of thought reasoning and determine the most appropriate clinical note format.
+You are an expert medical educator. Analyze this chain of thought reasoning and determine the most appropriate note format.
 
 Choose from:
 1. SOAP - Subjective, Objective, Assessment, Plan
@@ -191,7 +298,7 @@ Choose from:
 3. ISBAR - Identification, Situation, Background, Assessment, Recommendation
 4. POMR - Database, Problem List, Initial Plans, Progress Notes, Final Summary
 
-Return ONLY the format name (SOAP, SOAPIE, ISBAR, or POMR) without any explanation.
+Return ONLY the format name (SOAP, SOAPIE, ISBAR, or POMR) without any text before the note.
 
 Here's the reasoning trace:
 
@@ -280,14 +387,10 @@ Transform this reasoning into a POMR note with these sections:
     prompt = """
 You are an expert medical educator. Transform this chain of thought reasoning into a {format_type} clinical note.
 
-The note should:
-1. Follow this structure:
+Follow this structure:
 {format_structure}
-2. Be comprehensive
-3. Maintain all medical accuracy
-4. Use appropriate medical terminology
 
-Here's the reasoning trace:
+Here's the chain of thought reasoning:
 
 {cot}
 

@@ -5,30 +5,71 @@
 
 # Base and huatuo don't need training (pre-trained models)
 
-# Run training for each experiment
+# # Data selection
+# sbatch train/sft_carina.sh medqa-1k-embedding-diversity-question-cluster-10-outlier-5
+# sbatch train/sft_carina.sh medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
+
+# # Not converging:
+# sbatch train/sft_carina.sh medqa-1k-random-no-cot
+# sbatch train/sft_carina.sh medqa-1k-random-1-sentence-extract
+# sbatch train/sft_carina.sh medqa-5k-random-no-cot
+# sbatch train/sft_carina.sh medqa-10k-random-no-cot
+# sbatch train/sft_carina.sh medqa-25k
+
+# Extractions
 sbatch train/sft_carina.sh medqa-1k-random
-sbatch train/sft_carina.sh medqa-1k-embedding-diversity-question-cluster-10-outlier-5
-sbatch train/sft_carina.sh medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5
-sbatch train/sft_carina.sh medqa-1k-random-step-extract
-
-
-# Not converging:
-sbatch train/sft_carina.sh medqa-1k-random-no-cot
-sbatch train/sft_carina.sh medqa-1k-random-1-sentence-extract
-sbatch train/sft_carina.sh medqa-5k-random-no-cot
-sbatch train/sft_carina.sh medqa-10k-random-no-cot
-sbatch train/sft_carina.sh medqa-25k
-
-# Ablations
-sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-step-extract
-sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-evidence-extract
-sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-markdown-extract
-sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-list-extract
-sbatch train/sft_carina.sh curate_med_s1k.sh medqa-1k-random-note-extract
-
-# Run these commands after job 89838 completes
 sbatch train/sft_carina.sh medqa-1k-random-step-extract
 sbatch train/sft_carina.sh medqa-1k-random-evidence-extract
 sbatch train/sft_carina.sh medqa-1k-random-markdown-extract
 sbatch train/sft_carina.sh medqa-1k-random-list-extract
 sbatch train/sft_carina.sh medqa-1k-random-note-extract
+sbatch train/sft_carina.sh medqa-1k-random-qa-extract
+sbatch train/sft_carina.sh medqa-1k-random-socratic-extract
+sbatch train/sft_carina.sh medqa-1k-random-decision-tree-extract
+
+# Perturbation experiments
+# Collapse consecutive
+sbatch train/sft_carina.sh medqa-1k-random-collapse-33
+sbatch train/sft_carina.sh medqa-1k-random-collapse-66
+sbatch train/sft_carina.sh medqa-1k-random-collapse-100
+
+# Skip steps
+sbatch train/sft_carina.sh medqa-1k-random-skip-33
+sbatch train/sft_carina.sh medqa-1k-random-skip-66
+sbatch train/sft_carina.sh medqa-1k-random-skip-100
+
+# Shuffle steps
+sbatch train/sft_carina.sh medqa-1k-random-shuffle-33
+sbatch train/sft_carina.sh medqa-1k-random-shuffle-66
+sbatch train/sft_carina.sh medqa-1k-random-shuffle-100
+
+# Add irrelevant steps
+sbatch train/sft_carina.sh medqa-1k-random-irrelevant-33
+sbatch train/sft_carina.sh medqa-1k-random-irrelevant-66
+sbatch train/sft_carina.sh medqa-1k-random-irrelevant-100
+
+# Wrong answer
+sbatch train/sft_carina.sh medqa-1k-random-wrong-answer-33
+sbatch train/sft_carina.sh medqa-1k-random-wrong-answer-66
+sbatch train/sft_carina.sh medqa-1k-random-wrong-answer-100
+
+# Restoration experiments
+# Collapse consecutive
+sbatch train/sft_carina.sh medqa-1k-random-collapse-33-restore
+sbatch train/sft_carina.sh medqa-1k-random-collapse-66-restore
+sbatch train/sft_carina.sh medqa-1k-random-collapse-100-restore
+
+# Skip steps
+sbatch train/sft_carina.sh medqa-1k-random-skip-33-restore
+sbatch train/sft_carina.sh medqa-1k-random-skip-66-restore
+sbatch train/sft_carina.sh medqa-1k-random-skip-100-restore
+
+# Shuffle steps
+sbatch train/sft_carina.sh medqa-1k-random-shuffle-33-restore
+sbatch train/sft_carina.sh medqa-1k-random-shuffle-66-restore
+sbatch train/sft_carina.sh medqa-1k-random-shuffle-100-restore
+
+# Add irrelevant steps
+sbatch train/sft_carina.sh medqa-1k-random-irrelevant-33-restore
+sbatch train/sft_carina.sh medqa-1k-random-irrelevant-66-restore
+sbatch train/sft_carina.sh medqa-1k-random-irrelevant-100-restore

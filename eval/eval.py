@@ -260,7 +260,7 @@ async def main_async():
     path_to_output, metrics_file, metrics, approaches = save_and_score_results(args, final_results, model_path)
     
     # Update results.json
-    update_results_json(args, path_to_output, metrics_file, metrics, approaches)
+    update_results_json(args, path_to_output, metrics_file, metrics, approaches, final_results)
     
     print("\nEvaluation complete!")
 

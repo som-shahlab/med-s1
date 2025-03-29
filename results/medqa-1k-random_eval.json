@@ -1,55 +1,54 @@
 {
   "summary": {
     "MedMCQA_validation": {
-      "accuracy": 0.5428779069767442,
+      "accuracy": 0.5518410852713178,
       "accuracy_ci": [
-        0.5268895348837209,
-        0.5581455910852713
+        0.5373062015503876,
+        0.5680717054263565
       ],
-      "num_correct": 2241,
+      "num_correct": 2278,
       "total_examples": 4128,
-      "num_answered": 2239
+      "num_answered": 2278
     },
     "MedQA_USLME_test": {
-      "accuracy": 0.6534181240063593,
+      "accuracy": 0.6486486486486487,
       "accuracy_ci": [
-        0.6263910969793323,
-        0.6820349761526232
+        0.6208068362480128,
+        0.6756756756756757
       ],
-      "num_correct": 822,
+      "num_correct": 816,
       "total_examples": 1258,
-      "num_answered": 818
+      "num_answered": 810
     },
     "PubMedQA_test": {
-      "accuracy": 0.7558257345491388,
+      "accuracy": 0.7406281661600811,
       "accuracy_ci": [
-        0.729483282674772,
-        0.7832066869300911
+        0.7152735562310031,
+        0.765982776089159
       ],
-      "num_correct": 746,
+      "num_correct": 731,
       "total_examples": 987,
-      "num_answered": 745
+      "num_answered": 731
     },
     "MMLU-Pro_Medical_test": {
-      "accuracy": 0.5701119157340355,
+      "accuracy": 0.5852534562211982,
       "accuracy_ci": [
-        0.5457373271889401,
-        0.5938117182356814
+        0.5595786701777485,
+        0.6089697169190257
       ],
-      "num_correct": 866,
+      "num_correct": 889,
       "total_examples": 1519,
-      "num_answered": 861
+      "num_answered": 876
     },
     "GPQA_Medical_test": {
-      "accuracy": 0.46864864864864836,
+      "accuracy": 0.4891891891891892,
       "accuracy_ci": [
-        0.4453783783783784,
-        0.49082432432432427
+        0.44324324324324327,
+        0.5405405405405406
       ],
-      "num_correct": 196,
+      "num_correct": 181,
       "total_examples": 370,
-      "num_answered": 196,
-      "majority_vote_accuracy": 0.5297297297297298
+      "num_answered": 181
     }
   }
 }
