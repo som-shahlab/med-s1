@@ -1,16 +1,25 @@
 #!/bin/bash
 
+# Set paths
+if [ "$(whoami)" == "calebwin" ]; then
+    MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
+elif [ "$(whoami)" == "mwornow" ]; then
+    MED_S1_DIR="/share/pi/nigam/mwornow/med-s1"
+else
+    echo "Unknown user: $(whoami)"
+    exit 1
+fi
+
 # Check if experiment name is provided
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <experiment_name>"
     exit 1
 fi
-
 experiment_name=$1
 
 # Source configuration first to get environment variables
 echo "Sourcing config.sh..."
-source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
+source "${MED_S1_DIR}/config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
 # Get experiment config from results.json
 config=$(jq -r ".experiments[\"$experiment_name\"].config" "$RESULTS_JSON")

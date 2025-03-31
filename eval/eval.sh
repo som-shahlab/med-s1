@@ -11,6 +11,14 @@
 #SBATCH --time=04:00:00
 #SBATCH --account=nigam
 
+
+if [ "$(whoami)" == "calebwin" ]; then
+    export MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
+elif [ "$(whoami)" == "mwornow" ]; then
+    # # michael
+    export MED_S1_DIR="/share/pi/nigam/mwornow/med-s1"
+fi
+
 # Parse arguments and set time limit
 debug=false
 test_time_scaling=false
@@ -47,7 +55,7 @@ fi
 
 # Source configuration first to get environment variables
 echo "Sourcing config.sh..."
-source "/share/pi/nigam/users/calebwin/med-s1/config.sh" || { echo "Failed to source config.sh"; exit 1; }
+source "${MED_S1_DIR}/config.sh" || { echo "Failed to source config.sh"; exit 1; }
 
 # Get experiment config and parameters using Python script
 echo "Resolving experiment configuration..."
@@ -78,9 +86,16 @@ mkdir -p "${MED_S1_DIR}/logs"
 
 # Setup environment
 echo "Setting up conda environment..."
-source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+source "${CONDA_PATH}" || { echo "Failed to source conda.sh"; exit 1; }
 echo "Activating med-s1 environment..."
-conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+if [ "$(whoami)" == "calebwin" ]; then
+    conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+elif [ "$(whoami)" == "mwornow" ]; then
+    conda activate /local-scratch/nigam/users/mwornow/envs/meds1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+else
+    echo "Unknown user: $(whoami)"
+    exit 1
+fi
 
 # Clean experiment name for filenames
 safe_experiment_name=$(echo "$experiment_name" | sed 's/[^a-zA-Z0-9-]//g')
@@ -98,9 +113,12 @@ echo "Starting evaluation..."
 echo "Output directory: ${output_dir}"
 
 # Build eval.py command
+# cmd="python ${MED_S1_DIR}/eval/eval.py \
+#     --experiment_name ${experiment_name} \
+#     --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
+#     --path_to_output_dir ${output_dir}"
 cmd="python ${MED_S1_DIR}/eval/eval.py \
     --experiment_name ${experiment_name} \
-    --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
     --path_to_output_dir ${output_dir}"
 
 # Add debug flags if in debug mode

@@ -1670,6 +1670,57 @@
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random-irrelevant-100-restore_eval.json"
         }
       }
+    },
+    "s1-1k-random-no-cot": {
+      "description": "1k random samples from the raw s1 dataset post-dropping NAs (54k examples) without CoT",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "none"
+        },
+        "datasets": {
+          "curate": "s1-gemini-raw",
+          "eval": "gpqa-diamond"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 50,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.1,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/mwornow/hf_cache/med-s1k/s1-1k-random-no-cot_20250330_221818/med_s1k_formatted",
+          "timestamp": "2025-03-30T22:18:22.860185",
+          "stats_file": "/share/pi/nigam/mwornow/med-s1/results/s1-1k-random-no-cot_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/mwornow/hf_cache/ckpts/s1-1k-random-no-cot",
+          "timestamp": "2025-03-31T00:10:00Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/mwornow/hf_cache/eval/s1-1k-random-no-cot/best_modelgpqa-diamond.json",
+          "metrics_path": "/share/pi/nigam/mwornow/hf_cache/eval/s1-1k-random-no-cot/best_modelgpqa-diamond_metrics.json",
+          "timestamp": "2025-03-31T02:19:08.561172",
+          "summary_file": "/share/pi/nigam/mwornow/med-s1/results/s1-1k-random-no-cot_eval.json"
+        }
+      }
     }
   }
 }

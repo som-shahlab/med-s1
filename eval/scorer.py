@@ -92,7 +92,7 @@ def score(data: List[Dict], ignore_miss: bool = False) -> Tuple[Dict, List[Dict]
 
         output = da['output']
         ans,ans_type = match_choice(output,da['options'])
-        if ignore_miss and ans_type!= 1:
+        if ignore_miss and ans_type != 1:
             continue
 
         da['ans'] = ans

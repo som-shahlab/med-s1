@@ -22,3 +22,5 @@ numpy==1.26.0
 # Trouble shooting: deepseed engine issues
 # pydantic==1.10.9
 deepspeed==0.15.4
+google-genai
+scikit-learn

@@ -1,24 +1,25 @@
 #!/bin/bash
 
-# Set directory paths
-
-# # michael
-# MED_S1_DIR="/share/pi/nigam/mwornow/meds1/med-s1"
-# CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
-# DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
-# RESULTS_JSON="/share/pi/nigam/mwornow/meds1/med-s1/results_michael.json"
-
-# caleb
-MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
-CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
-DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
-RESULTS_JSON="/share/pi/nigam/users/calebwin/med-s1/results.json"
+# Set paths
+if [ "$(whoami)" == "calebwin" ]; then
+    export MED_S1_DIR="/share/pi/nigam/users/calebwin/med-s1"
+    export CACHE_DIR="/share/pi/nigam/users/calebwin/hf_cache"
+    export DATA_DIR="/share/pi/nigam/users/calebwin/hf_cache/med-s1k"
+    export RESULTS_JSON="/share/pi/nigam/users/calebwin/med-s1/results.json"
+    export CONDA_PATH="/share/pi/nigam/users/calebwin/nfs_conda.sh"
+elif [ "$(whoami)" == "mwornow" ]; then
+    # # michael
+    export MED_S1_DIR="/share/pi/nigam/mwornow/med-s1"
+    export CACHE_DIR="/share/pi/nigam/mwornow/hf_cache"
+    export DATA_DIR="/share/pi/nigam/mwornow/hf_cache/med-s1k"
+    export RESULTS_JSON="/share/pi/nigam/mwornow/med-s1/results.json"
+    export CONDA_PATH="/share/pi/nigam/mwornow/conda.sh"
+else
+    echo "Unknown user: $(whoami)"
+    exit 1
+fi
 
 # Export paths for scripts
-export MED_S1_DIR
-export CACHE_DIR
-export DATA_DIR
-export RESULTS_JSON
 mkdir -p "$CACHE_DIR"
 mkdir -p "$DATA_DIR"
 

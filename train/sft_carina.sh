@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=med-s1-train
-#SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
-#SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
+#SBATCH --output=/share/pi/nigam/mwornow/med-s1/logs/med-s1-train-%j.out
+#SBATCH --error=/share/pi/nigam/mwornow/med-s1/logs/med-s1-train-%j.err
 #SBATCH --partition=nigam-h100
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=28
+#SBATCH --gres=gpu:2
+#SBATCH --cpus-per-task=14
 #SBATCH --mem=150G
 #SBATCH --time=04:00:00
 #SBATCH --account=nigam
@@ -128,9 +128,16 @@ echo "  Adam Epsilon: $adam_epsilon"
 
 # Setup environment
 echo "Setting up conda environment..."
-source /share/pi/nigam/users/calebwin/nfs_conda.sh || { echo "Failed to source nfs_conda.sh"; exit 1; }
+source "${CONDA_PATH}" || { echo "Failed to source conda.sh"; exit 1; }
 echo "Activating med-s1 environment..."
-conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+if [ "$(whoami)" == "calebwin" ]; then
+    conda activate med-s1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+elif [ "$(whoami)" == "mwornow" ]; then
+    conda activate /local-scratch/nigam/users/mwornow/envs/meds1 || { echo "Failed to activate med-s1 environment"; exit 1; }
+else
+    echo "Unknown user: $(whoami)"
+    exit 1
+fi
 
 # Get network interface for NCCL
 export NCCL_SOCKET_IFNAME=$(ip route show default | awk '/default/ {print $5}')
@@ -139,7 +146,9 @@ echo "Using network interface: $NCCL_SOCKET_IFNAME"
 # Set NCCL environment variables for optimal multi-GPU performance
 echo "Configuring NCCL..."
 # Set CUDA_VISIBLE_DEVICES based on NUM_GPUS
-if [ "$NUM_GPUS" -eq 2 ]; then
+if [ "$NUM_GPUS" -eq 1 ]; then
+    export CUDA_VISIBLE_DEVICES=0
+elif [ "$NUM_GPUS" -eq 2 ]; then
     export CUDA_VISIBLE_DEVICES=0,1
 elif [ "$NUM_GPUS" -eq 4 ]; then
     export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -193,8 +202,8 @@ fi
 # Set up data directory
 if [ -d "/local-scratch" ]; then
     echo "Using local scratch directory..."
-    mkdir -p /local-scratch/nigam/meds1
-    LOCAL_DATA_DIR="/local-scratch/nigam/meds1/${SLURM_JOB_ID}"
+    mkdir -p /local-scratch/nigam/meds1_michael
+    LOCAL_DATA_DIR="/local-scratch/nigam/meds1_michael/${SLURM_JOB_ID}"
     mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; exit 1; }
     
     # Copy data to local scratch
@@ -243,7 +252,9 @@ if [ -z "$WANDB_API_KEY" ]; then
 fi
 
 # Select the appropriate accelerate config based on NUM_GPUS
-if [ "$NUM_GPUS" -eq 2 ]; then
+if [ "$NUM_GPUS" -eq 1 ]; then
+    accelerate_config="${MED_S1_DIR}/train/accelerate_config_1gpu.yaml"
+elif [ "$NUM_GPUS" -eq 2 ]; then
     accelerate_config="${MED_S1_DIR}/train/accelerate_config_2gpu.yaml"
 elif [ "$NUM_GPUS" -eq 4 ]; then
     accelerate_config="${MED_S1_DIR}/train/accelerate_config_4gpu.yaml"

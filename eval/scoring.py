@@ -198,18 +198,18 @@ def analyze_failures(args, path_to_output, final_results, approaches=None):
         else:
             print("No failures found!")
 
-def save_and_score_results(args, final_results, model_path):
+def save_and_score_results(args, final_results, model_path, task_name: str):
     """Save results to file and score them."""
     # Save outputs
     model_name = os.path.split(model_path)[-1]
-    task_name = model_name + os.path.basename(args.path_to_eval_json).replace('.json','') + \
+    task_name = model_name + os.path.basename(task_name).replace('.json','') + \
                 ('_strict-prompt' if args.strict_prompt else '') + \
                 ('_debug' if args.debug else '')
     file_name = f'{task_name}.json'
     path_to_output = os.path.join(args.path_to_output_dir, file_name)
     with open(path_to_output, 'w') as fw:
         json.dump(final_results, fw, ensure_ascii=False, indent=2)
-    
+
     # Score outputs and get metrics
     if args.test_time_scaling:
         metrics, approaches = score_test_time_scaling(args, final_results, path_to_output)
@@ -231,6 +231,8 @@ def save_and_score_results(args, final_results, model_path):
             "metrics": metrics,
             "test_time_scaling": args.test_time_scaling
         }, f, indent=2)
+    print(f"Saved model outputs to `{path_to_output}`")
+    print(f"Saved metrics to `{metrics_file}`")
     
     # Analyze failures
     analyze_failures(args, path_to_output, final_results, approaches)

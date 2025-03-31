@@ -38,12 +38,37 @@
             "hf_config": "en",
             "hf_split": "train",
             "description": "HuatuoGPT SFT dataset with ~25k examples"
+        },
+        "s1-gemini-raw" : {
+            "hf_path": "qfq/geminiall_nona",
+            "description": "S1 raw dataset (post-dropping NAs) with ~54k examples (using Gemini reasoning traces); See: https://github.com/simplescaling/s1/blob/main/data/filter.ipynb"
         }
     },
     "eval_datasets": {
         "huatuo-eval": {
             "file_path": "${MED_S1_DIR}/eval/data/eval_data.json",
             "description": "HuatuoGPT evaluation dataset with ~10k examples"
+        },
+        "gpqa-diamond" : {
+            "hf_path": "Idavidrein/gpqa",
+            "description": "Gpqa diamond eval dataset",
+            "hf_split": "train",
+            "hf_config": "gpqa_diamond"
+        },
+        "math500" : {
+            "hf_path": "simplescaling/openaimath",
+            "description": "Math500 eval dataset",
+            "hf_split": "test"
+        },
+        "aime24_nofigures" : {
+            "hf_path": "simplescaling/aime24_nofigures",
+            "description": "AIME 2024 eval dataset (no figures)",
+            "hf_split": "train"
+        },
+        "aime24_figures" : {
+            "hf_path": "simplescaling/aime24_figures",
+            "description": "AIME 2024 eval dataset (with figures)",
+            "hf_split": "train"
         }
     },
     "curation": {

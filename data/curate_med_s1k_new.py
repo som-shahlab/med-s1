@@ -59,9 +59,10 @@ def setup_logging():
 
 def load_config() -> Dict:
     """Load configuration from config.json"""
-    with open("/share/pi/nigam/users/calebwin/med-s1/config.json", "r") as f:
+    assert os.getenv("MED_S1_DIR") is not None, "MED_S1_DIR environment variable not set"
+    with open(os.path.join(os.getenv("MED_S1_DIR"), "config.json"), "r") as f:
         return json.load(f)
-
+    
 def resolve_config_reference(config: Dict, key: str, results: Dict, visited: set = None) -> Dict:
     """Recursively resolve 'same as' references in config"""
     if visited is None:
@@ -179,6 +180,17 @@ def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
     
     # Convert to DataFrame and initialize metadata columns
     df = pd.DataFrame(dataset)
+    
+    # Do some dataset-specific cleaning
+    if dataset_name == "s1-gemini-raw":
+        # Align column names with HuatuoGPT SFT dataset
+        df = df.rename(columns={
+            "thinking_trajectories": "Complex_CoT",
+            "question": "Question",
+            "solution": "Response"
+        })
+        # For some reason, `thinking_trajectories` is a list of strings (of length 1). Unwrap it.
+        df["Complex_CoT"] = df["Complex_CoT"].apply(lambda x: x[0] if isinstance(x, list) else x)
     
     # Sort by Question to ensure deterministic ordering across runs
     # This is critical for reproducibility when random sampling

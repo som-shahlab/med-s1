@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "gpqa-diamond": {
+      "accuracy": 0.2878787878787879,
+      "accuracy_ci": [
+        0.2222222222222222,
+        0.35353535353535354
+      ],
+      "num_correct": 57,
+      "total_examples": 198,
+      "num_answered": 57
+    }
+  }
+}

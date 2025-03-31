@@ -15,7 +15,7 @@ from scoring import save_and_score_results, update_results_json
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiment_name', type=str, required=True, help='Name of experiment from results.json')
-    parser.add_argument('--path_to_eval_json', type=str, required=False, help='Path to the evaluation data (optional, will use dataset from config if not provided)')
+    parser.add_argument('--path_to_eval_json', type=str, default=None, required=False, help='Path to the evaluation data (optional, will use dataset from config if not provided)')
     parser.add_argument('--path_to_output_dir', type=str, default='./results', help='Path to the output directory')
     parser.add_argument('--max_new_tokens', type=int, default=2000, help='Maximum number of new tokens to generate')
     parser.add_argument('--max_tokens', type=int, default=-1, help='Maximum number of tokens to generate. If -1, no truncation is performed')
@@ -257,7 +257,11 @@ async def main_async():
         final_results = await run_standard_evaluation(args, engine, tokenizer, non_gpqa_data, gpqa_data, template, query_prompt, experiment)
     
     # Save and score results
-    path_to_output, metrics_file, metrics, approaches = save_and_score_results(args, final_results, model_path)
+    if args.path_to_eval_json:
+        task_name: str = os.path.basename(args.path_to_eval_json).replace('.json', '')
+    else:
+        task_name = input_data[0]['source']
+    path_to_output, metrics_file, metrics, approaches = save_and_score_results(args, final_results, model_path, task_name)
     
     # Update results.json
     update_results_json(args, path_to_output, metrics_file, metrics, approaches, final_results)
