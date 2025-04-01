@@ -106,3 +106,13 @@ To add an experiment that finetunes a different model, you need to:
 4.  **Ensure compatibility with `train/sft.py`**:
     *   The `train/sft.py` script loads the model and tokenizer using `AutoModelForCausalLM` and `AutoTokenizer`. Ensure that the new model is compatible with these classes.
     *   If the new model requires specific training parameters or configurations, you may need to modify the `train/sft.py` script accordingly.
+
+## Michael's Notes
+
+```bash
+conda activate /local-scratch/nigam/users/mwornow/envs/meds1
+
+bash curate_med_s1k.sh <experiment_name>
+bash train/sft_carina.sh <experiment_name>
+bash eval/eval.sh <experiment_name>
+```
