@@ -11,6 +11,7 @@ Purpose:
 import json
 import os
 import re
+import shutil
 from typing import List, Dict, Any
 from tqdm import tqdm
 from datasets import Dataset
@@ -91,6 +92,9 @@ if __name__ == "__main__":
             for k, v in json_data.get('bodymatter', {}).get('diagnosis_sections', {}).items()
             if not is_doctor_diagnosis(k) # Ignore doctor diagnoses
         }
+        # Ignore if no non-doctor diagnoses
+        if len(diagnosis_sections) == 0 or all(v is None for v in diagnosis_sections.values()):
+            continue
         unique_diagnosis_keys.update(diagnosis_sections.keys())
 
         # Create dataset
@@ -111,8 +115,8 @@ if __name__ == "__main__":
 
     # Save as local HF dataset
     # force first entry to have all diagnosis_ keys, otherwise `from_list` will drop them
-    dataset[0] = { **dataset[0], **{ k: None for k in unique_diagnosis_keys } }
+    dataset[0] = { **dataset[0], **{ k: None for k in unique_diagnosis_keys if k not in dataset[0].keys() } }
     hf_dataset = Dataset.from_list(dataset)
     print(hf_dataset)
     hf_dataset.save_to_disk(path_to_output_dir)
-
+    print(hf_dataset[0])

@@ -2,6 +2,25 @@
 
 Scripts to collect custom datasets.
 
+# NEJM Case Reports
+
+## Usage
+
+```python
+from datasets import Dataset
+
+dataset = Dataset.load_from_disk("./outputs/4_create_dataset")
+
+print(dataset)
+
+> Dataset({
+    features: ['id', 'url', 'authors', 'published_date', 'volume', 'issue', 'title', 'question', 'thinking', 'diagnosis_clinical', 'diagnosis_anatomical', 'diagnosis_final', 'diagnosis_pathological', 'diagnosis_psychiatric', 'diagnosis_clinical_and_final', 'diagnosis_diagnosis_and_management', 'diagnosis_diagnosis', 'diagnosis_laboratory'],
+    num_rows: 1698
+})
+```
+
+## How to Generate Dataset
+
 ```bash
 # Collect URLs.
 python 1_collect_urls.py
@@ -17,7 +36,7 @@ python 3_parse_pages.py
 python 4_create_dataset.py
 ```
 
-## Data Generation Process
+### Details on Data Generation
 
 * **Raw Data:** I download every “Case Report” NEJM article (7k total, I only got ~2k) — e.g. https://www.nejm.org/doi/full/10.1056/NEJM199111143252007
 * **Reasoning Trace:** I pull all text in the main content (dropping images, tables, etc.) and convert it to Markdown. I save this in the `thinking` column.
@@ -27,7 +46,7 @@ The resulting HF dataset looks like:
 
 ```
 Dataset({
-    features: ['id', 'url', 'authors', 'published_date', 'volume', 'issue', 'title', 'question', 'thinking', 'diagnosis_clinical', 'diagnosis_anatomical', 'diagnosis_psychiatric', 'diagnosis_laboratory', 'diagnosis_diagnosis', 'diagnosis_pathological', 'diagnosis_clinical_and_final', 'diagnosis_diagnosis_and_management', 'diagnosis_final'],
-    num_rows: 1699
+    features: ['id', 'url', 'authors', 'published_date', 'volume', 'issue', 'title', 'question', 'thinking', 'diagnosis_clinical', 'diagnosis_anatomical', 'diagnosis_final', 'diagnosis_pathological', 'diagnosis_psychiatric', 'diagnosis_clinical_and_final', 'diagnosis_diagnosis_and_management', 'diagnosis_diagnosis', 'diagnosis_laboratory'],
+    num_rows: 1698
 })
 ```
