@@ -328,6 +328,247 @@ def plot_comparison(results_data, output_path):
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
 
+def plot_reasoning_syntax_impact(results_data, output_path, with_ci=True):
+    """Create bar plot comparing model performances with different reasoning syntaxes."""
+    models = ['base', 'medqa-1k-random', 'medqa-1k-random-list-extract', 'medqa-1k-random-markdown-extract',
+              'medqa-1k-random-decision-tree-extract', 'medqa-1k-random-qa-extract',
+              'medqa-1k-random-socratic-extract', 'medqa-1k-random-note-extract', 'medqa-1k-random-step-extract']
+    model_names = ['Base', 'HuaTuo', 'List', 'Markdown', 'Decision Tree', 'QA', 'Socratic', 'SOAP', 'Steps']
+    
+    metrics = {}
+    for model in models:
+        if model in results_data:
+            model_metrics = get_model_metrics(results_data[model])
+            if model_metrics:
+                metrics[model] = model_metrics['Overall']['accuracy'] * 100
+                if with_ci:
+                    metrics[model] = (metrics[model],
+                                      model_metrics['Overall']['ci_lower'] * 100,
+                                      model_metrics['Overall']['ci_upper'] * 100)
+    
+    x = np.arange(len(model_names))
+    width = 0.7
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    if with_ci:
+        accuracies = [metrics.get(model, (0, 0, 0))[0] for model in models if model in metrics]
+        ci_lower = [metrics.get(model, (0, 0, 0))[1] for model in models if model in metrics]
+        ci_upper = [metrics.get(model, (0, 0, 0))[2] for model in models if model in metrics]
+        yerr_lower = [acc - ci_l for acc, ci_l in zip(accuracies, ci_lower)]
+        yerr_upper = [ci_u - acc for acc, ci_u in zip(accuracies, ci_upper)]
+        ax.bar(x, accuracies, width, yerr=[yerr_lower, yerr_upper], capsize=5)
+    else:
+        accuracies = [metrics.get(model, 0) for model in models if model in metrics]
+        ax.bar(x, accuracies, width)
+    
+    ax.set_ylabel('Accuracy (%)')
+    ax.set_xlabel('Reasoning Syntax')
+    ax.set_title('Impact of Reasoning Syntax on Performance')
+    ax.set_ylim(35, 65)
+    ax.set_xticks(x)
+    ax.set_xticklabels([name for model, name in zip(models, model_names) if model in metrics], rotation=45, ha="right")
+    # ax.legend() # Removed legend
+    fig.tight_layout()
+    plt.savefig(output_path, dpi=300)
+    plt.close()
+
+def plot_sample_efficiency(results_data, output_path, with_ci=True):
+    """Create line plot comparing sample efficiency of different reasoning syntaxes."""
+    no_reasoning_models = ['medqa-1k-random-no-cot', 'medqa-5k-random-no-cot', 'medqa-10k-random-no-cot']
+    huatuo_model = 'medqa-1k-random'
+    steps_model = 'medqa-1k-random-step-extract'
+
+    no_reasoning_accuracies = []
+    no_reasoning_cis = []
+    for model in no_reasoning_models:
+        if model in results_data:
+            model_metrics = get_model_metrics(results_data[model])
+            if model_metrics and 'Overall' in model_metrics:
+                accuracy = model_metrics['Overall']['accuracy'] * 100
+                if with_ci:
+                    ci_lower = model_metrics['Overall']['ci_lower'] * 100
+                    ci_upper = model_metrics['Overall']['ci_upper'] * 100
+                    no_reasoning_accuracies.append((accuracy, ci_lower, ci_upper))
+                else:
+                    no_reasoning_accuracies.append(accuracy)
+
+    huatuo_metrics = {}
+    if huatuo_model in results_data:
+        model_metrics = get_model_metrics(results_data[huatuo_model])
+        if model_metrics and 'Overall' in model_metrics:
+            accuracy = model_metrics['Overall']['accuracy'] * 100
+            if with_ci:
+                ci_lower = model_metrics['Overall']['ci_lower'] * 100
+                ci_upper = model_metrics['Overall']['ci_upper'] * 100
+                huatuo_metrics['accuracy'] = (accuracy, ci_lower, ci_upper)
+            else:
+                huatuo_metrics['accuracy'] = accuracy
+
+    steps_metrics = {}
+    if steps_model in results_data:
+        model_metrics = get_model_metrics(results_data[steps_model])
+        if model_metrics and 'Overall' in model_metrics:
+            accuracy = model_metrics['Overall']['accuracy'] * 100
+            if with_ci:
+                ci_lower = model_metrics['Overall']['ci_lower'] * 100
+                ci_upper = model_metrics['Overall']['ci_upper'] * 100
+                steps_metrics['accuracy'] = (accuracy, ci_lower, ci_upper)
+            else:
+                steps_metrics['accuracy'] = accuracy
+
+    x_no_reasoning = [1000, 5000, 10000]
+    x_huatuo = [1000]
+    x_steps = [1000]
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    if with_ci:
+        # No Reasoning
+        accuracies, ci_lowers, ci_uppers = zip(*no_reasoning_accuracies)
+        yerr_lower = [acc - ci_l for acc, ci_l in zip(accuracies, ci_lowers)]
+        yerr_upper = [ci_u - acc for acc, ci_u in zip(accuracies, ci_uppers)]
+        ax.errorbar(x_no_reasoning, accuracies, yerr=[yerr_lower, yerr_upper], capsize=5, fmt='-o', label='No Reasoning')
+
+        # HuaTuo
+        if huatuo_metrics:
+            accuracy, ci_lower, ci_upper = huatuo_metrics['accuracy']
+            yerr_lower = accuracy - ci_lower
+            yerr_upper = ci_upper - accuracy
+            ax.errorbar(x_huatuo, [accuracy], yerr=[[yerr_lower], [yerr_upper]], capsize=5, fmt='-o', label='HuaTuo Reasoning')
+
+        # Steps
+        if steps_metrics:
+            accuracy, ci_lower, ci_upper = steps_metrics['accuracy']
+            yerr_lower = accuracy - ci_lower
+            yerr_upper = ci_upper - accuracy
+            ax.errorbar(x_steps, [accuracy], yerr=[[yerr_lower], [yerr_upper]], capsize=5, fmt='-o', label='Step Reasoning')
+    else:
+        # No Reasoning
+        ax.plot(x_no_reasoning, no_reasoning_accuracies, '-o', label='No Reasoning')
+
+        # HuaTuo
+        if huatuo_metrics:
+            ax.plot(x_huatuo, [huatuo_metrics['accuracy']], '-o', label='HuaTuo Reasoning')
+
+        # Steps
+        if steps_metrics:
+            ax.plot(x_steps, [steps_metrics['accuracy']], '-o', label='Step Reasoning')
+
+    ax.set_xlabel('Reasoning Trace Dataset Size')
+    ax.set_ylabel('Accuracy (%)')
+    ax.set_title('Sample Efficiency of Reasoning Syntax')
+    ax.set_xscale('log')
+    ax.set_xticks([1000, 5000, 10000])
+    ax.get_xaxis().set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
+    ax.legend()
+    fig.tight_layout()
+    plt.savefig(output_path, dpi=300)
+    plt.close()
+
+def plot_perturbation_impact(results_data, output_path, with_ci=True):
+    """Create line plot showing impact of different perturbation rates."""
+    # Base model (x=0 point)
+    base_model = 'medqa-1k-random-step-extract'
+    
+    # Perturbation types and their corresponding model prefixes
+    perturbation_types = {
+        'Collapse': 'medqa-1k-random-collapse-',
+        'Skip': 'medqa-1k-random-skip-',
+        'Shuffle': 'medqa-1k-random-shuffle-',
+        'Irrelevant': 'medqa-1k-random-irrelevant-',
+        'Incorrect': 'medqa-1k-random-wrong-answer-'
+    }
+    
+    # Perturbation rates
+    rates = ['33', '66', '100']
+    x_values = [0, 33, 66, 100]
+    
+    # Set up the plot
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # Colors for different perturbation types
+    colors = ['#4B88A2', '#BB4430', '#2D5D7B', '#6B5B95', '#88B04B']  # Added a new color (green)
+    
+    # Get base accuracy (x=0 point)
+    base_accuracy = None
+    base_ci_lower = None
+    base_ci_upper = None
+    if base_model in results_data:
+        base_metrics = get_model_metrics(results_data[base_model])
+        if base_metrics and 'Overall' in base_metrics:
+            base_accuracy = base_metrics['Overall']['accuracy'] * 100
+            if with_ci:
+                base_ci_lower = base_metrics['Overall']['ci_lower'] * 100
+                base_ci_upper = base_metrics['Overall']['ci_upper'] * 100
+    
+    # Plot each perturbation type
+    for (perturbation_name, model_prefix), color in zip(perturbation_types.items(), colors):
+        accuracies = [base_accuracy] if base_accuracy is not None else []
+        ci_lowers = [base_ci_lower] if base_ci_lower is not None else []
+        ci_uppers = [base_ci_upper] if base_ci_upper is not None else []
+        
+        # Get points for each rate
+        for rate in rates:
+            model_key = f"{model_prefix}{rate}"
+            if model_key in results_data:
+                metrics = get_model_metrics(results_data[model_key])
+                if metrics and 'Overall' in metrics:
+                    accuracies.append(metrics['Overall']['accuracy'] * 100)
+                    if with_ci:
+                        ci_lowers.append(metrics['Overall']['ci_lower'] * 100)
+                        ci_uppers.append(metrics['Overall']['ci_upper'] * 100)
+
+        if len(accuracies) == len(x_values):  # Only plot if we have all points
+            if with_ci:
+                yerr_lower = [acc - ci_l for acc, ci_l in zip(accuracies, ci_lowers)]
+                yerr_upper = [ci_u - acc for acc, ci_u in zip(accuracies, ci_uppers)]
+                ax.errorbar(x_values, accuracies,
+                          yerr=[yerr_lower, yerr_upper],
+                          capsize=5, fmt='-o',
+                          label=perturbation_name,
+                          color=color,
+                          markersize=8,
+                          linewidth=2)
+            else:
+                ax.plot(x_values, accuracies, '-o',
+                       label=perturbation_name,
+                       color=color,
+                       markersize=8,
+                       linewidth=2)
+    
+    # Customize the plot
+    ax.set_xlabel('Percentage of Steps Perturbed', fontsize=12)
+    ax.set_ylabel('Accuracy (%)', fontsize=12)
+    ax.set_title('Impact of Step Perturbations on Performance', fontsize=14, pad=20)
+    
+    # Set x-axis ticks
+    ax.set_xticks(x_values)
+    ax.set_xticklabels([f'{x}%' for x in x_values])
+    
+    # Add grid
+    ax.grid(True, linestyle='--', alpha=0.3)
+    
+    # Customize legend
+    ax.legend(loc='center left',
+             bbox_to_anchor=(1, 0.5),
+             frameon=True,
+             fancybox=True,
+             shadow=True)
+    
+    # Set background colors
+    ax.set_facecolor('#f8f9fa')
+    fig.patch.set_facecolor('#ffffff')
+    
+    # Add subtle spines
+    for spine in ax.spines.values():
+        spine.set_color('#dddddd')
+    
+    # Adjust layout and save
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
 def main():
     # Load and plot results
     results_path = os.environ.get('RESULTS_JSON', 'med-s1/results.json')
@@ -335,6 +576,15 @@ def main():
     results = load_results(results_path)
     plot_comparison(results, 'med-s1/data/model_comparison.png')
     
+    plot_reasoning_syntax_impact(results, 'med-s1/data/reasoning_syntax_impact_with_ci.png', with_ci=True)
+    plot_reasoning_syntax_impact(results, 'med-s1/data/reasoning_syntax_impact_without_ci.png', with_ci=False)
+    
+    plot_sample_efficiency(results, 'med-s1/data/sample_efficiency_with_ci.png', with_ci=True)
+    plot_sample_efficiency(results, 'med-s1/data/sample_efficiency_without_ci.png', with_ci=False)
+    
+    plot_perturbation_impact(results, 'med-s1/data/perturbation_impact_with_ci.png', with_ci=True)
+    plot_perturbation_impact(results, 'med-s1/data/perturbation_impact_without_ci.png', with_ci=False)
+
     # Find models with evaluation results
     models_with_eval = []
     for model_key, model_data in results.items():

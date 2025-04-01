@@ -202,11 +202,11 @@
           "n_samples": 25371
         },
         "training_params": {
-          "learning_rate": 3e-06,
+          "learning_rate": 2e-06,
           "batch_size": 2,
           "num_epochs": 3,
           "weight_decay": 0.1,
-          "warmup_ratio": 0.02,
+          "warmup_ratio": 0.05,
           "optimizer": {
             "no_decay_params": [
               "bias",
@@ -222,20 +222,116 @@
       },
       "results": {
         "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-25k_20250315_174228/med_s1k_formatted",
-          "timestamp": "2025-03-15T17:42:34.955957",
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-25k_20250331_183859/med_s1k_formatted",
+          "timestamp": "2025-03-31T18:39:05.722471",
           "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k_curation.json"
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-25k",
-          "timestamp": "2025-03-18T19:20:35Z",
+          "timestamp": "2025-04-01T00:17:45Z",
           "metrics": null
         },
         "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modeleval_data.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-20T02:56:57.087364",
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modelMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k/best_modelMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-01T01:29:57.671736",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k_eval.json"
+        }
+      }
+    },
+    "medqa-25k-no-cot": {
+      "description": "Full dataset with no CoT",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "all",
+          "huatuo_format": true,
+          "n_samples": 25371,
+          "extract": "none"
+        },
+        "training_params": {
+          "learning_rate": 2e-06,
+          "batch_size": 2,
+          "num_epochs": 3,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-25k-no-cot_20250331_183859/med_s1k_formatted",
+          "timestamp": "2025-03-31T18:39:05.000165",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k-no-cot_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-25k-no-cot",
+          "timestamp": "2025-03-31T23:26:12Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k-no-cot/best_modelMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k-no-cot/best_modelMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-01T01:21:59.419127",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k-no-cot_eval.json"
+        }
+      }
+    },
+    "medqa-25k-step-extract": {
+      "description": "Full dataset with step extract",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "all",
+          "huatuo_format": true,
+          "n_samples": 25371,
+          "extract": "step"
+        },
+        "training_params": {
+          "learning_rate": 2e-06,
+          "batch_size": 2,
+          "num_epochs": 3,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-25k-step-extract_20250331_183859/med_s1k_formatted",
+          "timestamp": "2025-03-31T19:21:28.098512",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k-step-extract_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-25k-step-extract",
+          "timestamp": "2025-04-01T01:13:49Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k-step-extract/best_modelMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-25k-step-extract/best_modelMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-01T01:31:44.165002",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-25k-step-extract_eval.json"
         }
       }
     },

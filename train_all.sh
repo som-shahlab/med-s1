@@ -16,6 +16,11 @@
 # sbatch train/sft_carina.sh medqa-10k-random-no-cot
 # sbatch train/sft_carina.sh medqa-25k
 
+# Hyperparameter tuning
+sbatch train/sft_carina.sh medqa-25k-no-cot
+sbatch train/sft_carina.sh medqa-25k
+sbatch train/sft_carina.sh medqa-25k-step-extract
+
 # Extractions
 sbatch train/sft_carina.sh medqa-1k-random
 sbatch train/sft_carina.sh medqa-1k-random-step-extract
