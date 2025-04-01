@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=med-s1-train
-#SBATCH --output=/share/pi/nigam/mwornow/med-s1/logs/med-s1-train-%j.out
-#SBATCH --error=/share/pi/nigam/mwornow/med-s1/logs/med-s1-train-%j.err
+#SBATCH --output=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.out
+#SBATCH --error=/share/pi/nigam/users/calebwin/med-s1/logs/med-s1-train-%j.err
 #SBATCH --partition=nigam-h100
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=14
 #SBATCH --mem=150G
 #SBATCH --time=04:00:00
@@ -202,8 +202,8 @@ fi
 # Set up data directory
 if [ -d "/local-scratch" ]; then
     echo "Using local scratch directory..."
-    mkdir -p /local-scratch/nigam/meds1_michael
-    LOCAL_DATA_DIR="/local-scratch/nigam/meds1_michael/${SLURM_JOB_ID}"
+    mkdir -p "/local-scratch/nigam/meds1_$(whoami)"
+    LOCAL_DATA_DIR="/local-scratch/nigam/meds1_$(whoami)/${SLURM_JOB_ID}"
     mkdir -p $LOCAL_DATA_DIR || { echo "Failed to create local scratch directory"; exit 1; }
     
     # Copy data to local scratch

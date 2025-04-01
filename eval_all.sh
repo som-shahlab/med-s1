@@ -16,6 +16,11 @@
 # sbatch eval/eval.sh medqa-10k-random-no-cot
 # sbatch eval/eval.sh medqa-25k
 
+# Hyperparameter tuning
+sbatch eval/eval.sh medqa-25k-no-cot
+sbatch eval/eval.sh medqa-25k
+sbatch eval/eval.sh medqa-25k-step-extract
+
 # Extractions
 sbatch eval/eval.sh medqa-1k-random
 sbatch eval/eval.sh medqa-1k-random-step-extract
