@@ -1,0 +1,8 @@
+{
+  "total_examples": 54116,
+  "selected_examples": 54000,
+  "filtered_examples": 116,
+  "filter_reasons": {
+    "not_selected_in_sampling": 116
+  }
+}
