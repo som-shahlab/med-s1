@@ -1868,6 +1868,32 @@
           "summary_file": "/share/pi/nigam/mwornow/med-s1/results/s1-54k-no-cot_eval.json"
         }
       }
+    },
+    "qwen-32b-test": {
+      "description": "test run with qwen-32b on random 1k",
+      "config": {
+        "model_key": "qwq:32B",
+        "curation": {
+          "method": "random",
+          "huatuo_format": true,
+          "n_samples": 1000,
+          "extract": "step",
+          "perturbation": {
+            "type": "shuffle",
+            "rate": 1.0
+          },
+          "restore": true
+        },
+        "training_params": "same as medqa-1k-embedding-difficulty-diversity-question-cluster-10-outlier-5",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/mwornow/hf_cache/med-s1k/s1-54k-no-cot_20250331_022229/med_s1k_formatted",
+          "timestamp": "2025-03-31T02:22:45.985779",
+          "stats_file": "/share/pi/nigam/mwornow/med-s1/results/s1-54k-no-cot_curation.json"
+        }
+      }
     }
   }
 }
