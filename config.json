@@ -2,6 +2,7 @@
     "model_choices": {
         "base": "llama3.1:8b",
         "huatuo": "huatuo:8b",
+        "nemotron": "nemotron:8b",
         "specialty_labeler": "gemini-2.0-flash",
         "base_judge": "gemini-2.0-flash",
         "curation": "gemini-2.0-flash"
@@ -14,6 +15,18 @@
         "huatuo:8b": {
             "hf_path": "FreedomIntelligence/HuatuoGPT-o1-8B",
             "max_length": 128000
+        },
+        "nemotron:8b": {
+            "hf_path": "nvidia/Llama-3.1-Nemotron-Nano-8B-v1",
+            "max_length": 128000,
+            "system_prompt": "detailed thinking {thinking}",
+            "chat_template": {
+                "messages": [
+                    {"role": "system", "content": "{system_prompt}"},
+                    {"role": "user", "content": "{question}"},
+                    {"role": "assistant", "content": "<think>{thinking}</think>{answer}"}
+                ]
+            }
         },
         "gpt4o-mini": {
             "max_length": 128000,
@@ -42,6 +55,10 @@
         "s1-gemini-raw" : {
             "hf_path": "qfq/geminiall_nona",
             "description": "S1 raw dataset (post-dropping NAs) with ~54k examples (using Gemini reasoning traces); See: https://github.com/simplescaling/s1/blob/main/data/filter.ipynb"
+        },
+        "nejmcr": {
+            "file_path": "/share/pi/nigam/mwornow/med-s1/data_collection/nejm_case_reports/outputs/4_create_dataset/",
+            "description": "NEJM Case Reports dataset with ~1.7k examples"
         }
     },
     "eval_datasets": {

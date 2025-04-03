@@ -44,7 +44,7 @@ def main():
             generation_kwargs = dict(
                 input_ids=inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=4096,
+                max_new_tokens=8192,
                 temperature=0.7,
                 do_sample=True,
                 pad_token_id=tokenizer.pad_token_id,

@@ -23,7 +23,7 @@ IMPORTANT: Start directly with the bullet points. Do not include any text before
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
     
     # Ensure proper formatting
     if result:
@@ -64,7 +64,7 @@ IMPORTANT: Start directly with markdown content. Do not include any meta-text or
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
     
     return result
 
@@ -89,7 +89,7 @@ IMPORTANT: Start directly with "## Step 1:" without any introduction.
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
     
     # Ensure proper formatting
     if result:
@@ -139,7 +139,7 @@ IMPORTANT: Your response must be EXACTLY ONE SENTENCE. Do not include any introd
 """
 
     from utils.openai_utils import get_model_response
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
 
     # Post-process the result based on extraction type
     if result:
@@ -186,7 +186,7 @@ IMPORTANT: Start directly with the decision tree. Do not include any introductio
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
     
     # Ensure proper formatting
     if result:
@@ -224,7 +224,7 @@ IMPORTANT: Start directly with "Q:" without any introduction. Each Q&A should be
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
     
     # Ensure proper formatting
     if result:
@@ -259,7 +259,7 @@ IMPORTANT: Start directly with the first speaker's line. Do not include any intr
 """
     from utils.openai_utils import get_model_response
     
-    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=4096)
+    result = await get_model_response(prompt.format(cot=cot), model=model_key, max_tokens=8192)
     
     # Ensure proper formatting
     if result:
@@ -402,7 +402,7 @@ IMPORTANT: Start directly with the first section heading (##). Do not include an
         format_type=format_type,
         format_structure=format_prompts[format_type],
         cot=cot
-    ), model=model_key, max_tokens=4096)
+    ), model=model_key, max_tokens=8192)
     
     # Ensure proper formatting
     if result:
@@ -415,4 +415,51 @@ IMPORTANT: Start directly with the first section heading (##). Do not include an
         result = re.sub(r'(?<!#)#(?!#)', '##', result)  # Ensure consistent heading level
         result = re.sub(r'\n\s*\n\s*\n+', '\n\n', result)  # Remove excess newlines
         
+    return result
+
+async def transform_to_cot(question: str, answer: str, model_key: str) -> str:
+    """Transform question and answer into Chain of Thought reasoning."""
+    prompt = """
+{question}
+{answer}
+Please respond to the above question using the Chain of Thought (CoT) reasoning method to reach the answer.
+
+The Chain of Thought should resemble a human-like, intuitive natural thinking process. It should:
+1. Be presented as step-by-step reasoning, with each thought on a new line separated by a line break.
+2. Avoid structured titles or formatting, focusing on natural transitions. Use casual and natural language for
+transitions or validations, such as "hmm," "oh," "also," or "wait."
+3. Expand the content, making the reasoning richer, more detailed, and logically clear while still being
+conversational and intuitive.
+
+IMPORTANT: Start directly with your reasoning without any introduction or meta-text. Do not repeat the question or answer at the start.
+"""
+    from utils.openai_utils import get_model_response
+    
+    result = await get_model_response(
+        prompt.format(question=question, answer=answer),
+        model=model_key,
+        max_tokens=8192
+    )
+    
+    if result:
+        # Remove any meta-text or explanations at the start
+        lines = result.split('\n')
+        content_lines = []
+        started = False
+        for line in lines:
+            # Skip empty lines at start
+            if not started and not line.strip():
+                continue
+            # Skip lines that look like meta-text
+            if not started and (
+                line.lower().startswith(('here', 'let', 'i will', 'first', 'okay', 'now', 'using', 'let\'s'))
+                or 'chain of thought' in line.lower()
+                or 'reasoning' in line.lower()
+            ):
+                continue
+            started = True
+            content_lines.append(line)
+        
+        result = '\n'.join(content_lines)
+    
     return result

@@ -1,55 +1,54 @@
 {
   "summary": {
     "MedMCQA_validation": {
-      "accuracy": 0.6356589147286822,
+      "accuracy": 0.6426841085271318,
       "accuracy_ci": [
-        0.6218447189922481,
-        0.6497153585271318
+        0.627906976744186,
+        0.6562560562015504
       ],
-      "num_correct": 2624,
+      "num_correct": 2653,
       "total_examples": 4128,
-      "num_answered": 2623
+      "num_answered": 2635
     },
     "MedQA_USLME_test": {
-      "accuracy": 0.7694753577106518,
+      "accuracy": 0.7734499205087441,
       "accuracy_ci": [
-        0.7456081081081082,
-        0.7917527821939586
+        0.7511923688394276,
+        0.794912559618442
       ],
-      "num_correct": 968,
+      "num_correct": 973,
       "total_examples": 1258,
-      "num_answered": 959
+      "num_answered": 970
     },
     "PubMedQA_test": {
-      "accuracy": 0.7963525835866262,
+      "accuracy": 0.7993920972644377,
       "accuracy_ci": [
-        0.7710233029381965,
-        0.818693009118541
+        0.7730496453900709,
+        0.8247213779128673
       ],
-      "num_correct": 786,
+      "num_correct": 789,
       "total_examples": 987,
-      "num_answered": 786
+      "num_answered": 788
     },
     "MMLU-Pro_Medical_test": {
-      "accuracy": 0.6524028966425279,
+      "accuracy": 0.6438446346280448,
       "accuracy_ci": [
-        0.6293449637919685,
-        0.6774193548387096
+        0.618828176431863,
+        0.6675444371296906
       ],
-      "num_correct": 991,
+      "num_correct": 978,
       "total_examples": 1519,
-      "num_answered": 991
+      "num_answered": 961
     },
     "GPQA_Medical_test": {
-      "accuracy": 0.538918918918919,
+      "accuracy": 0.6054054054054054,
       "accuracy_ci": [
-        0.5135135135135135,
-        0.5610810810810811
+        0.5540540540540541,
+        0.6567567567567567
       ],
-      "num_correct": 202,
+      "num_correct": 224,
       "total_examples": 370,
-      "num_answered": 202,
-      "majority_vote_accuracy": 0.5459459459459459
+      "num_answered": 224
     }
   }
 }

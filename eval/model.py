@@ -34,11 +34,38 @@ async def process_data_batch(
         
         # Process batch
         prompts = [item["input_str"] for item in batch]
+        
+        # Print first example's raw input before template
+        if current_batch == 1:
+            print("\nFirst example raw input (before template):", flush=True)
+            print("=" * 80, flush=True)
+            print(prompts[0], flush=True)
+            print("=" * 80, flush=True)
+        
         if is_use_chat_template:
-            prompts = [template.render(messages=[{"role": "user", "content": p}],
-                                    bos_token=tokenizer.bos_token,
-                                    add_generation_prompt=True)
-                      for p in prompts]
+            if callable(template):
+                # For custom template functions (like Nemotron)
+                if current_batch == 1:
+                    print("\nFirst example chat messages:", flush=True)
+                    print("=" * 80, flush=True)
+                    print({"role": "user", "content": prompts[0]}, flush=True)
+                    print("=" * 80, flush=True)
+                
+                prompts = [template([{"role": "user", "content": p}])
+                          for p in prompts]
+                
+                # Print first example's formatted input
+                if current_batch == 1:
+                    print("\nFirst example after chat template:", flush=True)
+                    print("=" * 80, flush=True)
+                    print(prompts[0], flush=True)
+                    print("=" * 80, flush=True)
+            else:
+                # For Jinja2 templates
+                prompts = [template.render(messages=[{"role": "user", "content": p}],
+                                        bos_token=tokenizer.bos_token,
+                                        add_generation_prompt=True)
+                          for p in prompts]
         
         # Generate completions using sglang
         tasks = [
@@ -54,6 +81,13 @@ async def process_data_batch(
         ]
         outputs = await asyncio.gather(*tasks)
         preds = [output['text'] for output in outputs]
+        # Print first example's output
+        if current_batch == 1:
+            print("\nFirst example output from model:", flush=True)
+            print("=" * 80, flush=True)
+            print(preds[0], flush=True)
+            print("=" * 80, flush=True)
+            print("=" * 80)
         
         # Store results
         for item, pred in zip(batch, preds):

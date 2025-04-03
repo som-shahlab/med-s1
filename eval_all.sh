@@ -16,10 +16,25 @@
 # sbatch eval/eval.sh medqa-10k-random-no-cot
 # sbatch eval/eval.sh medqa-25k
 
+# Test chat formats
+sbatch eval/eval.sh huatuo
+sbatch eval/eval.sh medqa-1k-random
+sbatch eval/eval.sh medqa-1k-nemotron
+
 # Hyperparameter tuning
 sbatch eval/eval.sh medqa-25k-no-cot
 sbatch eval/eval.sh medqa-25k
 sbatch eval/eval.sh medqa-25k-step-extract
+
+# Case reports
+sbatch eval/eval.sh medqa-nejmcr-1k-random
+sbatch eval/eval.sh medqa-nejmcr-1k-random-step-extract
+sbatch eval/eval.sh medqa-nejmcr-1k-random-cot-extract
+
+# Base reasoning LLM
+sbatch eval/eval.sh base-nemotron
+sbatch eval/eval.sh medqa-1k-nemotron
+sbatch eval/eval.sh medqa-1k-step-extract-nemotron
 
 # Extractions
 sbatch eval/eval.sh medqa-1k-random

@@ -172,7 +172,13 @@ def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
             elif file_path.endswith(".parquet"):
                 dataset = Dataset.from_parquet(file_path)
             elif os.path.isdir(file_path):
-                dataset = load_from_disk(file_path)
+                logging.info(f"Loading dataset from directory {file_path}")
+                try:
+                    dataset = load_from_disk(file_path)
+                    logging.info(f"Successfully loaded dataset with {len(dataset)} examples")
+                except Exception as e:
+                    logging.error(f"Failed to load dataset from {file_path}: {e}")
+                    raise
             else:
                 raise ValueError(f"Unsupported file format for {file_path}")
         else:
@@ -180,6 +186,7 @@ def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
     
     # Convert to DataFrame and initialize metadata columns
     df = pd.DataFrame(dataset)
+    logging.info(f"Converted dataset to DataFrame with {len(df)} rows and columns: {list(df.columns)}")
     
     # Do some dataset-specific cleaning
     if dataset_name == "s1-gemini-raw":
@@ -191,6 +198,54 @@ def load_base_dataset(experiment_config: Dict, config: Dict) -> pd.DataFrame:
         })
         # For some reason, `thinking_trajectories` is a list of strings (of length 1). Unwrap it.
         df["Complex_CoT"] = df["Complex_CoT"].apply(lambda x: x[0] if isinstance(x, list) else x)
+    elif dataset_name == "nejmcr":
+        # Process NEJM case reports dataset
+        logging.info(f"Processing NEJM case reports dataset with {len(df)} samples")
+        
+        # Format the columns
+        df["Question"] = df["question"] + "\nWhat is the diagnosis of the patient?"
+        df["Complex_CoT"] = df["thinking"]
+        
+        # Choose diagnosis based on priority order
+        diagnosis_fields = [
+            'diagnosis_final',
+            'diagnosis_clinical_and_final',
+            'diagnosis_pathological',
+            'diagnosis_anatomical',
+            'diagnosis_diagnosis_and_management',
+            'diagnosis_diagnosis',
+            'diagnosis_clinical',
+            'diagnosis_laboratory',
+            'diagnosis_psychiatric'
+        ]
+        
+        def get_diagnosis(row):
+            for field in diagnosis_fields:
+                if field in row and pd.notna(row[field]):
+                    return row[field]
+            return "No diagnosis available"
+            
+        df["Response"] = df.apply(get_diagnosis, axis=1)
+        
+        # Calculate total tokens for each sample
+        model_name = config["models"][config["model_choices"]["base"]]["hf_path"]
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        
+        def get_total_tokens(row):
+            text = f"{row['Question']} {row['Complex_CoT']} {row['Response']}"
+            return len(tokenizer(text).input_ids)
+        
+        df['token_length'] = df.apply(get_total_tokens, axis=1)
+        
+        # Filter to samples under 8192 tokens
+        n_total = len(df)
+        df = df[df['token_length'] <= 8192].copy()
+        n_filtered = len(df)
+        
+        logging.info(f"Filtered NEJM dataset from {n_total} to {n_filtered} samples (token length ≤ 8192)")
+        
+        # Keep only needed columns
+        df = df[["Question", "Complex_CoT", "Response"]]
     
     # Sort by Question to ensure deterministic ordering across runs
     # This is critical for reproducibility when random sampling
@@ -263,13 +318,16 @@ async def main():
     # Get output directory
     output_dir = get_output_dir()
     
+    # Get dataset name
+    dataset_name = experiment_config.get("datasets", {}).get("curate")
+    
     # Check if base dataset exists
     filtered_path = os.path.join(data_dir, "plumbing_test_001_20250219_145607/med_s1k_filtered.parquet")
     
     # Process based on curation method
     if curation_method == "all":
         # For "all" method, load dataset and use full dataset
-        if os.path.exists(filtered_path):
+        if dataset_name != "nejmcr" and os.path.exists(filtered_path):
             df = pd.read_parquet(filtered_path)
             logging.info(f"Loaded existing dataset from {filtered_path}")
         else:
@@ -278,7 +336,7 @@ async def main():
     
     elif curation_method == "random":
         # For "random" method, load dataset and randomly sample
-        if os.path.exists(filtered_path):
+        if dataset_name != "nejmcr" and os.path.exists(filtered_path):
             df = pd.read_parquet(filtered_path)
             logging.info(f"Loaded existing dataset from {filtered_path}")
         else:

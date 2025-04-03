@@ -18,17 +18,19 @@ def preprocess_text(text: str) -> str:
     text = text.replace("  ", " ")
     return text
 
-def format_chat_template(question: str, thinking: str, answer: str, model_name: str, tokenizer, huatuo_format: bool = False, extract: str = None) -> str:
+def format_chat_template(question: str, thinking: str, answer: str, model_name: str, tokenizer, format: str = "huatuo", extract: str = None) -> str:
     """Format example using appropriate chat template based on model"""
     # Add Answer: prefix if needed
-    if not huatuo_format and "Answer:" not in answer:
+    if format != "huatuo" and "Answer:" not in answer:
         answer = "Answer: " + answer
     
     # Check if we should skip the thinking part (no-cot mode)
     if extract == "none":
         # Skip the thinking part entirely
-        if huatuo_format:
+        if format == "huatuo":
             assistant_content = f"## Final Response\n\n{answer}"
+        elif format == "nemotron":
+            assistant_content = f"{answer}"
         else:
             if "Llama" in model_name:
                 assistant_content = f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
@@ -36,9 +38,12 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
                 assistant_content = f"<|im_start|>answer\n{answer}"
     else:
         # Format assistant content based on format flag
-        if huatuo_format:
+        if format == "huatuo":
             # HuatuoGPT format with ## markers
             assistant_content = f"## Thinking\n\n{thinking}\n\n## Final Response\n\n{answer}"
+        elif format == "nemotron":
+            # Nemotron format with <think> tags
+            assistant_content = f"<think>{thinking}</think>{answer}"
         else:
             # Default format with model-specific markers
             if "Llama" in model_name:
@@ -48,11 +53,21 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
                 assistant_content = f"<|im_start|>think\n{thinking}\n" + \
                                   f"<|im_start|>answer\n{answer}"
     
-    # Apply chat template consistently
-    return tokenizer.apply_chat_template([
-        {"role": "user", "content": question},
-        {"role": "assistant", "content": assistant_content}
-    ], tokenize=False)
+    # Apply chat template with model-specific handling
+    if format == "nemotron":
+        # Get Nemotron system prompt from config
+        system_prompt = "detailed thinking on"
+        return tokenizer.apply_chat_template([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": assistant_content}
+        ], tokenize=False)
+    else:
+        # Default chat template for other models
+        return tokenizer.apply_chat_template([
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": assistant_content}
+        ], tokenize=False)
 
 def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict, experiment_name: str, 
                        validation_split: float = 0.1, seed: int = 42) -> Tuple[Dataset, Optional[Dataset]]:
@@ -72,23 +87,30 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
     logging.info("Formatting for training...")
     
     # Check formatting mode from config
-    huatuo_format = experiment_config["curation"].get("huatuo_format", False)
+    format = experiment_config["curation"].get("format", "huatuo")
     extract = experiment_config["curation"].get("extract", None)
     
-    logging.info(f"Formatting mode: {'HuatuoGPT-style' if huatuo_format else 'default'}")
+    logging.info(f"Formatting mode: {format}")
     if extract == "none":
         logging.info("Skipping CoT/Thinking section (no-cot mode)")
     elif extract == "step":
         logging.info("Using step-by-step extracted CoT")
     elif extract == "1-sentence":
         logging.info("Using 1-sentence extracted CoT")
-    if huatuo_format:
+    if format == "huatuo":
         logging.info("Using '## Thinking' and '## Final Response' markers")
+    elif format == "nemotron":
+        logging.info("Using '<think>' tags")
     else:
         logging.info("Using model-specific markers with Answer: prefix")
-    
+
     # Get model info from config
-    model_name = config["models"][config["model_choices"]["base"]]["hf_path"]
+    # Get model key from experiment config, falling back to base model
+    model_key = experiment_config.get("model_key")
+    if not model_key:
+        model_key = config["model_choices"]["base"]
+        print(f"Model key not found in experiment config, using base model: {model_key}")
+    model_name = config["models"][model_key]["hf_path"]
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     
     # Only format selected examples
@@ -102,14 +124,14 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
         thinking = preprocess_text(row['Complex_CoT']) if pd.notna(row['Complex_CoT']) else ""
         answer = preprocess_text(row['Response'])
         
-        # Format using chat template with huatuo_format flag and extract parameter
+        # Format using chat template with format flag and extract parameter
         text = format_chat_template(
             question=question,
             thinking=thinking,
             answer=answer,
             model_name=model_name,
             tokenizer=tokenizer,
-            huatuo_format=huatuo_format,
+            format=format,
             extract=extract
         )
         formatted_data.append({"text": text})

@@ -16,6 +16,15 @@
 # bash curate_med_s1k.sh medqa-5k-random-no-cot
 # bash curate_med_s1k.sh medqa-10k-random-no-cot
 
+# Case reports
+bash curate_med_s1k.sh medqa-nejmcr-1k-random
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-step-extract
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-cot-extract
+
+# Base reasoning LLM
+bash curate_med_s1k.sh medqa-1k-nemotron
+bash curate_med_s1k.sh medqa-1k-step-extract-nemotron
+
 # Extractions
 bash curate_med_s1k.sh medqa-1k-random
 bash curate_med_s1k.sh medqa-1k-random-step-extract

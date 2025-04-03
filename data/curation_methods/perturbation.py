@@ -51,7 +51,7 @@ Here's the chain of thought reasoning to transform:
 IMPORTANT: Return ONLY the improved step-by-step reasoning trace, starting directly with "## Step 1:". Do not include any introduction or explanation.
 """
     try:
-        result = await get_model_response(restore_prompt, model=model_key, max_tokens=4096)
+        result = await get_model_response(restore_prompt, model=model_key, max_tokens=8192)
         
         # Validate result
         if not result or len(result.strip()) < 10:

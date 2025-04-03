@@ -34,7 +34,7 @@ def generate_response(model, tokenizer, user_input, thinking_placeholder, answer
             model.generate(
                 inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_new_tokens=4096,
+                max_new_tokens=8192,
                 temperature=0.7,
                 do_sample=True,
                 pad_token_id=tokenizer.pad_token_id,

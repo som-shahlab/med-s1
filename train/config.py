@@ -18,7 +18,7 @@ class TrainingConfig:
     output_dir: str = field(default=None)
     
     # Training hyperparameters
-    block_size: int = field(default=4096)
+    block_size: int = field(default=8192)
     per_device_train_batch_size: int = field(default=4)
     gradient_accumulation_steps: int = field(default=4)
     learning_rate: float = field(default=5e-6)

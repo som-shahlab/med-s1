@@ -39,6 +39,8 @@ def match_choice(text,options):
         text = text.split('Answer:')[-1]
     if '## Final Response\n\n' in text:
         text = text.split('## Final Response\n\n')[-1]
+    if '</think>' in text:
+        text = text.split('</think>')[-1]
     
     # for strict prompt 
     matches = list(re.finditer(r"(answer is\s*?)([A-N])", text, re.S))

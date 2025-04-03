@@ -17,7 +17,8 @@ from .clinical_formatting import (
     transform_to_steps,
     transform_to_qa,
     transform_to_decision_tree,
-    transform_to_socratic
+    transform_to_socratic,
+    transform_to_cot
 )
 
 # Get MED_S1_DIR from environment
@@ -70,8 +71,14 @@ async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_metho
         logging.info(f"Processing batch {i//batch_size + 1}/{total_batches} ({len(batch)} examples)")
 
         # Create tasks for all valid rows at once
-        tasks = [transform_func(row['Complex_CoT'], model_key, **kwargs) 
-                for _, row in batch.iterrows()]
+        if extract_method == "Chain of Thought":
+            # For CoT, pass the row
+            tasks = [transform_func(row['Complex_CoT'], model_key, row=row, **kwargs)
+                    for _, row in batch.iterrows()]
+        else:
+            # For other methods, use original signature
+            tasks = [transform_func(row['Complex_CoT'], model_key, **kwargs)
+                    for _, row in batch.iterrows()]
 
         # Process batch with concurrent API calls
         batch_results = await asyncio.gather(*tasks)
@@ -151,7 +158,7 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
                 if (exp_curation_config.get('method') == curation_config.get('method') and
                     exp_curation_config.get('n_samples') == curation_config.get('n_samples') and
                     exp_curation_config.get('extract') == extract_method and
-                    exp_curation_config.get('huatuo_format') == curation_config.get('huatuo_format') and
+                    exp_curation_config.get('format') == curation_config.get('format') and
                     exp_curation_config.get('perturbation', {}).get('type') == perturbation_type and
                     exp_curation_config.get('perturbation', {}).get('rate') == perturbation_rate and
                     not exp_curation_config.get('restore')):
@@ -224,7 +231,7 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
                 if (exp_curation_config.get('method') == curation_config.get('method') and
                     exp_curation_config.get('n_samples') == curation_config.get('n_samples') and
                     exp_curation_config.get('extract') == extract_method and
-                    exp_curation_config.get('huatuo_format') == curation_config.get('huatuo_format') and
+                    exp_curation_config.get('format') == curation_config.get('format') and
                     not exp_curation_config.get('perturbation')):
                     
                     exp_dir = os.path.dirname(exp_data.get('results', {}).get('curation', {}).get('dataset_path', ''))
@@ -306,6 +313,32 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
             df = await _apply_extraction_method(df, full_config, "Q&A", transform_to_qa)
         elif extract_method == "socratic":
             df = await _apply_extraction_method(df, full_config, "Socratic dialogue", transform_to_socratic)
+        elif extract_method in ["cot", "cot-step"]:
+            # Create a wrapper function that takes Complex_CoT as input but uses Q&A
+            async def cot_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                # Use Question and Response from the row directly
+                return await transform_to_cot(row['Question'], row['Response'], model_key)
+            
+            # Override the default filtering to use Question and Response
+            df_filtered = df[df['selected_for_training'] & df['Question'].notna() & df['Response'].notna()].copy()
+            df = df[~df.index.isin(df_filtered.index)].copy()  # Keep unselected rows
+            
+            # Add dummy Complex_CoT for _apply_extraction_method
+            df_filtered['Complex_CoT'] = 'dummy'
+            
+            # Use existing parallelization infrastructure
+            df_processed = await _apply_extraction_method(df_filtered, full_config, "Chain of Thought", cot_wrapper)
+            
+            # For cot-step, apply step formatting to the generated CoT
+            if extract_method == "cot-step":
+                logging.info("Applying step formatting to generated CoT...")
+                # Store the CoT before step formatting
+                df_processed['Complex_CoT_orig'] = df_processed['Complex_CoT']
+                # Apply step formatting
+                df_processed = await _apply_extraction_method(df_processed, full_config, "step", transform_to_steps, extract_type="step")
+            
+            # Merge back
+            df = pd.concat([df, df_processed])
         else:
             logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
 

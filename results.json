@@ -53,9 +53,9 @@
         "curation": null,
         "training": null,
         "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8Beval_data_metrics.json",
-          "timestamp": "2025-03-15T22:29:05.214214",
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8BMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8BMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T21:44:14.575912",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo_eval.json"
         }
       }
@@ -66,7 +66,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000
         },
         "training_params": {
@@ -100,9 +100,9 @@
           "metrics": null
         },
         "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modeleval_data.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modeleval_data_metrics.json",
-          "timestamp": "2025-03-29T19:23:30.544018",
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modelMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-random/best_modelMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T21:48:25.337763",
           "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-random_eval.json"
         }
       }
@@ -113,7 +113,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "embedding-diversity",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "column": "Question",
           "cluster_percentage": 10,
@@ -147,7 +147,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "embedding-diversity",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "column": "Question",
           "cluster_percentage": 10,
@@ -198,7 +198,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "all",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 25371
         },
         "training_params": {
@@ -245,7 +245,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "all",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 25371,
           "extract": "none"
         },
@@ -293,7 +293,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "all",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 25371,
           "extract": "step"
         },
@@ -341,7 +341,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step"
         },
@@ -373,7 +373,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "none"
         },
@@ -421,7 +421,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "1-sentence"
         },
@@ -469,7 +469,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 5000,
           "extract": "none"
         },
@@ -517,7 +517,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 10000,
           "extract": "none"
         },
@@ -565,7 +565,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "note"
         },
@@ -597,7 +597,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "list"
         },
@@ -629,7 +629,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "markdown"
         },
@@ -661,7 +661,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step-evidence"
         },
@@ -693,7 +693,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -729,7 +729,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -765,7 +765,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -801,7 +801,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -837,7 +837,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -873,7 +873,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -909,7 +909,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -945,7 +945,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -981,7 +981,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1017,7 +1017,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1053,7 +1053,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1089,7 +1089,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1125,7 +1125,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1161,7 +1161,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1197,7 +1197,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "decision-tree"
         },
@@ -1229,7 +1229,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "qa"
         },
@@ -1261,7 +1261,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "socratic"
         },
@@ -1293,7 +1293,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1329,7 +1329,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1366,7 +1366,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1403,7 +1403,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1440,7 +1440,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1477,7 +1477,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1514,7 +1514,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1551,7 +1551,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1588,7 +1588,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1625,7 +1625,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1662,7 +1662,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1699,7 +1699,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1736,7 +1736,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "step",
           "perturbation": {
@@ -1773,7 +1773,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 1000,
           "extract": "none"
         },
@@ -1824,7 +1824,7 @@
         "model_key": "llama3.1:8b",
         "curation": {
           "method": "random",
-          "huatuo_format": true,
+          "format": "huatuo",
           "n_samples": 54000,
           "extract": "none"
         },
@@ -1866,6 +1866,273 @@
           "metrics_path": "/share/pi/nigam/mwornow/hf_cache/eval/s1-54k-no-cot/s1-54k-no-cotgpqa-diamond_metrics.json",
           "timestamp": "2025-03-31T16:58:47.685686",
           "summary_file": "/share/pi/nigam/mwornow/med-s1/results/s1-54k-no-cot_eval.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random": {
+      "description": "1k uniform random sample from NEJM case reports",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "format": "huatuo",
+          "n_samples": 1000
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 10,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random_20250403_130135/med_s1k_formatted",
+          "timestamp": "2025-04-03T13:01:37.710798",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random",
+          "timestamp": "2025-04-03T14:38:39Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random/medqa-nejmcr-1k-randomMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random/medqa-nejmcr-1k-randomMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T15:30:22.089591",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random_eval.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-step-extract": {
+      "description": "1k uniform random sample from NEJM case reports with step extraction",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "format": "huatuo",
+          "n_samples": 1000,
+          "extract": "step"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 10,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-step-extract_20250403_130341/med_s1k_formatted",
+          "timestamp": "2025-04-03T13:07:13.089947",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-step-extract_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random-step-extract",
+          "timestamp": "2025-04-03T15:04:32Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-step-extract/medqa-nejmcr-1k-random-step-extractMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-step-extract/medqa-nejmcr-1k-random-step-extractMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T15:38:48.683520",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-step-extract_eval.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-cot-extract": {
+      "description": "1k uniform random sample from NEJM case reports with synthetic reasoning",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "format": "huatuo",
+          "n_samples": 1000,
+          "extract": "cot"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 10,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-cot-extract_20250403_135126/med_s1k_formatted",
+          "timestamp": "2025-04-03T13:53:22.980038",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-cot-extract_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random-cot-extract",
+          "timestamp": "2025-04-03T15:20:32Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-cot-extract/medqa-nejmcr-1k-random-cot-extractMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-cot-extract/medqa-nejmcr-1k-random-cot-extractMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T15:33:26.950171",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-cot-extract_eval.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-cot-step-extract": {
+      "description": "1k uniform random sample from NEJM case reports with synthetic reasoning",
+      "config": {
+        "model_key": "llama3.1:8b",
+        "curation": {
+          "method": "random",
+          "format": "huatuo",
+          "n_samples": 1000,
+          "extract": "cot-step"
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 10,
+          "weight_decay": 0.1,
+          "warmup_ratio": 0.05,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.95,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 16
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-cot-step-extract_20250403_183326/med_s1k_formatted",
+          "timestamp": "2025-04-03T18:35:27.522104",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-cot-step-extract_curation.json"
+        }
+      }
+    },
+    "base-nemotron": {
+      "description": "Base Nemotron model without fine-tuning",
+      "config": {
+        "model_key": "nemotron:8b",
+        "curation": null,
+        "training_params": null,
+        "datasets": {
+          "curate": null,
+          "eval": "huatuo-eval"
+        }
+      }
+    },
+    "medqa-1k-nemotron": {
+      "description": "1k uniform random sample with Nemotron format",
+      "config": {
+        "model_key": "nemotron:8b",
+        "curation": {
+          "method": "random",
+          "format": "nemotron",
+          "n_samples": 1000
+        },
+        "training_params": "same as medqa-1k-random",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-nemotron_20250403_163128/med_s1k_formatted",
+          "timestamp": "2025-04-03T16:31:32.179495",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-nemotron_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-nemotron",
+          "timestamp": "2025-04-03T16:51:34Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-nemotron/medqa-1k-nemotronMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-nemotron/medqa-1k-nemotronMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T20:41:28.401230",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-nemotron_eval.json"
+        }
+      }
+    },
+    "medqa-1k-step-extract-nemotron": {
+      "description": "1k uniform random sample with step extraction and Nemotron format",
+      "config": {
+        "model_key": "nemotron:8b",
+        "curation": {
+          "method": "random",
+          "format": "nemotron",
+          "n_samples": 1000,
+          "extract": "step"
+        },
+        "training_params": "same as medqa-1k-random",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-step-extract-nemotron_20250403_163128/med_s1k_formatted",
+          "timestamp": "2025-04-03T16:32:31.616518",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-step-extract-nemotron_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-step-extract-nemotron",
+          "timestamp": "2025-04-03T17:03:13Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-step-extract-nemotron/medqa-1k-step-extract-nemotronMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-step-extract-nemotron/medqa-1k-step-extract-nemotronMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T18:44:21.406973",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-step-extract-nemotron_eval.json"
         }
       }
     }

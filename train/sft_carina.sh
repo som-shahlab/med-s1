@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:4
 #SBATCH --cpus-per-task=14
-#SBATCH --mem=150G
+#SBATCH --mem=300G
 #SBATCH --time=04:00:00
 #SBATCH --account=nigam
 
@@ -89,9 +89,11 @@ mkdir -p "${MED_S1_DIR}/logs"
 # Extract training parameters
 learning_rate=$(echo "$resolved_config" | jq -r '.training_params.learning_rate')
 batch_size=$(echo "$resolved_config" | jq -r '.training_params.batch_size')
+batch_size=$((batch_size / 2))  # Reduce batch size by half
 base_batch_size=$(echo "$resolved_config" | jq -r '.training_params.base_batch_size')
 num_epochs=$(echo "$resolved_config" | jq -r '.training_params.num_epochs')
 grad_acc=$(echo "$resolved_config" | jq -r '.training_params.gradient_accumulation_steps')
+grad_acc=$((grad_acc * 2))  # Double gradient accumulation steps
 base_grad_acc=$(echo "$resolved_config" | jq -r '.training_params.base_gradient_accumulation_steps')
 weight_decay=$(echo "$resolved_config" | jq -r '.training_params.weight_decay')
 warmup_ratio=$(echo "$resolved_config" | jq -r '.training_params.warmup_ratio')
@@ -182,6 +184,7 @@ export CUDA_DEVICE_MAX_CONNECTIONS=1
 export NCCL_MIN_NCHANNELS=4
 export DS_ACCELERATOR=cuda
 export DS_ACCELERATOR_BACKEND=nccl
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Print NCCL configuration
 echo "NCCL Configuration:"
@@ -312,7 +315,7 @@ cmd="accelerate launch \
     --model_name=\"${model}\" \
     --train_file_path=\"${LOCAL_DATA_DIR}/med_s1k_formatted\" \
     --output_dir=\"${checkpoint_dir}\" \
-    --block_size=4096 \
+    --block_size=8192 \
     --per_device_train_batch_size=${batch_size} \
     --gradient_accumulation_steps=${grad_acc} \
     --learning_rate=${learning_rate} \

@@ -3,14 +3,22 @@ import json
 import asyncio
 import uvloop
 import os
+import sys
 from transformers import AutoTokenizer
 import sglang as sgl
 from jinja2 import Template
 
 from dataset import load_eval_dataset
-from utils import get_query_prompt
+from utils import (
+    get_query_prompt, print_indented, postprocess_output,
+    load_experiment_config
+)
 from model import process_data_batch, process_gpqa_with_multiple_runs
 from scoring import save_and_score_results, update_results_json
+
+# Add med-s1 to path for imports
+med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+sys.path.insert(0, med_s1_dir)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -32,23 +40,46 @@ def parse_args():
 
 def get_model_path_from_results(experiment_name: str) -> tuple:
     """Get the model path from results.json based on experiment name."""
+    print(f"\nGetting model path for experiment: {experiment_name}")
+    
+    # Use load_experiment_config to handle reference resolution
+    experiment_config = load_experiment_config(experiment_name)
+    
+    # Get experiment data from results.json for results/training info
     results_json = os.environ.get('RESULTS_JSON')
     if not results_json:
         raise ValueError("RESULTS_JSON environment variable not set")
-        
     with open(results_json, "r") as f:
         results = json.load(f)
-    
-    if experiment_name not in results.get("experiments", {}):
-        raise ValueError(f"Experiment {experiment_name} not found in results.json")
-        
     experiment = results["experiments"][experiment_name]
+    print(f"Found experiment config: {experiment}")
     
     # Get model_path from results.json
     model_path = None
     
-    # First try to get model_path from training results
-    if experiment.get("results", {}).get("training", {}) and experiment["results"]["training"].get("model_path"):
+    # Check if this is a pre-trained model (training results should be null)
+    print("\nChecking model path resolution:")
+    print(f"Resolved config: {experiment_config}")
+    print(f"Training results is None? {experiment.get('results', {}).get('training') is None}")
+    print(f"Has model_key? {experiment_config.get('model_key')}")
+    
+    if experiment.get("results", {}).get("training") is None and experiment_config.get("model_key"):
+        model_key = experiment_config["model_key"]
+        print(f"Pre-trained model detected, using model_key: {model_key}")
+        
+        # Load config.json to get the model path from model_key
+        med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+        with open(os.path.join(med_s1_dir, 'config.json'), 'r') as f:
+            config = json.load(f)
+        
+        if model_key in config.get("models", {}):
+            model_path = config["models"][model_key]["hf_path"]
+            print(f"Found pre-trained model path in config.json: {model_path}")
+        else:
+            raise ValueError(f"Model key {model_key} not found in config.json")
+    
+    # If not pre-trained, try to get model_path from training results
+    elif experiment.get("results", {}).get("training", {}) and experiment["results"]["training"].get("model_path"):
         base_model_path = experiment["results"]["training"]["model_path"]
         best_model_path = os.path.join(base_model_path, "best_model")
         
@@ -59,10 +90,10 @@ def get_model_path_from_results(experiment_name: str) -> tuple:
         else:
             model_path = base_model_path
             print(f"Using base model path from training results: {model_path}")
-    # If not available, try to get it from model_key in config
-    elif experiment.get("config", {}).get("model_key"):
-        model_key = experiment["config"]["model_key"]
-        print(f"No model_path in training results, using model_key: {model_key}")
+    # If not pre-trained and no training results, try model_key as fallback
+    elif experiment_config.get("model_key"):
+        model_key = experiment_config["model_key"]
+        print(f"No training results found, using model_key as fallback: {model_key}")
         
         # Load config.json to get the model path from model_key
         med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
@@ -75,13 +106,21 @@ def get_model_path_from_results(experiment_name: str) -> tuple:
         else:
             raise ValueError(f"Model key {model_key} not found in config.json")
     else:
-        raise ValueError(f"No model_path or model_key found for experiment {experiment_name}")
+        # Provide more helpful error message
+        if not experiment.get("config"):
+            raise ValueError(f"No config found for experiment {experiment_name}")
+        elif not experiment.get("config", {}).get("model_key"):
+            raise ValueError(f"No model_key found in config for experiment {experiment_name}")
+        else:
+            raise ValueError(f"Could not determine model path for experiment {experiment_name}. " +
+                           "Either set training results to null for pre-trained models, " +
+                           "or provide training results with model_path.")
     
     return model_path, experiment
 
 def prepare_data(args, experiment):
     """Load and prepare data for evaluation."""
-    print("\nLoading evaluation data...")
+    print(f"\nLoading evaluation data with {args=}...")
     input_data = load_eval_dataset(args.experiment_name, args.path_to_eval_json)
     print(f"Loaded {len(input_data)} total examples")
     
@@ -237,12 +276,62 @@ async def main_async():
         tokenizer.pad_token = "<|reserved_special_token_5|>"
     elif "Qwen" in model_path:
         tokenizer.pad_token = "<|fim_pad|>"
+    
+    # Load config to get model-specific settings
+    med_s1_dir = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+    with open(os.path.join(med_s1_dir, 'config.json'), 'r') as f:
+        config = json.load(f)
 
     # Load model
     print("Loading model...")
     engine = sgl.Engine(model_path=model_path)
     print("Model loaded")
-    template = Template(tokenizer.chat_template) if args.use_chat_template else None
+    
+    # Get model key from experiment config
+    model_key = experiment.get("config", {}).get("model_key")
+    
+    # Set up chat template
+    if args.use_chat_template:
+        print("\nSetting up chat template:", flush=True)
+        print(f"Model key: {model_key}", flush=True)
+        print(f"Model path: {model_path}", flush=True)
+        
+        # Always use tokenizer's apply_chat_template for consistency with training
+        first_message = True  # Flag to track first message
+        def custom_template(messages):
+            nonlocal first_message
+            if model_key == "nemotron:8b":
+                # Use Nemotron-specific template with system prompt
+                model_config = config["models"][model_key]
+                system_prompt = model_config["system_prompt"].format(thinking="on")
+                print(f"Using Nemotron format with system prompt: {system_prompt}", flush=True)
+                formatted_messages = [
+                    {"role": "system", "content": system_prompt},
+                    messages[0]  # User message
+                ]
+            elif model_key == "huatuo:8b":
+                # Use default LLaMA format for huatuo since it's trained like LLaMA
+                print(f"Using LLaMA format for huatuo", flush=True)
+                formatted_messages = [
+                    messages[0]  # User message
+                ]
+            else:
+                # For other models, just use the user message
+                print(f"Using default format for {model_key}", flush=True)
+                formatted_messages = [messages[0]]
+            
+            # Apply chat template and print result for first example
+            formatted_prompt = tokenizer.apply_chat_template(formatted_messages, tokenize=False)
+            if first_message:  # Print formatted prompt for first message
+                print("\nFirst example after apply_chat_template:")
+                print("=" * 80)
+                print(formatted_prompt)
+                print("=" * 80)
+                first_message = False
+            return formatted_prompt
+        template = custom_template
+    else:
+        template = None
 
     # Prepare data
     input_data, gpqa_data, non_gpqa_data = prepare_data(args, experiment)

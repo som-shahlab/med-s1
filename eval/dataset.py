@@ -51,8 +51,9 @@ def load_eval_dataset(experiment_name: str, path_to_eval_json: Optional[str] = N
         results_json = os.environ.get('RESULTS_JSON')
         if not results_json:
             raise ValueError("RESULTS_JSON environment variable not set")
-        
-        experiment = resolve_eval_config(experiment_name, results_json)['config']
+        # Get experiment config with resolved references
+        resolved = resolve_eval_config(experiment_name, results_json)
+        experiment = resolved['config']
         
         # Get dataset name from experiment config
         dataset_name = experiment.get('datasets', {}).get('eval')

@@ -101,7 +101,7 @@ def analyze_training_data(dataset_path: str):
         "avg_tokens_between_think_answer": 0,
         "max_tokens_between_think_answer": 0,
         "token_lengths": [],
-        "examples_over_4096": 0,
+        "examples_over_8192": 0,
         "examples_over_2048": 0,
         "examples_over_1024": 0
     }
@@ -130,8 +130,8 @@ def analyze_training_data(dataset_path: str):
         token_length = len(tokens)
         stats["token_lengths"].append(token_length)
         
-        if token_length > 4096:
-            stats["examples_over_4096"] += 1
+        if token_length > 8192:
+            stats["examples_over_8192"] += 1
         if token_length > 2048:
             stats["examples_over_2048"] += 1
         if token_length > 1024:
@@ -167,7 +167,7 @@ def analyze_training_data(dataset_path: str):
     print(f"- Truncated examples:      {stats['truncated_examples']:5d} ({stats['truncated_examples']/stats['total_examples']*100:6.2f}%)")
     
     print("\nToken Length Distribution:")
-    print(f"- Over 4096 tokens:        {stats['examples_over_4096']:5d} ({stats['examples_over_4096']/stats['total_examples']*100:6.2f}%)")
+    print(f"- Over 8192 tokens:        {stats['examples_over_8192']:5d} ({stats['examples_over_8192']/stats['total_examples']*100:6.2f}%)")
     print(f"- Over 2048 tokens:        {stats['examples_over_2048']:5d} ({stats['examples_over_2048']/stats['total_examples']*100:6.2f}%)")
     print(f"- Over 1024 tokens:        {stats['examples_over_1024']:5d} ({stats['examples_over_1024']/stats['total_examples']*100:6.2f}%)")
     print(f"- Average length:          {sum(stats['token_lengths'])/len(stats['token_lengths']):6.1f} tokens")
