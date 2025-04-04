@@ -1,6 +1,6 @@
 {
     "model_choices": {
-        "base": "llama3.1:8b",
+        "base": "qwq:32B",
         "huatuo": "huatuo:8b",
         "nemotron": "nemotron:8b",
         "specialty_labeler": "gemini-2.0-flash",
@@ -14,6 +14,10 @@
         },
         "llama3.1:8b": {
             "hf_path": "meta-llama/Llama-3.1-8B-Instruct",
+            "max_length": 128000
+        },
+        "qwq:32B": {
+            "hf_path": "Qwen/QwQ-32B",
             "max_length": 128000
         },
         "huatuo:8b": {

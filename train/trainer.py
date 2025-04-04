@@ -41,12 +41,12 @@ class SFTTrainer:
         self.best_model_state = None
         self.should_stop = False
         
-        # Set validation frequency (default to every 0.1 epochs if not specified)
+        # Set validation frequency (default to every 0.2 epochs if not specified)
         self.validation_steps = getattr(config, 'validation_steps', None)
         if self.validation_steps is None:
-            # Default to validating roughly every 10% of an epoch
+            # Default to validating roughly every 20% of an epoch
             # Will be properly calculated after dataloader is created
-            self.validation_frequency = 0.1
+            self.validation_frequency = 0.2
         else:
             # Use the specified number of steps directly
             self.validation_frequency = None
