@@ -300,7 +300,17 @@ async def main_async():
         first_message = True  # Flag to track first message
         def custom_template(messages):
             nonlocal first_message
-            if model_key == "nemotron:8b":
+            # Not using format here because base models don't have curation.format so we go off of model key
+            
+            if model_key == "qwen2.5:7b":
+                # Use Qwen's default chat template
+                print(f"Using Qwen format", flush=True)
+                return tokenizer.apply_chat_template(
+                    [messages[0]],  # User message
+                    tokenize=False,
+                    add_generation_prompt=True
+                )
+            elif model_key == "nemotron:8b":
                 # Use Nemotron-specific template with system prompt
                 model_config = config["models"][model_key]
                 system_prompt = model_config["system_prompt"].format(thinking="on")

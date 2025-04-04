@@ -24,6 +24,8 @@ bash curate_med_s1k.sh medqa-nejmcr-1k-random-cot-extract
 # Base reasoning LLM
 bash curate_med_s1k.sh medqa-1k-nemotron
 bash curate_med_s1k.sh medqa-1k-step-extract-nemotron
+bash curate_med_s1k.sh medqa-1k-qwen
+bash curate_med_s1k.sh medqa-1k-step-extract-qwen
 
 # Extractions
 bash curate_med_s1k.sh medqa-1k-random

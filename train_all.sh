@@ -29,6 +29,8 @@ sbatch train/sft_carina.sh medqa-nejmcr-1k-random-cot-extract
 # Base reasoning LLM
 sbatch train/sft_carina.sh medqa-1k-nemotron
 sbatch train/sft_carina.sh medqa-1k-step-extract-nemotron
+sbatch train/sft_carina.sh medqa-1k-qwen
+sbatch train/sft_carina.sh medqa-1k-step-extract-qwen
 
 # Extractions
 sbatch train/sft_carina.sh medqa-1k-random

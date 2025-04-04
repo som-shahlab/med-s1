@@ -82,9 +82,15 @@ class PreformattedDataset(Dataset):
         # Get pre-formatted text
         text = self.dataset[idx]['text']
         
-        # Verify format
-        assert text.startswith('<|begin_of_text|>'), f"Text doesn't start with begin_of_text: {text[:50]}"
-        assert '<|eot_id|>' in text, f"Text doesn't contain eot_id: {text[-50:]}"
+        # Verify format based on model markers
+        if '<|im_start|>' in text:
+            # Qwen format
+            assert text.startswith('<|im_start|>'), f"Qwen text doesn't start with im_start: {text[:50]}"
+            assert '<|im_end|>' in text, f"Qwen text doesn't contain im_end: {text[-50:]}"
+        else:
+            # Default format (Huatuo/LLaMA)
+            assert text.startswith('<|begin_of_text|>'), f"Text doesn't start with begin_of_text: {text[:50]}"
+            assert '<|eot_id|>' in text, f"Text doesn't contain eot_id: {text[-50:]}"
         
         return text
         
@@ -95,18 +101,31 @@ class PreformattedDataset(Dataset):
     def get_query_and_response(self, text):
         """Split text into query and response parts."""
         # Find the assistant section which contains the response
-        assistant_start = text.find('<|start_header_id|>assistant<|end_header_id|>')
-        assert assistant_start != -1, "No assistant section found"
+        if '<|im_start|>' in text:
+            # Qwen format
+            assistant_start = text.find('<|im_start|>assistant')
+            assert assistant_start != -1, "No assistant section found in Qwen format"
+        else:
+            # Default format (Huatuo/LLaMA)
+            assistant_start = text.find('<|start_header_id|>assistant<|end_header_id|>')
+            assert assistant_start != -1, "No assistant section found"
         
         # Query is everything before assistant's response
         query = text[:assistant_start]
         # Response is everything after, including the assistant header
         response = text[assistant_start:]
         
-        # Verify format
-        assert query.startswith('<|begin_of_text|>'), f"Query doesn't start with begin_of_text: {query[:50]}"
-        assert '<|eot_id|>' in query, f"Query doesn't contain eot_id: {query[-50:]}"
-        assert '<|eot_id|>' in response, f"Response doesn't contain eot_id: {response[-50:]}"
+        # Verify format based on model markers
+        if '<|im_start|>' in text:
+            # Qwen format
+            assert query.startswith('<|im_start|>'), f"Qwen query doesn't start with im_start: {query[:50]}"
+            assert '<|im_end|>' in query, f"Qwen query doesn't contain im_end: {query[-50:]}"
+            assert '<|im_end|>' in response, f"Qwen response doesn't contain im_end: {response[-50:]}"
+        else:
+            # Default format (Huatuo/LLaMA)
+            assert query.startswith('<|begin_of_text|>'), f"Query doesn't start with begin_of_text: {query[:50]}"
+            assert '<|eot_id|>' in query, f"Query doesn't contain eot_id: {query[-50:]}"
+            assert '<|eot_id|>' in response, f"Response doesn't contain eot_id: {response[-50:]}"
         
         return query, response
     

@@ -44,14 +44,12 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
         elif format == "nemotron":
             # Nemotron format with <think> tags
             assistant_content = f"<think>{thinking}</think>{answer}"
+        elif format == "qwen":  # Qwen
+            assistant_content = f"<|im_start|>think\n{thinking}\n" + \
+                                f"<|im_start|>answer\n{answer}"
         else:
-            # Default format with model-specific markers
-            if "Llama" in model_name:
-                assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
-                                  f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
-            else:  # Qwen
-                assistant_content = f"<|im_start|>think\n{thinking}\n" + \
-                                  f"<|im_start|>answer\n{answer}"
+            assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
+                                f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
     
     # Apply chat template with model-specific handling
     if format == "nemotron":
@@ -62,6 +60,12 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
             {"role": "user", "content": question},
             {"role": "assistant", "content": assistant_content}
         ], tokenize=False)
+    elif format == "qwen":
+        # Use Qwen's default chat template with system message
+        return tokenizer.apply_chat_template([
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": assistant_content}
+        ], tokenize=False, add_generation_prompt=True)
     else:
         # Default chat template for other models
         return tokenizer.apply_chat_template([

@@ -35,6 +35,9 @@ sbatch eval/eval.sh medqa-nejmcr-1k-random-cot-extract
 sbatch eval/eval.sh base-nemotron
 sbatch eval/eval.sh medqa-1k-nemotron
 sbatch eval/eval.sh medqa-1k-step-extract-nemotron
+sbatch eval/eval.sh base-qwen
+sbatch eval/eval.sh medqa-1k-qwen
+sbatch eval/eval.sh medqa-1k-step-extract-qwen
 
 # Extractions
 sbatch eval/eval.sh medqa-1k-random

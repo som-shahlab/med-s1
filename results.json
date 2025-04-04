@@ -2061,6 +2061,89 @@
         }
       }
     },
+    "base-qwen": {
+      "description": "Pre-trained Qwen 2.5 7B model without fine-tuning",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": null,
+        "training_params": null,
+        "datasets": "same as base",
+        "format": "qwen"
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/Qwen2.5-7B-InstructMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/Qwen2.5-7B-InstructMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-04T03:40:25.272535",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-qwen_eval.json"
+        }
+      }
+    },
+    "medqa-1k-qwen": {
+      "description": "1k uniform random sample with Qwen 2.5 7B",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000
+        },
+        "training_params": "same as medqa-1k-random",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-qwen_20250403_222422/med_s1k_formatted",
+          "timestamp": "2025-04-03T22:24:25.588833",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-qwen_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-qwen",
+          "timestamp": "2025-04-04T01:05:34Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-qwen/medqa-1k-qwenMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-qwen/medqa-1k-qwenMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-04T03:31:20.463430",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-qwen_eval.json"
+        }
+      }
+    },
+    "medqa-1k-step-extract-qwen": {
+      "description": "1k uniform random sample with Qwen 2.5 7B",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": "step"
+        },
+        "training_params": "same as medqa-1k-random-step-extract",
+        "datasets": "same as base-step-prompt"
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-1k-step-extract-qwen_20250403_222432/med_s1k_formatted",
+          "timestamp": "2025-04-03T22:25:59.680302",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-step-extract-qwen_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-1k-step-extract-qwen",
+          "timestamp": "2025-04-04T01:14:44Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-step-extract-qwen/medqa-1k-step-extract-qwenMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-1k-step-extract-qwen/medqa-1k-step-extract-qwenMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-04T03:33:13.034178",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-1k-step-extract-qwen_eval.json"
+        }
+      }
+    },
     "base-nemotron": {
       "description": "Base Nemotron model without fine-tuning",
       "config": {
@@ -2070,6 +2153,14 @@
         "datasets": {
           "curate": null,
           "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-nemotron/Llama-3.1-Nemotron-Nano-8B-v1MedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-nemotron/Llama-3.1-Nemotron-Nano-8B-v1MedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-03T22:29:46.689394",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-nemotron_eval.json"
         }
       }
     },

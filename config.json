@@ -8,6 +8,10 @@
         "curation": "gemini-2.0-flash"
     },
     "models": {
+        "qwen2.5:7b": {
+            "hf_path": "Qwen/Qwen2.5-7B-Instruct",
+            "max_length": 128000
+        },
         "llama3.1:8b": {
             "hf_path": "meta-llama/Llama-3.1-8B-Instruct",
             "max_length": 128000
