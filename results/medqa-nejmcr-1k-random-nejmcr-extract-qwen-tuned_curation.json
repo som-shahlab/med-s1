@@ -1,0 +1,8 @@
+{
+  "total_examples": 1403,
+  "selected_examples": 1000,
+  "filtered_examples": 403,
+  "filter_reasons": {
+    "not_selected_in_sampling": 403
+  }
+}

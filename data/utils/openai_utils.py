@@ -15,8 +15,8 @@ from functools import partial, lru_cache
 from openai import OpenAI, AsyncOpenAI
 from google import genai
 from google.genai import types
-
-# Configure logging to only show warnings and errors
+# Configure logging to show info and above
+logging.getLogger().setLevel(logging.INFO)
 logging.getLogger().setLevel(logging.WARNING)
 
 # Global clients for reuse
@@ -24,12 +24,14 @@ _openai_client = None
 _gemini_client = None
 _config = None
 
+MED_S1_DIR = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
+
 @lru_cache(maxsize=1)
 def load_config() -> Dict:
     """Load configuration from config.json"""
     global _config
     if _config is None:
-        with open("config.json", "r") as f:
+        with open(os.path.join(MED_S1_DIR, "config.json"), "r") as f:
             _config = json.load(f)
     return _config
 
@@ -58,14 +60,30 @@ def get_client(model: str):
 
 # Cache for model responses
 response_cache = {}
-
 async def get_model_response(
     prompt: str,
     model: str,
-    max_retries: int = 5,
+    max_retries: int = 15,  # Increased from 5 to 10
     initial_retry_delay: float = 1.0,
-    max_tokens=500
+    max_tokens=8192,  # Increased from 500 to 8192 for long responses
+    raise_on_failure: bool = True  # New parameter to control error handling
 ) -> Optional[str]:
+    """Get response from model API with exponential backoff and caching.
+    
+    Args:
+        prompt: The prompt to send to the model
+        model: The model to use
+        max_retries: Maximum number of retries (default: 10)
+        initial_retry_delay: Initial delay between retries in seconds (default: 1.0)
+        max_tokens: Maximum tokens in response (default: 8192)
+        raise_on_failure: Whether to raise an exception on failure after max retries (default: True)
+    
+    Returns:
+        The model's response text, or None if raise_on_failure is False and all retries failed
+        
+    Raises:
+        RuntimeError: If raise_on_failure is True and all retries failed
+    """
     """Get response from model API with exponential backoff and caching"""
     # Check cache first
     cache_key = f"{model}:{prompt}"
@@ -123,19 +141,47 @@ async def get_model_response(
                     contents=contents,
                     config=generate_config
                 )
+                
+                # Check for various failure modes
+                if not response:
+                    logging.error("Gemini API returned None response object")
+                    raise RuntimeError("Gemini API returned None response object")
+                    
+                if not hasattr(response, 'text'):
+                    logging.error(f"Gemini response missing text attribute: {response}")
+                    raise RuntimeError("Gemini response missing text attribute")
+                
                 result = response.text
+                
+                # Treat None response as a failure that should trigger retry
+                if result is None:
+                    logging.error(f"Gemini API returned None response. Response object: {response}")
+                    raise RuntimeError("Gemini API returned None response")
+                
+                if result is None:
+                    logging.error(f"Gemini API returned None response. Response object: {response}")
 
             # Cache successful response
             response_cache[cache_key] = result
             return result
 
         except Exception as e:
+            # Log the error with more details
+            error_msg = f"API error (attempt {attempt + 1}/{max_retries}): {str(e)}"
+            if hasattr(e, 'response'):
+                error_msg += f"\nResponse: {e.response}"
+            logging.warning(error_msg)
+            
             if attempt < max_retries - 1:
+                # Calculate delay with jitter
                 delay = initial_retry_delay * (2 ** attempt) * (0.5 + random.random())
-                logging.warning(f"API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                logging.info(f"Retrying in {delay:.2f} seconds...")
                 await asyncio.sleep(delay)
             else:
-                logging.error(f"Failed to get response after {max_retries} attempts")
+                error_msg = f"Failed to get response after {max_retries} attempts"
+                logging.error(error_msg)
+                if raise_on_failure:
+                    raise RuntimeError(error_msg) from e
                 return None
 
 async def verify_answer(question: str, model_answer: str, correct_answer: str) -> tuple[bool, str]:

@@ -18,7 +18,14 @@ from .clinical_formatting import (
     transform_to_qa,
     transform_to_decision_tree,
     transform_to_socratic,
-    transform_to_cot
+    transform_to_cot,
+    transform_to_nejmcr_steps,
+    transform_to_gemini,
+    transform_to_nejmcr_transform,
+    transform_to_gemini_nejmcr,
+    transform_to_nejmcr_qa,
+    transform_to_nejmcr_reason,
+    transform_to_nejmcr_clean
 )
 
 # Get MED_S1_DIR from environment
@@ -55,7 +62,7 @@ async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_metho
     selected_df = df[df['selected_for_training'] & df['Complex_CoT'].notna() & (df['Complex_CoT'].str.strip() != '')].copy()
     
     # Increased batch size for better throughput
-    batch_size = 500  # Increased from 25 to 100
+    batch_size = 350  # Increased from 25 to 100
     total_batches = (len(selected_df) + batch_size - 1) // batch_size
 
     # Get model key once
@@ -71,8 +78,8 @@ async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_metho
         logging.info(f"Processing batch {i//batch_size + 1}/{total_batches} ({len(batch)} examples)")
 
         # Create tasks for all valid rows at once
-        if extract_method == "Chain of Thought":
-            # For CoT, pass the row
+        if extract_method in ["Chain of Thought", "NEJM Case Report", "NEJMCR Transform", "Gemini", "Gemini-NEJMCR", "NEJMCR Q&A", "NEJMCR Reasoning"]:
+            # For methods that need Question/Response or row data, pass the row
             tasks = [transform_func(row['Complex_CoT'], model_key, row=row, **kwargs)
                     for _, row in batch.iterrows()]
         else:
@@ -84,13 +91,30 @@ async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_metho
         batch_results = await asyncio.gather(*tasks)
 
         # Update results efficiently
-        for (idx, _), result in zip(batch.iterrows(), batch_results):
+        for (idx, row), result in zip(batch.iterrows(), batch_results):
             if result is not None:
                 logging.info(f"Raw {extract_method} extraction result: {result[:100]}...")
-                # Store extracted version in extraction column
-                df.loc[idx, 'Complex_CoT_extracted'] = result
-                # Always update the main column with the extraction
-                df.loc[idx, 'Complex_CoT'] = result
+                
+                # Handle Q&A updates differently
+                if extract_method == "NEJMCR Q&A":
+                    # Parse Q&A result and update columns
+                    lines = result.strip().split('\n')
+                    for line in lines:
+                        if line.startswith("Question:"):
+                            df.loc[idx, 'Question'] = line[9:].strip()
+                        elif line.startswith("Answer:"):
+                            df.loc[idx, 'Response'] = line[7:].strip()
+                    # Store raw result for debugging
+                    df.loc[idx, 'Complex_CoT_extracted'] = result
+                else:
+                    # For other transforms, update CoT columns
+                    df.loc[idx, 'Complex_CoT_extracted'] = result
+                    df.loc[idx, 'Complex_CoT'] = result
+                # Log updates for verification
+                if extract_method == "NEJMCR Q&A":
+                    logging.info(f"Updated Q&A for idx {idx}:")
+                    logging.info(f"Question: {df.loc[idx, 'Question']}")
+                    logging.info(f"Answer: {df.loc[idx, 'Response']}")
 
     logging.info(f"Completed {extract_method} extraction for {len(selected_df)} examples")
     return df
@@ -108,7 +132,9 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     """
     # Get extraction parameters from config
     curation_config = config.get("curation", {})
-    extract_method = curation_config.get("extract")
+    extract_config = curation_config.get("extract")
+    # Handle both string and list formats for extract
+    extract_methods = [extract_config] if isinstance(extract_config, str) else (extract_config or [])
     perturbation = curation_config.get("perturbation", {})
     perturbation_type = perturbation.get("type")
     perturbation_rate = perturbation.get("rate")
@@ -117,10 +143,11 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     # Load cached config
     full_config = load_full_config()
 
-    # If perturbation is specified, we need step extraction
-    if perturbation and extract_method != "step":
-        logging.warning("Perturbation requires step extraction. Forcing extract_method to 'step'")
-        extract_method = "step"
+    # If perturbation is specified, we need step extraction as the final transform
+    if perturbation:
+        if not extract_methods or extract_methods[-1] != "step":
+            logging.warning("Perturbation requires step extraction. Adding 'step' as final transform.")
+            extract_methods = extract_methods + ["step"]
 
     # Initialize tracking variables
     reused_from = None
@@ -139,7 +166,7 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
             results = json.load(f)
             
         logging.info(f"Looking for experiments to reuse with method={curation_config.get('method')}, "
-                    f"n_samples={curation_config.get('n_samples')}, extract={extract_method}")
+                    f"n_samples={curation_config.get('n_samples')}, extract={extract_methods}")
         if restore:
             logging.info(f"Need experiment with perturbation type={perturbation_type} rate={perturbation_rate} but not restored")
         elif perturbation:
@@ -295,52 +322,148 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     # Apply extraction if needed
     if need_extraction:
         logging.info("Applying extraction...")
-        if extract_method == "step":
-            df = await _apply_extraction_method(df, full_config, "step", transform_to_steps, extract_type="step")
-        elif extract_method == "1-sentence":
-            df = await _apply_extraction_method(df, full_config, "1-sentence", transform_to_steps, extract_type="1-sentence")
-        elif extract_method == "list":
-            df = await _apply_extraction_method(df, full_config, "list", transform_to_list)
-        elif extract_method == "markdown":
-            df = await _apply_extraction_method(df, full_config, "markdown", transform_to_markdown)
-        elif extract_method == "step-evidence":
-            df = await _apply_extraction_method(df, full_config, "step-evidence", transform_to_step_evidence)
-        elif extract_method in ["note", "soap", "soapie", "isbar", "pomr"]:
-            df = await _apply_extraction_method(df, full_config, extract_method.upper(), transform_to_note)
-        elif extract_method == "decision-tree":
-            df = await _apply_extraction_method(df, full_config, "decision tree", transform_to_decision_tree)
-        elif extract_method == "qa":
-            df = await _apply_extraction_method(df, full_config, "Q&A", transform_to_qa)
-        elif extract_method == "socratic":
-            df = await _apply_extraction_method(df, full_config, "Socratic dialogue", transform_to_socratic)
-        elif extract_method in ["cot", "cot-step"]:
-            # Create a wrapper function that takes Complex_CoT as input but uses Q&A
-            async def cot_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
-                # Use Question and Response from the row directly
-                return await transform_to_cot(row['Question'], row['Response'], model_key)
+        # Apply each extraction method in sequence
+        for extract_method in extract_methods:
+            logging.info(f"Applying {extract_method} extraction...")
             
-            # Override the default filtering to use Question and Response
-            df_filtered = df[df['selected_for_training'] & df['Question'].notna() & df['Response'].notna()].copy()
-            df = df[~df.index.isin(df_filtered.index)].copy()  # Keep unselected rows
+            # Store current state before transformation
+            if 'Complex_CoT_orig' not in df.columns:
+                df.loc[df['selected_for_training'], 'Complex_CoT_orig'] = df.loc[df['selected_for_training'], 'Complex_CoT']
             
-            # Add dummy Complex_CoT for _apply_extraction_method
-            df_filtered['Complex_CoT'] = 'dummy'
+            # Store pre-transform state for this method
+            df.loc[df['selected_for_training'], f'Complex_CoT_before_{extract_method}'] = df.loc[df['selected_for_training'], 'Complex_CoT']
             
-            # Use existing parallelization infrastructure
-            df_processed = await _apply_extraction_method(df_filtered, full_config, "Chain of Thought", cot_wrapper)
+            if extract_method == "step":
+                df = await _apply_extraction_method(df, full_config, "step", transform_to_steps, extract_type="step")
+            elif extract_method == "1-sentence":
+                df = await _apply_extraction_method(df, full_config, "1-sentence", transform_to_steps, extract_type="1-sentence")
+            elif extract_method == "list":
+                df = await _apply_extraction_method(df, full_config, "list", transform_to_list)
+            elif extract_method == "markdown":
+                df = await _apply_extraction_method(df, full_config, "markdown", transform_to_markdown)
+            elif extract_method == "step-evidence":
+                df = await _apply_extraction_method(df, full_config, "step-evidence", transform_to_step_evidence)
+            elif extract_method in ["note", "soap", "soapie", "isbar", "pomr"]:
+                df = await _apply_extraction_method(df, full_config, extract_method.upper(), transform_to_note)
+            elif extract_method == "decision-tree":
+                df = await _apply_extraction_method(df, full_config, "decision tree", transform_to_decision_tree)
+            elif extract_method == "qa":
+                df = await _apply_extraction_method(df, full_config, "Q&A", transform_to_qa)
+            elif extract_method == "socratic":
+                df = await _apply_extraction_method(df, full_config, "Socratic dialogue", transform_to_socratic)
+            elif extract_method in ["cot", "cot-step"]:
+                # Create a wrapper function that takes Complex_CoT as input but uses Q&A
+                async def cot_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                    # Use Question and Response from the row directly
+                    return await transform_to_cot(row['Question'], row['Response'], model_key)
+                
+                # Override the default filtering to use Question and Response
+                df_filtered = df[df['selected_for_training'] & df['Question'].notna() & df['Response'].notna()].copy()
+                df = df[~df.index.isin(df_filtered.index)].copy()  # Keep unselected rows
+                
+                # Add dummy Complex_CoT for _apply_extraction_method
+                df_filtered['Complex_CoT'] = 'dummy'
+                
+                # Use existing parallelization infrastructure
+                df_processed = await _apply_extraction_method(df_filtered, full_config, "Chain of Thought", cot_wrapper)
+                
+                # For cot-step, apply step formatting to the generated CoT
+                if extract_method == "cot-step":
+                    logging.info("Applying step formatting to generated CoT...")
+                    # Store the CoT before step formatting
+                    df_processed['Complex_CoT_orig'] = df_processed['Complex_CoT']
+                    # Apply step formatting
+                    df_processed = await _apply_extraction_method(df_processed, full_config, "step", transform_to_steps, extract_type="step")
+                
+                # Merge back
+                df = pd.concat([df, df_processed])
+            elif extract_method == "nejmcr":
+                # Simply return Complex_CoT as-is
+                logging.info("Using original Complex_CoT without transformation")
+                df['Complex_CoT_extracted'] = df['Complex_CoT']
+            elif extract_method == "gemini":
+                # Create wrapper for Gemini transformation
+                async def gemini_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                    # Use Question instead of CoT for Gemini
+                    return await transform_to_gemini(row['Question'], model_key, row['Response'])
+                
+                # Use existing parallelization infrastructure
+                df = await _apply_extraction_method(df, full_config, "Gemini", gemini_wrapper)
+            elif extract_method == "nejmcr-transform":
+                # Create wrapper for NEJMCR transformation
+                async def nejmcr_transform_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                    return await transform_to_nejmcr_transform(cot, model_key, row['Response'])
+                
+                # Use existing parallelization infrastructure
+                df = await _apply_extraction_method(df, full_config, "NEJMCR Transform", nejmcr_transform_wrapper)
+            elif extract_method == "gemini-nejmcr":
+                # Create wrapper for Gemini-NEJMCR transformation
+                async def gemini_nejmcr_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                    # Pass both Question and CoT for Gemini-NEJMCR
+                    return await transform_to_gemini_nejmcr(
+                        row['Question'],
+                        model_key,
+                        row['Response'],
+                        cot  # Original CoT for enhancement
+                    )
+                
+                # Use existing parallelization infrastructure
+                df = await _apply_extraction_method(df, full_config, "Gemini-NEJMCR", gemini_nejmcr_wrapper)
+            elif extract_method == "nejmcr-qa":
+                # Create wrapper for NEJMCR Q&A transformation
+                async def nejmcr_qa_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                    # Remove "What is the diagnosis of the patient?" from question
+                    original_question = row['Question']
+                    clean_question = original_question.replace("\nWhat is the diagnosis of the patient?", "")
+                    
+                    # Get new Q&A
+                    qa_result = await transform_to_nejmcr_qa(
+                        clean_question,
+                        cot,
+                        row['Response'],
+                        model_key
+                    )
+                    return qa_result
+                
+                # Use existing parallelization infrastructure
+                # Q&A updates are handled in _apply_extraction_method
+                df = await _apply_extraction_method(df, full_config, "NEJMCR Q&A", nejmcr_qa_wrapper)
+                
+            elif extract_method == "nejmcr-reason":
+                # Create wrapper for NEJMCR reasoning transformation
+                async def nejmcr_reason_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
+                    # Log input for debugging
+                    logging.info(f"NEJMCR Reason input for idx {row.name}:")
+                    logging.info(f"Question: {row['Question']}")
+                    logging.info(f"Answer: {row['Response']}")
+                    logging.info(f"Original CoT: {cot[:100]}...")
+                    
+                    # Generate new reasoning based on the updated Q&A
+                    new_reasoning = await transform_to_nejmcr_reason(
+                        cot,
+                        row['Question'],  # Using updated question from nejmcr-qa
+                        row['Response'],  # Using updated answer from nejmcr-qa
+                        model_key
+                    )
+                    
+                    # Log output for verification
+                    logging.info(f"Generated new reasoning: {new_reasoning[:100]}...")
+                    return new_reasoning
+                
+                # Use existing parallelization infrastructure
+                df = await _apply_extraction_method(df, full_config, "NEJMCR Reasoning", nejmcr_reason_wrapper)
+            elif extract_method == "nejmcr-clean":
+                # Create wrapper for NEJMCR clean transformation
+                async def nejmcr_clean_wrapper(cot: str, model_key: str) -> str:
+                    return await transform_to_nejmcr_clean(cot, model_key)
+                
+                # Use existing parallelization infrastructure
+                df = await _apply_extraction_method(df, full_config, "NEJMCR Clean", nejmcr_clean_wrapper)
+            else:
+                logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
             
-            # For cot-step, apply step formatting to the generated CoT
-            if extract_method == "cot-step":
-                logging.info("Applying step formatting to generated CoT...")
-                # Store the CoT before step formatting
-                df_processed['Complex_CoT_orig'] = df_processed['Complex_CoT']
-                # Apply step formatting
-                df_processed = await _apply_extraction_method(df_processed, full_config, "step", transform_to_steps, extract_type="step")
-            
-            # Merge back
-            df = pd.concat([df, df_processed])
-        else:
-            logging.warning(f"Unknown extraction method: {extract_method}. No extraction applied.")
+            # Store post-transform state for this method
+            df.loc[df['selected_for_training'], f'Complex_CoT_after_{extract_method}'] = df.loc[df['selected_for_training'], 'Complex_CoT']
 
     # Apply perturbation if needed
     if need_perturbation:
@@ -359,7 +482,7 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
     selected_df = df[df['selected_for_training']]
     if len(selected_df) > 0:
         first_example = selected_df.iloc[0]
-        logging.info(f"First example after {extract_method} extraction:")
+        logging.info(f"First example after extraction:")
         if 'Complex_CoT_orig' in first_example and pd.notna(first_example['Complex_CoT_orig']):
             logging.info(f"Original CoT length: {len(str(first_example['Complex_CoT_orig']))}")
         if 'Complex_CoT_perturbed' in first_example and pd.notna(first_example['Complex_CoT_perturbed']):

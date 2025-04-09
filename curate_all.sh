@@ -17,6 +17,14 @@
 # bash curate_med_s1k.sh medqa-10k-random-no-cot
 
 # Case reports
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-cot-extract-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned-m1
+
+# Synthetic with no transformation
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-qwen
+
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-step-extract-qwen
 bash curate_med_s1k.sh medqa-nejmcr-1k-random
 bash curate_med_s1k.sh medqa-nejmcr-1k-random-step-extract
 bash curate_med_s1k.sh medqa-nejmcr-1k-random-cot-extract

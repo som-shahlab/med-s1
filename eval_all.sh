@@ -27,6 +27,13 @@ sbatch eval/eval.sh medqa-25k
 sbatch eval/eval.sh medqa-25k-step-extract
 
 # Case reports
+sbatch eval/eval.sh medqa-nejmcr-1k-random-qwen
+sbatch eval/eval.sh medqa-nejmcr-1k-random-qwen-tuned
+sbatch eval/eval.sh medqa-nejmcr-1k-random-cot-extract-qwen-tuned
+sbatch eval/eval.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned --dependency=afterany:91405
+
+sbatch eval/eval.sh medqa-nejmcr-1k-random-step-extract-qwen
+
 sbatch eval/eval.sh medqa-nejmcr-1k-random
 sbatch eval/eval.sh medqa-nejmcr-1k-random-step-extract
 sbatch eval/eval.sh medqa-nejmcr-1k-random-cot-extract

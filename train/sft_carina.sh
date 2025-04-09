@@ -114,6 +114,10 @@ echo "  Key: $model_key"
 echo "  Path: $model"
 echo "Training Parameters:"
 echo "  Learning Rate: $learning_rate"
+echo "  Original Batch Size per GPU: $(echo "$resolved_config" | jq -r '.training_params.batch_size')"
+echo "  Adjusted Batch Size per GPU: $batch_size"
+echo "  Original Gradient Accumulation Steps: $(echo "$resolved_config" | jq -r '.training_params.gradient_accumulation_steps')"
+echo "  Adjusted Gradient Accumulation Steps: $grad_acc"
 echo "  Batch Size per GPU: $batch_size"
 echo "  Number of GPUs: $NUM_GPUS"
 echo "  Gradient Accumulation Steps (base): $base_grad_acc"
@@ -290,11 +294,11 @@ fi
 
 # Launch training command with Accelerate
 echo "Launching training with accelerate..."
-# Set early stopping parameters with hardcoded defaults
-early_stopping="false"  # Set to "true" to enable early stopping
-early_stopping_patience="2"
-early_stopping_threshold="0.001"
-early_stopping_metric="loss"  # Options: "loss" or "accuracy"
+# Set early stopping parameters to save best model but never stop
+early_stopping="true"  # Enable early stopping to track best model
+early_stopping_patience="999999"  # Very high patience to effectively disable stopping
+early_stopping_threshold="0.0"  # Any improvement counts as better
+early_stopping_metric="loss"  # Track loss for best model selection
 
 # Build early stopping flags
 early_stopping_flags=""

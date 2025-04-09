@@ -22,6 +22,18 @@ sbatch train/sft_carina.sh medqa-25k
 sbatch train/sft_carina.sh medqa-25k-step-extract
 
 # Case reports
+
+# focus on fine-tuning these:
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-qwen
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-qwen-tuned
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-cot-extract-qwen
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-cot-extract-qwen-tuned
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned-m1
+sbatch --dependency=afterany:914057 train/sft_carina.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned
+
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-step-extract-qwen
+
 sbatch train/sft_carina.sh medqa-nejmcr-1k-random
 sbatch train/sft_carina.sh medqa-nejmcr-1k-random-step-extract
 sbatch train/sft_carina.sh medqa-nejmcr-1k-random-cot-extract

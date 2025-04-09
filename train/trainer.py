@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    get_cosine_schedule_with_warmup
+    get_cosine_schedule_with_warmup,
 )
 from accelerate import Accelerator
 from tqdm import tqdm
@@ -208,11 +208,25 @@ class SFTTrainer:
                 logger.info(f"  Approximately {1/actual_frequency:.1f} validations per epoch")
 
         # Create scheduler
+        # Scale learning rate to achieve desired minimum of 1e-6
+        # If we want LR to decay from 5e-6 to 1e-6,
+        # we can scale by 4e-6 and add 1e-6 base
+        original_lr = self.optimizer.param_groups[0]['lr']
+        scaled_lr = original_lr - 1e-6  # This will decay to 0
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = scaled_lr
+            
+        # Create scheduler that will decay the scaled portion to 0
         self.lr_scheduler = get_cosine_schedule_with_warmup(
             optimizer=self.optimizer,
             num_warmup_steps=num_warmup_steps,
             num_training_steps=self.num_training_steps,
+            num_cycles=0.5  # Ensure single half-cosine decay
         )
+        
+        # Add back the minimum LR
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] += 1e-6
 
         # Prepare everything with accelerator
         if self.has_validation:
@@ -281,14 +295,15 @@ class SFTTrainer:
             
         # Determine current metric value based on configuration
         current_metric = val_loss if self.config.early_stopping_metric == 'loss' else val_acc
-        
         # For loss, lower is better; for accuracy, higher is better
+        # With threshold=0.0, any improvement counts
         is_better = False
         if self.config.early_stopping_metric == 'loss':
-            # Check if current loss is better (lower) than best loss by at least the threshold
-            is_better = current_metric < (self.best_metric - self.config.early_stopping_threshold)
+            # Check if current loss is better (lower) than best loss
+            is_better = current_metric < self.best_metric
         else:
-            # Check if current accuracy is better (higher) than best accuracy by at least the threshold
+            # Check if current accuracy is better (higher) than best accuracy
+            is_better = current_metric > self.best_metric
             is_better = current_metric > (self.best_metric + self.config.early_stopping_threshold)
         
         if is_better:

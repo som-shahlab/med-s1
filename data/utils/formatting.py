@@ -34,7 +34,7 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
         else:
             if "Llama" in model_name:
                 assistant_content = f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
-            else:  # Qwen
+            else:  # Qwen - match the same format as with thinking
                 assistant_content = f"<|im_start|>answer\n{answer}"
     else:
         # Format assistant content based on format flag
@@ -45,11 +45,12 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
             # Nemotron format with <think> tags
             assistant_content = f"<think>{thinking}</think>{answer}"
         elif format == "qwen":  # Qwen
-            assistant_content = f"<|im_start|>think\n{thinking}\n" + \
-                                f"<|im_start|>answer\n{answer}"
+            # Match m1's simpler format without extra <|im_end|> tags
+            assistant_content = f"<|im_start|>think\n{thinking}\n<|im_start|>answer\n{answer}"
         else:
+            # Keep consistent format for other models
             assistant_content = f"<|start_header_id|>think<|end_header_id|>\n{thinking}\n" + \
-                                f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
+                              f"<|start_header_id|>answer<|end_header_id|>\n{answer}"
     
     # Apply chat template with model-specific handling
     if format == "nemotron":
@@ -61,11 +62,11 @@ def format_chat_template(question: str, thinking: str, answer: str, model_name: 
             {"role": "assistant", "content": assistant_content}
         ], tokenize=False)
     elif format == "qwen":
-        # Use Qwen's default chat template with system message
+        # Simplified chat template without system message, matching m1's implementation
         return tokenizer.apply_chat_template([
             {"role": "user", "content": question},
             {"role": "assistant", "content": assistant_content}
-        ], tokenize=False, add_generation_prompt=True)
+        ], tokenize=False)
     else:
         # Default chat template for other models
         return tokenizer.apply_chat_template([
@@ -105,6 +106,8 @@ def format_for_training(df: pd.DataFrame, config: Dict, experiment_config: Dict,
         logging.info("Using '## Thinking' and '## Final Response' markers")
     elif format == "nemotron":
         logging.info("Using '<think>' tags")
+    elif format == "qwen":
+        logging.info("Using '<|im_start|>think' and '<|im_start|>answer' markers")
     else:
         logging.info("Using model-specific markers with Answer: prefix")
 

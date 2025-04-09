@@ -135,17 +135,36 @@ class PreformattedDataset(Dataset):
         labels_list = []
         
         for text in batch:
-            # Split into query and response
-            query, response = self.get_query_and_response(text)
-            
             # Encode full text
             input_ids = self.tokenizer.encode(text, add_special_tokens=False)
             
-            # Encode query to get its length
-            query_ids = self.tokenizer.encode(query, add_special_tokens=False)
+            # Create labels array initialized to -100
+            labels = [-100] * len(input_ids)
             
-            # Create labels: -100 for query tokens, actual ids for response
-            labels = [-100] * len(query_ids) + input_ids[len(query_ids):]
+            if '<|im_start|>' in text:  # Qwen format
+                # Find start positions of think and answer sections
+                think_start = text.find('<|im_start|>think\n')
+                answer_start = text.find('<|im_start|>answer\n')
+                
+                # Get token indices for these positions
+                think_start_idx = len(self.tokenizer.encode(text[:think_start], add_special_tokens=False))
+                answer_start_idx = len(self.tokenizer.encode(text[:answer_start], add_special_tokens=False))
+                
+                # Set labels for think and answer sections
+                if think_start != -1:
+                    # From "think\n" until next "<|im"
+                    next_tag = text.find('<|im', think_start + 12)
+                    think_end_idx = len(self.tokenizer.encode(text[:next_tag], add_special_tokens=False))
+                    labels[think_start_idx:think_end_idx] = input_ids[think_start_idx:think_end_idx]
+                
+                if answer_start != -1:
+                    # From "answer\n" until end of text
+                    labels[answer_start_idx:] = input_ids[answer_start_idx:]
+            else:
+                # For other formats, mask out only the query section
+                query, response = self.get_query_and_response(text)
+                query_ids = self.tokenizer.encode(query, add_special_tokens=False)
+                labels[len(query_ids):] = input_ids[len(query_ids):]
             
             # Verify lengths match
             assert len(labels) == len(input_ids), f"Length mismatch: labels={len(labels)}, input_ids={len(input_ids)}"
