@@ -14,6 +14,7 @@ from transformers import (
     AutoTokenizer,
     get_cosine_schedule_with_warmup,
 )
+import json
 from accelerate import Accelerator
 from tqdm import tqdm
 import wandb
@@ -107,7 +108,6 @@ class SFTTrainer:
             self.config.debug,
             split="train"
         )
-        
         # Create validation dataset if available
         try:
             val_dataset = PreformattedDataset(
@@ -273,11 +273,19 @@ class SFTTrainer:
                 
                 # Update metrics
                 val_metric(outputs.logits, batch["labels"], loss)
+                
+                # Free up memory
+                del outputs
+                torch.cuda.empty_cache()
         
         # Get validation metrics
         val_acc, val_loss = val_metric.get_metric()
-        self.model.train()
         
+        # Log validation sample count
+        if self.accelerator.is_main_process:
+            logger.info(f"Validated on {len(self.val_dataloader.dataset)} samples")
+            
+        self.model.train()
         return val_loss, val_acc
         
     def check_early_stopping(self, val_loss: float, val_acc: float) -> bool:

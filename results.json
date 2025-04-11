@@ -1,5 +1,27 @@
 {
   "experiments": {
+    "base-qwen": {
+      "description": "Pre-trained Qwen 2.5 7B model without fine-tuning",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": null,
+        "training_params": null,
+        "datasets": "same as base",
+        "format": "qwen"
+      },
+      "results": {
+        "curation": null,
+        "training": null,
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/Qwen2.5-7B-InstructMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/Qwen2.5-7B-InstructMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-11T06:39:15.003341",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-qwen_eval.json",
+          "output_dir": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/eval_data_20250411_055930",
+          "metrics_file": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/eval_data_20250411_055930/eval_data_metrics.json"
+        }
+      }
+    },
     "base": {
       "description": "Base LLaMA model without fine-tuning",
       "config": {
@@ -55,8 +77,10 @@
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8BMedMCQA_validation.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/HuatuoGPT-o1-8BMedMCQA_validation_metrics.json",
-          "timestamp": "2025-04-03T21:44:14.575912",
-          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo_eval.json"
+          "timestamp": "2025-04-10T14:12:30.130980",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/huatuo_eval.json",
+          "output_dir": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/eval_data_20250410_135621",
+          "metrics_file": "/share/pi/nigam/users/calebwin/hf_cache/eval/huatuo/eval_data_20250410_135621/eval_data_metrics.json"
         }
       }
     },
@@ -99,7 +123,7 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random-qwen",
-          "timestamp": "2025-04-06T00:28:51Z",
+          "timestamp": "2025-04-11T07:17:52Z",
           "metrics": null
         },
         "eval": {
@@ -150,14 +174,287 @@
         },
         "training": {
           "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random-qwen-tuned",
-          "timestamp": "2025-04-06T00:54:21Z",
+          "timestamp": "2025-04-11T14:29:39Z",
           "metrics": null
         },
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-qwen-tuned/medqa-nejmcr-1k-random-qwen-tunedMedMCQA_validation.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-qwen-tuned/medqa-nejmcr-1k-random-qwen-tunedMedMCQA_validation_metrics.json",
-          "timestamp": "2025-04-06T01:53:20.725831",
-          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-qwen-tuned_eval.json"
+          "timestamp": "2025-04-11T16:55:27.907122",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-qwen-tuned_eval.json",
+          "output_dir": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-qwen-tuned/eval_data_20250411_163740",
+          "metrics_file": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-qwen-tuned/eval_data_20250411_163740/eval_data_metrics.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-nejmcr-qa-qwen-tuned": {
+      "description": "1k uniform random sample from NEJM case reports with NEJM case report style Q&A and reasoning extraction and tuned hyperparameters",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": [
+            "nejmcr-qa"
+          ]
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.001,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 4
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-qa-qwen-tuned_20250411_175001/med_s1k_formatted",
+          "timestamp": "2025-04-11T17:50:53.394937",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-qa-qwen-tuned_curation.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-nejmcr-abl-extract-qwen-tuned": {
+      "description": "1k random sample with NEJM Q&A and basic reasoning extraction only",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": [
+            "nejmcr-qa",
+            "nejmcr-reason-extraction"
+          ]
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.001,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 4
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-abl-extract-qwen-tuned_20250411_195839/med_s1k_formatted",
+          "timestamp": "2025-04-11T20:04:04.785380",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-abl-extract-qwen-tuned_curation.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-nejmcr-abl-structure-qwen-tuned": {
+      "description": "1k random sample with NEJM Q&A and structured reasoning extraction",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": [
+            "nejmcr-qa",
+            "nejmcr-reason-structure"
+          ]
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.001,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 4
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-abl-structure-qwen-tuned_20250411_200725/med_s1k_formatted",
+          "timestamp": "2025-04-11T20:09:00.940781",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-abl-structure-qwen-tuned_curation.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-nejmcr-abl-depth-qwen-tuned": {
+      "description": "1k random sample with NEJM Q&A and comprehensive reasoning extraction",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": [
+            "nejmcr-qa",
+            "nejmcr-reason-depth"
+          ]
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.001,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 4
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-abl-depth-qwen-tuned_20250411_200726/med_s1k_formatted",
+          "timestamp": "2025-04-11T20:09:46.941034",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-abl-depth-qwen-tuned_curation.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-nejmcr-abl-purity-qwen-tuned": {
+      "description": "1k random sample with NEJM Q&A and pure reasoning extraction",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": [
+            "nejmcr-qa",
+            "nejmcr-reason-purity"
+          ]
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.001,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 4
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-abl-purity-qwen-tuned_20250411_200732/med_s1k_formatted",
+          "timestamp": "2025-04-11T20:10:31.589439",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-abl-purity-qwen-tuned_curation.json"
+        }
+      }
+    },
+    "medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned": {
+      "description": "1k uniform random sample from NEJM case reports with NEJM case report style Q&A and reasoning extraction and tuned hyperparameters",
+      "config": {
+        "model_key": "qwen2.5:7b",
+        "curation": {
+          "method": "random",
+          "format": "qwen",
+          "n_samples": 1000,
+          "extract": [
+            "nejmcr-qa",
+            "nejmcr-reason",
+            "nejmcr-clean"
+          ]
+        },
+        "training_params": {
+          "learning_rate": 5e-06,
+          "batch_size": 2,
+          "num_epochs": 5,
+          "weight_decay": 0.001,
+          "warmup_ratio": 0.2,
+          "optimizer": {
+            "no_decay_params": [
+              "bias",
+              "LayerNorm.weight"
+            ],
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-08
+          },
+          "gradient_accumulation_steps": 4
+        },
+        "datasets": {
+          "curate": "nejmcr",
+          "eval": "huatuo-eval"
+        }
+      },
+      "results": {
+        "curation": {
+          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned_20250410_132718/med_s1k_formatted",
+          "timestamp": "2025-04-10T13:30:16.758144",
+          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned_curation.json"
+        },
+        "training": {
+          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned",
+          "timestamp": "2025-04-10T14:25:50Z",
+          "metrics": null
+        },
+        "eval": {
+          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned/best_modelMedMCQA_validation.json",
+          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned/best_modelMedMCQA_validation_metrics.json",
+          "timestamp": "2025-04-11T12:33:53.908175",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned_eval.json",
+          "output_dir": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned/eval_data_20250411_112153",
+          "metrics_file": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned/eval_data_20250411_112153/eval_data_metrics.json"
         }
       }
     },
@@ -421,61 +718,6 @@
         "eval_qualitative": {
           "path": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned_qualitative.json",
           "timestamp": "2025-04-08T06:05:39.664466"
-        }
-      }
-    },
-    "medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned": {
-      "description": "1k uniform random sample from NEJM case reports with NEJM case report style Q&A and reasoning extraction and tuned hyperparameters",
-      "config": {
-        "model_key": "qwen2.5:7b",
-        "curation": {
-          "method": "random",
-          "format": "qwen",
-          "n_samples": 1000,
-          "extract": [
-            "nejmcr-qa",
-            "nejmcr-reason",
-            "nejmcr-clean"
-          ]
-        },
-        "training_params": {
-          "learning_rate": 5e-06,
-          "batch_size": 2,
-          "num_epochs": 5,
-          "weight_decay": 0.001,
-          "warmup_ratio": 0.2,
-          "optimizer": {
-            "no_decay_params": [
-              "bias",
-              "LayerNorm.weight"
-            ],
-            "adam_beta1": 0.9,
-            "adam_beta2": 0.999,
-            "adam_epsilon": 1e-08
-          },
-          "gradient_accumulation_steps": 4
-        },
-        "datasets": {
-          "curate": "nejmcr",
-          "eval": "huatuo-eval"
-        }
-      },
-      "results": {
-        "curation": {
-          "dataset_path": "/share/pi/nigam/users/calebwin/hf_cache/med-s1k/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned_20250409_053218/med_s1k_formatted",
-          "timestamp": "2025-04-09T05:40:21.367489",
-          "stats_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned_curation.json"
-        },
-        "training": {
-          "model_path": "/share/pi/nigam/users/calebwin/hf_cache/ckpts/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned",
-          "timestamp": "2025-04-09T06:00:17Z",
-          "metrics": null
-        },
-        "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned/best_modelMedMCQA_validation.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned/best_modelMedMCQA_validation_metrics.json",
-          "timestamp": "2025-04-09T06:22:36.460377",
-          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned_eval.json"
         }
       }
     },
@@ -2531,26 +2773,6 @@
         }
       }
     },
-    "base-qwen": {
-      "description": "Pre-trained Qwen 2.5 7B model without fine-tuning",
-      "config": {
-        "model_key": "qwen2.5:7b",
-        "curation": null,
-        "training_params": null,
-        "datasets": "same as base",
-        "format": "qwen"
-      },
-      "results": {
-        "curation": null,
-        "training": null,
-        "eval": {
-          "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/Qwen2.5-7B-InstructMedMCQA_validation.json",
-          "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-qwen/Qwen2.5-7B-InstructMedMCQA_validation_metrics.json",
-          "timestamp": "2025-04-04T03:40:25.272535",
-          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-qwen_eval.json"
-        }
-      }
-    },
     "medqa-1k-qwen": {
       "description": "1k uniform random sample with Qwen 2.5 7B",
       "config": {
@@ -2629,8 +2851,10 @@
         "eval": {
           "outputs_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-nemotron/Llama-3.1-Nemotron-Nano-8B-v1MedMCQA_validation.json",
           "metrics_path": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-nemotron/Llama-3.1-Nemotron-Nano-8B-v1MedMCQA_validation_metrics.json",
-          "timestamp": "2025-04-03T22:29:46.689394",
-          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-nemotron_eval.json"
+          "timestamp": "2025-04-10T11:10:13.990664",
+          "summary_file": "/share/pi/nigam/users/calebwin/med-s1/results/base-nemotron_eval.json",
+          "output_dir": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-nemotron/MedMCQA_validation_20250410_092115",
+          "metrics_file": "/share/pi/nigam/users/calebwin/hf_cache/eval/base-nemotron/MedMCQA_validation_20250410_092115/eval_data_metrics.json"
         }
       }
     },

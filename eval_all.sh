@@ -16,6 +16,15 @@
 # sbatch eval/eval.sh medqa-10k-random-no-cot
 # sbatch eval/eval.sh medqa-25k
 
+# RQ1 - does training on human-generated reasoning improve performance?
+sbatch eval/eval.sh base-qwen
+sbatch eval/eval.sh medqa-nejmcr-1k-random-qwen-tuned
+
+# Models trained on synthetic reasoning
+sbatch eval/eval.sh huatuo
+sbatch eval/eval.sh base-qwen
+sbatch eval/eval.sh base-nemotron
+
 # Test chat formats
 sbatch eval/eval.sh huatuo
 sbatch eval/eval.sh medqa-1k-random
@@ -30,7 +39,9 @@ sbatch eval/eval.sh medqa-25k-step-extract
 sbatch eval/eval.sh medqa-nejmcr-1k-random-qwen
 sbatch eval/eval.sh medqa-nejmcr-1k-random-qwen-tuned
 sbatch eval/eval.sh medqa-nejmcr-1k-random-cot-extract-qwen-tuned
-sbatch eval/eval.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned --dependency=afterany:91405
+sbatch eval/eval.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned
+sbatch eval/eval.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned-m1
+# --dependency=afterany:91416 
 
 sbatch eval/eval.sh medqa-nejmcr-1k-random-step-extract-qwen
 

@@ -890,12 +890,10 @@ Filter from the case report detailed reasoning for answering the question with "
 The reasoning must:
 1. Be presented as step-by-step reasoning, with each thought on a new line separated by a line break.
 2. Provide maximally in-depth reasoning for every statement (i.e. include all pertinent positives, negatives, counterfactuals, alternatives, etc.).
-3. Be a plausible reasoning based ONLY on facts provided in the QUESTION
-4. Rely primarily on biomedical and clinical knowledge from the case report.
-5. Be written as if I am the doctor reasoning out loud having never seen the case report, only having seen the question.
-6. NEVER mention the case report
-
-IMPORTANT: The reasoning must NEVER cite the case report or say something like "the case report mentions that <biomedical/clinical rationale>" --> instead say "<biomedical/clinical rationale>".
+3. Rely primarily on biomedical and clinical knowledge from the case report.
+4. Include relevant reflection, backtracking, and self-validation present in the case report.
+5. Be written as if I am the doctor reasoning out loud having never seen the case report, ONLY having seen the facts in the QUESTION.
+6. NEVER cite the case report
 
 IMPORTANT: Start directly with the reasoning without any introduction or meta-text.
 """
@@ -934,6 +932,7 @@ Reasoning:
 
 Edit the reasoning with the following changes:
 1. Remove mentions of the case report. Change any language like "the case report mentions that <biomedical/clinical rationale>" --> to instead say "<biomedical/clinical rationale>".
+2. Edit the transitions in reasoning sound to sound more naturally dynamic, weaving in words like "Oh" "Hmm" "Wait"
 
 Do NOT edit anything else in the reasoning.
 

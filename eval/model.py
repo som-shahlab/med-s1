@@ -1,171 +1,114 @@
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
+import json
 from tqdm import tqdm
-from collections import Counter
-from scorer import match_choice
 
 async def process_data_batch(
     engine,
     tokenizer,
     input_data: List[Dict],
-    template,
-    query_prompt: str,
-    max_new_tokens: int,
-    temperature: float,
-    is_use_chat_template: bool,
-    max_tokens: int,
-    batch_size: int = 256
+    template=None,
+    query_prompt=None,
+    max_new_tokens=4096,
+    temperature=0.0,
+    is_use_chat_template=True
 ) -> List[Dict]:
-    """Process a batch of data through the model."""
-    results = []
-    total_batches = (len(input_data) + batch_size - 1) // batch_size
+    """Process a batch of data through the model.
     
-    print(f"Processing {len(input_data)} examples in {total_batches} batches (size {batch_size})...")
+    This function handles parallel inference for a batch of items.
+    Uses asyncio.gather for parallel processing while being careful about resources.
     
-    for i in tqdm(range(0, len(input_data), batch_size), desc="Processing batches"):
-        batch = input_data[i:i + batch_size]
-        current_batch = i // batch_size + 1
-        print(f"\nBatch {current_batch}/{total_batches} ({len(batch)} examples)")
+    Args:
+        engine: The model engine to use
+        tokenizer: The tokenizer to use
+        input_data: List of data points to process (a single batch)
+        template: Optional template function for formatting prompts
+        query_prompt: Optional query prompt template
+        max_new_tokens: Maximum number of new tokens to generate
+        temperature: Temperature for sampling
+        is_use_chat_template: Whether to use chat template
         
-        # Format batch
-        for item in batch:
-            item['option_str'] = '\n'.join([f'{op}. {ans}' for op,ans in item['options'].items()])
-            item["input_str"] = query_prompt.format_map(item)
+    Returns:
+        List of results with model outputs
+    """
+    # Format prompts for this batch
+    all_prompts = []
+    for item in input_data:
+        # Format options string
+        options = item['options']
+        option_str = "\n".join(f"{k}. {v}" for k, v in options.items())
         
-        # Process batch
-        prompts = [item["input_str"] for item in batch]
-        
-        # Print first example's raw input before template
-        if current_batch == 1:
-            print("\nFirst example raw input (before template):", flush=True)
-            print("=" * 80, flush=True)
-            print(prompts[0], flush=True)
-            print("=" * 80, flush=True)
-        
-        if is_use_chat_template:
-            if callable(template):
-                # For custom template functions (like Nemotron)
-                if current_batch == 1:
-                    print("\nFirst example chat messages:", flush=True)
-                    print("=" * 80, flush=True)
-                    print({"role": "user", "content": prompts[0]}, flush=True)
-                    print("=" * 80, flush=True)
-                
-                prompts = [template([{"role": "user", "content": p}])
-                          for p in prompts]
-                
-                # Print first example's formatted input
-                if current_batch == 1:
-                    print("\nFirst example after chat template:", flush=True)
-                    print("=" * 80, flush=True)
-                    print(prompts[0], flush=True)
-                    print("=" * 80, flush=True)
-            else:
-                # For Jinja2 templates
-                prompts = [template.render(messages=[{"role": "user", "content": p}],
-                                        bos_token=tokenizer.bos_token,
-                                        add_generation_prompt=True)
-                          for p in prompts]
-        
-        # Generate completions using sglang
-        tasks = [
-            engine.async_generate(
-                prompt=prompt,
-                sampling_params={
-                    "temperature": temperature,
-                    "max_new_tokens": max_new_tokens,
-                    "top_p": 0.9
-                }
+        # Format prompt
+        if query_prompt:
+            prompt = query_prompt.format(
+                question=item['question'],
+                option_str=option_str
             )
-            for prompt in prompts
-        ]
-        outputs = await asyncio.gather(*tasks)
-        preds = [output['text'] for output in outputs]
-        # Print first example's output
-        if current_batch == 1:
-            print("\nFirst example output from model:", flush=True)
-            print("=" * 80, flush=True)
-            print(preds[0], flush=True)
-            print("=" * 80, flush=True)
-            print("=" * 80)
+        else:
+            prompt = item['question']
         
-        # Store results
-        for item, pred in zip(batch, preds):
-            if len(pred) > 0:
-                item_copy = item.copy()
-                item_copy["output"] = pred
-                results.append(item_copy)
+        # Apply template if provided
+        if template and is_use_chat_template:
+            messages = [{"role": "user", "content": prompt}]
+            prompt = template(messages)
+        
+        all_prompts.append(prompt)
     
-    return results
-
-async def process_gpqa_with_multiple_runs(
-    engine,
-    tokenizer,
-    gpqa_data: List[Dict],
-    template,
-    query_prompt: str,
-    max_new_tokens: int,
-    temperature: float,
-    is_use_chat_template: bool,
-    max_tokens: int,
-    batch_size: int,
-    num_runs: int
-) -> List[Dict]:
-    """Process GPQA data with multiple runs and majority voting."""
-    print(f"\nProcessing {len(gpqa_data)} GPQA examples with {num_runs} runs each...")
-    gpqa_results = []
-    
-    # Run GPQA data multiple times
-    for run in range(num_runs):
-        print(f"\nGPQA Run {run+1}/{num_runs}")
-        run_results = await process_data_batch(
-            engine=engine,
-            tokenizer=tokenizer,
-            input_data=gpqa_data,
-            template=template,
-            query_prompt=query_prompt,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            is_use_chat_template=is_use_chat_template,
-            max_tokens=max_tokens,
-            batch_size=batch_size
-        )
+    try:
+        # Create tasks for parallel inference
+        tasks = []
+        for prompt in all_prompts:
+            task = asyncio.create_task(
+                engine.async_generate(
+                    prompt=prompt,
+                    sampling_params={
+                        "temperature": temperature,
+                        "max_new_tokens": max_new_tokens,
+                        "top_p": 0.9
+                    }
+                ),
+                name=f"generate_{len(tasks)}"  # Add task names for debugging
+            )
+            tasks.append(task)
         
-        # Store results for this run
-        for i, result in enumerate(run_results):
-            if run == 0:
-                # First run, initialize the result with runs array
-                result["runs"] = [{"output": result["output"]}]
-                gpqa_results.append(result)
-            else:
-                # Add this run's output to the existing result
-                gpqa_results[i]["runs"].append({"output": result["output"]})
-    
-    # Process the multiple runs to get averaged results
-    for result in gpqa_results:
-        # Get all outputs from runs
-        outputs = [run["output"] for run in result["runs"]]
+        try:
+            # Process all prompts in parallel with timeout
+            responses = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=300  # 5 minute timeout for entire batch
+            )
+            
+            # Store results
+            results = []
+            for item, prompt, response in zip(input_data, all_prompts, responses):
+                if isinstance(response, Exception):
+                    # Handle individual task failures
+                    print(f"Error processing prompt: {str(response)}")
+                    results.append({
+                        'output': '',
+                        'prompt': prompt,
+                        'error': f'Task error: {str(response)}'
+                    })
+                else:
+                    results.append({
+                        'output': response['text'],
+                        'prompt': prompt,
+                        'error': None
+                    })
+            
+            return results
+            
+        except asyncio.TimeoutError:
+            print("Batch processing timed out, cancelling tasks...")
+            # Cancel any remaining tasks
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            # Wait for cancellation
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
         
-        # Get all parsed answers
-        answers = []
-        for output in outputs:
-            ans, ans_type = match_choice(output, result["options"])
-            answers.append(ans[-1])  # Use the last answer (most likely the final answer)
-        
-        # Count occurrences of each answer
-        answer_counts = Counter(answers)
-        
-        # Get the most common answer
-        most_common_answer = answer_counts.most_common(1)[0][0]
-        
-        # Use the output from the first run where the answer matches the most common answer
-        for i, run in enumerate(result["runs"]):
-            ans, _ = match_choice(run["output"], result["options"])
-            if ans[-1] == most_common_answer:
-                result["output"] = run["output"]
-                result["majority_vote"] = most_common_answer
-                result["vote_counts"] = dict(answer_counts)
-                result["confidence"] = answer_counts[most_common_answer] / num_runs
-                break
-    
-    return gpqa_results
+    except Exception as e:
+        # Log error but let caller handle it
+        print(f"Error in process_data_batch: {str(e)}")
+        raise

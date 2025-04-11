@@ -20,7 +20,7 @@ def get_query_prompt(args, experiment=None):
     if experiment and "config" in experiment:
         step_prompt = experiment["config"].get("prompting", "") == "step"
     
-    if args.test_time_scaling or args.strict_prompt:
+    if args.strict_prompt:
         base_prompt = "Please answer the following multiple-choice question, ensuring your response concludes with the correct option in the format: 'The answer is BLANK' where BLANK is the correct option. For example, if the correct answer is A, your response should be 'The answer is A.'."
         if step_prompt:
             return f"{base_prompt}\n{{question}}\n{{option_str}}\n\nLet's think step by step."

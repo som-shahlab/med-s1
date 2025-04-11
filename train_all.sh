@@ -16,6 +16,9 @@
 # sbatch train/sft_carina.sh medqa-10k-random-no-cot
 # sbatch train/sft_carina.sh medqa-25k
 
+# RQ1 - does training on human-generated reasoning improve performance?
+sbatch train/sft_carina.sh medqa-nejmcr-1k-random-qwen
+
 # Hyperparameter tuning
 sbatch train/sft_carina.sh medqa-25k-no-cot
 sbatch train/sft_carina.sh medqa-25k

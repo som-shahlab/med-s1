@@ -4,6 +4,7 @@ import numpy as np
 import os
 import re
 import sys
+import pandas as pd
 sys.path.append('/share/pi/nigam/users/calebwin/med-s1')
 from eval.scorer import calculate_confidence_interval
 
@@ -25,7 +26,7 @@ def aggregate_confidence_intervals(metrics):
     for data in metrics.values():
         if 'ci_upper' in data and 'ci_lower' in data:
             # Convert CI to standard error
-            ci_range = data['ci_upper'] - data['ci_lower']
+            ci_range = data['accuracy_ci'][1] - data['accuracy_ci'][0]
             se = ci_range / (2 * 1.96)  # 1.96 for 95% CI
             standard_errors.append(se)
     
@@ -51,19 +52,18 @@ def get_model_metrics(model_data):
 
     eval_data = model_data.get('results', {}).get('eval', {})
     
-    # Check if we have a summary directly in results.json
-    if 'summary' in eval_data:
-        summary = eval_data['summary']
-    # Otherwise, check if we have a reference to a summary file
-    elif 'summary_file' in eval_data:
+    # Get metrics from metrics file
+    if 'metrics_file' in eval_data:
+        print(f"Found metrics_file")
         try:
-            with open(eval_data['summary_file'], 'r') as f:
-                summary_data = json.load(f)
-                summary = summary_data.get('summary', {})
+            with open(eval_data['metrics_file'], 'r') as f:
+                metrics_data = json.load(f)
+                return metrics_data
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading summary file {eval_data['summary_file']}: {e}")
+            print(f"Error loading metrics file {eval_data['metrics_file']}: {e}")
             return None
     else:
+        print(f"No metrics_file found in eval data")
         return None
     
     metrics = {}
@@ -250,8 +250,8 @@ def plot_comparison(results_data, output_path):
         for dataset in datasets:
             if dataset in model_metrics:
                 values.append(model_metrics[dataset]['accuracy'] * 100)
-                ci_lower.append(model_metrics[dataset]['ci_lower'] * 100)
-                ci_upper.append(model_metrics[dataset]['ci_upper'] * 100)
+                ci_lower.append(model_metrics[dataset]['accuracy_ci'][0] * 100)
+                ci_upper.append(model_metrics[dataset]['accuracy_ci'][1] * 100)
             else:
                 # Use NaN for missing datasets
                 values.append(float('nan'))
@@ -343,8 +343,8 @@ def plot_reasoning_syntax_impact(results_data, output_path, with_ci=True):
                 metrics[model] = model_metrics['Overall']['accuracy'] * 100
                 if with_ci:
                     metrics[model] = (metrics[model],
-                                      model_metrics['Overall']['ci_lower'] * 100,
-                                      model_metrics['Overall']['ci_upper'] * 100)
+                                      model_metrics['Overall']['accuracy_ci'][0] * 100,
+                                      model_metrics['Overall']['accuracy_ci'][1] * 100)
     
     x = np.arange(len(model_names))
     width = 0.7
@@ -352,12 +352,45 @@ def plot_reasoning_syntax_impact(results_data, output_path, with_ci=True):
     fig, ax = plt.subplots(figsize=(12, 6))
     
     if with_ci:
-        accuracies = [metrics.get(model, (0, 0, 0))[0] for model in models if model in metrics]
-        ci_lower = [metrics.get(model, (0, 0, 0))[1] for model in models if model in metrics]
-        ci_upper = [metrics.get(model, (0, 0, 0))[2] for model in models if model in metrics]
+        # Get models that have metrics
+        available_models = [model for model in models if model in metrics]
+        if not available_models:
+            print("No models with metrics found")
+            return
+            
+        # Get x positions for available models
+        x_available = np.arange(len(available_models))
+        model_names_available = [name for model, name in zip(models, model_names) if model in metrics]
+        
+        # Get metrics for available models
+        accuracies = []
+        ci_lower = []
+        ci_upper = []
+        for model in available_models:
+            if 'Overall' in metrics[model]:
+                accuracies.append(metrics[model]['Overall']['accuracy'] * 100)
+                if 'accuracy_ci' in metrics[model]['Overall']:
+                    ci_lower.append(metrics[model]['Overall']['accuracy_ci'][0] * 100)
+                    ci_upper.append(metrics[model]['Overall']['accuracy_ci'][1] * 100)
+                else:
+                    print(f"Warning: No confidence intervals found for {model}")
+                    ci_lower.append(accuracies[-1])  # Use accuracy as CI bounds if none available
+                    ci_upper.append(accuracies[-1])
+            else:
+                print(f"Warning: No Overall metrics found for {model}")
+                accuracies.append(0)
+                ci_lower.append(0)
+                ci_upper.append(0)
+        
         yerr_lower = [acc - ci_l for acc, ci_l in zip(accuracies, ci_lower)]
         yerr_upper = [ci_u - acc for acc, ci_u in zip(accuracies, ci_upper)]
-        ax.bar(x, accuracies, width, yerr=[yerr_lower, yerr_upper], capsize=5)
+        
+        # Plot only available models
+        ax.bar(x_available, accuracies, width, yerr=[yerr_lower, yerr_upper], capsize=5)
+        
+        # Update x-axis
+        ax.set_xticks(x_available)
+        ax.set_xticklabels(model_names_available, rotation=45, ha="right")
     else:
         accuracies = [metrics.get(model, 0) for model in models if model in metrics]
         ax.bar(x, accuracies, width)
@@ -387,8 +420,8 @@ def plot_sample_efficiency(results_data, output_path, with_ci=True):
             if model_metrics and 'Overall' in model_metrics:
                 accuracy = model_metrics['Overall']['accuracy'] * 100
                 if with_ci:
-                    ci_lower = model_metrics['Overall']['ci_lower'] * 100
-                    ci_upper = model_metrics['Overall']['ci_upper'] * 100
+                    ci_lower = model_metrics['Overall']['accuracy_ci'][0] * 100
+                    ci_upper = model_metrics['Overall']['accuracy_ci'][1] * 100
                     no_reasoning_accuracies.append((accuracy, ci_lower, ci_upper))
                 else:
                     no_reasoning_accuracies.append(accuracy)
@@ -399,8 +432,8 @@ def plot_sample_efficiency(results_data, output_path, with_ci=True):
         if model_metrics and 'Overall' in model_metrics:
             accuracy = model_metrics['Overall']['accuracy'] * 100
             if with_ci:
-                ci_lower = model_metrics['Overall']['ci_lower'] * 100
-                ci_upper = model_metrics['Overall']['ci_upper'] * 100
+                ci_lower = model_metrics['Overall']['accuracy_ci'][0] * 100
+                ci_upper = model_metrics['Overall']['accuracy_ci'][1] * 100
                 huatuo_metrics['accuracy'] = (accuracy, ci_lower, ci_upper)
             else:
                 huatuo_metrics['accuracy'] = accuracy
@@ -411,8 +444,8 @@ def plot_sample_efficiency(results_data, output_path, with_ci=True):
         if model_metrics and 'Overall' in model_metrics:
             accuracy = model_metrics['Overall']['accuracy'] * 100
             if with_ci:
-                ci_lower = model_metrics['Overall']['ci_lower'] * 100
-                ci_upper = model_metrics['Overall']['ci_upper'] * 100
+                ci_lower = model_metrics['Overall']['accuracy_ci'][0] * 100
+                ci_upper = model_metrics['Overall']['accuracy_ci'][1] * 100
                 steps_metrics['accuracy'] = (accuracy, ci_lower, ci_upper)
             else:
                 steps_metrics['accuracy'] = accuracy
@@ -425,24 +458,38 @@ def plot_sample_efficiency(results_data, output_path, with_ci=True):
 
     if with_ci:
         # No Reasoning
-        accuracies, ci_lowers, ci_uppers = zip(*no_reasoning_accuracies)
-        yerr_lower = [acc - ci_l for acc, ci_l in zip(accuracies, ci_lowers)]
-        yerr_upper = [ci_u - acc for acc, ci_u in zip(accuracies, ci_uppers)]
-        ax.errorbar(x_no_reasoning, accuracies, yerr=[yerr_lower, yerr_upper], capsize=5, fmt='-o', label='No Reasoning')
+        if no_reasoning_accuracies:  # Only plot if we have data
+            accuracies, ci_lowers, ci_uppers = zip(*no_reasoning_accuracies)
+            yerr_lower = [acc - ci_l for acc, ci_l in zip(accuracies, ci_lowers)]
+            yerr_upper = [ci_u - acc for acc, ci_u in zip(accuracies, ci_uppers)]
+            ax.errorbar(x_no_reasoning[:len(accuracies)], accuracies, yerr=[yerr_lower, yerr_upper],
+                       capsize=5, fmt='-o', label='No Reasoning')
 
         # HuaTuo
-        if huatuo_metrics:
-            accuracy, ci_lower, ci_upper = huatuo_metrics['accuracy']
-            yerr_lower = accuracy - ci_lower
-            yerr_upper = ci_upper - accuracy
-            ax.errorbar(x_huatuo, [accuracy], yerr=[[yerr_lower], [yerr_upper]], capsize=5, fmt='-o', label='HuaTuo Reasoning')
+        if huatuo_metrics and 'accuracy' in huatuo_metrics:
+            accuracy = huatuo_metrics['accuracy'][0] if isinstance(huatuo_metrics['accuracy'], tuple) else huatuo_metrics['accuracy']
+            if isinstance(huatuo_metrics['accuracy'], tuple):
+                ci_lower = huatuo_metrics['accuracy'][1]
+                ci_upper = huatuo_metrics['accuracy'][2]
+                yerr_lower = accuracy - ci_lower
+                yerr_upper = ci_upper - accuracy
+                ax.errorbar(x_huatuo, [accuracy], yerr=[[yerr_lower], [yerr_upper]],
+                          capsize=5, fmt='-o', label='HuaTuo Reasoning')
+            else:
+                ax.errorbar(x_huatuo, [accuracy], yerr=None, fmt='-o', label='HuaTuo Reasoning')
 
         # Steps
-        if steps_metrics:
-            accuracy, ci_lower, ci_upper = steps_metrics['accuracy']
-            yerr_lower = accuracy - ci_lower
-            yerr_upper = ci_upper - accuracy
-            ax.errorbar(x_steps, [accuracy], yerr=[[yerr_lower], [yerr_upper]], capsize=5, fmt='-o', label='Step Reasoning')
+        if steps_metrics and 'accuracy' in steps_metrics:
+            accuracy = steps_metrics['accuracy'][0] if isinstance(steps_metrics['accuracy'], tuple) else steps_metrics['accuracy']
+            if isinstance(steps_metrics['accuracy'], tuple):
+                ci_lower = steps_metrics['accuracy'][1]
+                ci_upper = steps_metrics['accuracy'][2]
+                yerr_lower = accuracy - ci_lower
+                yerr_upper = ci_upper - accuracy
+                ax.errorbar(x_steps, [accuracy], yerr=[[yerr_lower], [yerr_upper]],
+                          capsize=5, fmt='-o', label='Step Reasoning')
+            else:
+                ax.errorbar(x_steps, [accuracy], yerr=None, fmt='-o', label='Step Reasoning')
     else:
         # No Reasoning
         ax.plot(x_no_reasoning, no_reasoning_accuracies, '-o', label='No Reasoning')
@@ -499,8 +546,8 @@ def plot_perturbation_impact(results_data, output_path, with_ci=True):
         if base_metrics and 'Overall' in base_metrics:
             base_accuracy = base_metrics['Overall']['accuracy'] * 100
             if with_ci:
-                base_ci_lower = base_metrics['Overall']['ci_lower'] * 100
-                base_ci_upper = base_metrics['Overall']['ci_upper'] * 100
+                base_ci_lower = base_metrics['Overall']['accuracy_ci'][0] * 100
+                base_ci_upper = base_metrics['Overall']['accuracy_ci'][1] * 100
     
     # Plot each perturbation type
     for (perturbation_name, model_prefix), color in zip(perturbation_types.items(), colors):
@@ -516,8 +563,8 @@ def plot_perturbation_impact(results_data, output_path, with_ci=True):
                 if metrics and 'Overall' in metrics:
                     accuracies.append(metrics['Overall']['accuracy'] * 100)
                     if with_ci:
-                        ci_lowers.append(metrics['Overall']['ci_lower'] * 100)
-                        ci_uppers.append(metrics['Overall']['ci_upper'] * 100)
+                        ci_lowers.append(metrics['Overall']['accuracy_ci'][0] * 100)
+                        ci_uppers.append(metrics['Overall']['accuracy_ci'][1] * 100)
 
         if len(accuracies) == len(x_values):  # Only plot if we have all points
             if with_ci:
@@ -569,76 +616,225 @@ def plot_perturbation_impact(results_data, output_path, with_ci=True):
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-def main():
-    # Load and plot results
-    results_path = os.environ.get('RESULTS_JSON', 'med-s1/results.json')
-    print(f"Loading results from {results_path}")
-    results = load_results(results_path)
-    plot_comparison(results, 'med-s1/data/model_comparison.png')
-    
-    plot_reasoning_syntax_impact(results, 'med-s1/data/reasoning_syntax_impact_with_ci.png', with_ci=True)
-    plot_reasoning_syntax_impact(results, 'med-s1/data/reasoning_syntax_impact_without_ci.png', with_ci=False)
-    
-    plot_sample_efficiency(results, 'med-s1/data/sample_efficiency_with_ci.png', with_ci=True)
-    plot_sample_efficiency(results, 'med-s1/data/sample_efficiency_without_ci.png', with_ci=False)
-    
-    plot_perturbation_impact(results, 'med-s1/data/perturbation_impact_with_ci.png', with_ci=True)
-    plot_perturbation_impact(results, 'med-s1/data/perturbation_impact_without_ci.png', with_ci=False)
+def format_accuracy(accuracy, with_ci=False, ci_lower=None, ci_upper=None):
+    """Format accuracy with or without confidence interval."""
+    accuracy = accuracy * 100
+    if with_ci:
+        ci_lower = ci_lower * 100
+        ci_upper = ci_upper * 100
+        error = (ci_upper - ci_lower) / 2
+        return f"{accuracy:.1f} ± {error:.1f}%"
+    else:
+        return f"{accuracy:.1f}%"
 
-    # Find models with evaluation results
+def get_all_metrics(metrics):
+    """Get average accuracy across all datasets."""
+    all_datasets = [d for d in metrics.keys() if d != 'Overall']
+    if not all_datasets:
+        return None
+    
+    # Calculate simple average
+    accuracies = [metrics[d]['accuracy'] for d in all_datasets]
+    return sum(accuracies) / len(accuracies)
+
+def get_medqa_metrics(metrics):
+    """Get average accuracy for MedQA datasets."""
+    medqa_datasets = ['MedMCQA_validation', 'MedQA_USLME_test', 'PubMedQA_test',
+                     'MMLU-Pro_Medical_test', 'GPQA_Medical_test']
+    available_datasets = [d for d in medqa_datasets if d in metrics]
+    if not available_datasets:
+        return None
+    
+    # Calculate simple average
+    accuracies = [metrics[d]['accuracy'] for d in available_datasets]
+    return sum(accuracies) / len(accuracies)
+
+
+def create_comparison_csv(results, output_path):
+    """Create CSV file with model comparisons."""
+    # Define MedQA datasets
+    medqa_datasets = [
+        ('MedMCQA_validation', 'MedMCQA'),
+        ('MedQA_USLME_test', 'USMLE'),
+        ('PubMedQA_test', 'PubMedQA'),
+        ('MMLU-Pro_Medical_test', 'MMLU-Med'),
+        ('GPQA_Medical_test', 'GPQA')
+    ]
+    
+    # Create CSV header
+    header = ['Model', 'All', 'MedQA', 'MedDS', 'MedDS_NOTA', 'NEJMCRMC']
+    header.extend([display for _, display in medqa_datasets])
+    
+    csv_rows = [header]
+    
+    # Get all models with eval results
     models_with_eval = []
     for model_key, model_data in results.items():
         if model_data.get('results', {}).get('eval', {}):
             models_with_eval.append(model_key)
     
-    # Get base metrics if available
-    base_metrics = None
-    if 'base' in results and results['base'].get('results', {}).get('eval', {}):
-        base_metrics = get_model_metrics(results['base'])
-    
-    # Print detailed improvements for all models compared to base
-    if base_metrics:
-        print("\nDetailed improvements over base model:")
-        
-        dataset_display = {
-            'MedMCQA_validation': 'MedMCQA',
-            'MedQA_USLME_test': 'USMLE',
-            'PubMedQA_test': 'PubMedQA',
-            'MMLU-Pro_Medical_test': 'MMLU-Med',
-            'GPQA_Medical_test': 'GPQA',
-            'Overall': 'Overall (Simple Average)'
-        }
-        
-        for model in models_with_eval:
-            if model == 'base':
-                continue
-                
-            model_metrics = get_model_metrics(results[model])
-            if not model_metrics:
-                continue
-                
-            improvements = calculate_improvements(model_metrics, base_metrics)
-            
-            print(f"\n{model} improvements:")
-            for dataset, improvement in improvements.items():
-                display_name = dataset_display.get(dataset, dataset)
-                base = base_metrics[dataset]['accuracy'] * 100
-                model_acc = model_metrics[dataset]['accuracy'] * 100
-                print(f"{display_name:15}: {base:.1f}% → {model_acc:.1f}% ({improvement:+.1f}%)")
-
-    # Print average accuracy and CI for all models
-    print("\nAverage accuracy and CI for all models:")
     for model in sorted(models_with_eval):
         metrics = get_model_metrics(results[model])
-        if metrics and 'Overall' in metrics:
-            overall_metrics = metrics['Overall']
-            if 'accuracy' in overall_metrics:
-                accuracy = overall_metrics['accuracy'] * 100
-                ci_lower = overall_metrics['ci_lower'] * 100
-                ci_upper = overall_metrics['ci_upper'] * 100
-                print(f"{model:20}: Accuracy = {accuracy:.1f}%, CI = [{ci_lower:.1f}%, {ci_upper:.1f}%]")
+        if not metrics:
+            continue
+        
+        row = [model]
+        
+        # All datasets average
+        all_acc = get_all_metrics(metrics)
+        row.append(format_accuracy(all_acc) if all_acc is not None else 'N/A')
+        
+        # MedQA average
+        medqa_acc = get_medqa_metrics(metrics)
+        row.append(format_accuracy(medqa_acc) if medqa_acc is not None else 'N/A')
+        
+        # MedDS with CI
+        if 'MedDS' in metrics:
+            row.append(format_accuracy(metrics['MedDS']['accuracy'], True,
+                                    metrics['MedDS']['accuracy_ci'][0],
+                                    metrics['MedDS']['accuracy_ci'][1]))
+        else:
+            row.append('N/A')
+        
+        # MedDS_NOTA with CI
+        if 'MedDS_NOTA' in metrics:
+            row.append(format_accuracy(metrics['MedDS_NOTA']['accuracy'], True,
+                                    metrics['MedDS_NOTA']['accuracy_ci'][0],
+                                    metrics['MedDS_NOTA']['accuracy_ci'][1]))
+        else:
+            row.append('N/A')
+        
+        # NEJMCRMC with CI
+        if 'NEJMCRMC' in metrics:
+            row.append(format_accuracy(metrics['NEJMCRMC']['accuracy'], True,
+                                    metrics['NEJMCRMC']['accuracy_ci'][0],
+                                    metrics['NEJMCRMC']['accuracy_ci'][1]))
+        else:
+            row.append('N/A')
+        
+        # Individual MedQA datasets
+        for dataset_key, _ in medqa_datasets:
+            if dataset_key in metrics:
+                print(f"{metrics[dataset_key]=}")
+                row.append(format_accuracy(metrics[dataset_key]['accuracy'], True,
+                                        metrics[dataset_key]['accuracy_ci'][0],
+                                        metrics[dataset_key]['accuracy_ci'][1]))
             else:
-                print(f"{model:20}: Overall accuracy not available")
+                row.append('N/A')
+        
+        csv_rows.append(row)
+    
+    # Write CSV file
+    with open(output_path, 'w') as f:
+        for row in csv_rows:
+            f.write(','.join(row) + '\n')
+
+def plot_model_subset_comparison():
+    """Create bar plot comparing Qwen and HuaTuo on specific metrics."""
+    # Read data
+    df = pd.read_csv('med-s1/data/model_comparison.csv')
+
+    # Select models and metrics we want
+    models = ['base-qwen', 'huatuo']
+    metrics = ['MedQA', 'MedDS', 'MedDS_NOTA', 'NEJMCRMC']
+    metric_display_names = ['MedQA', 'MedDS', 'MedDS-NOTA', 'NEJM-CR']
+    model_display_names = ['Qwen2.5-7B', 'HuatuoGPT-o1-8B']
+
+    # Extract data
+    data = []
+    errors = []
+    for model in models:
+        model_data = []
+        model_errors = []
+        row = df[df['Model'] == model].iloc[0]
+        for metric in metrics:
+            value = row[metric]
+            if value == 'N/A':
+                model_data.append(0)
+                model_errors.append([0, 0])
+            elif '±' in value:
+                base = float(value.split('±')[0].strip().rstrip('%'))
+                error = float(value.split('±')[1].strip().rstrip('%'))
+                model_data.append(base)
+                model_errors.append([error, error])
+            else:
+                base = float(value.rstrip('%'))
+                model_data.append(base)
+                model_errors.append([0, 0])
+        data.append(model_data)
+        errors.append(model_errors)
+
+    # Convert to numpy arrays
+    data = np.array(data)
+    errors = np.array(errors)
+
+    # Set up the plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Set width of bars and positions
+    bar_width = 0.35  # Wider bars
+    r1 = np.arange(len(metrics))
+
+    # Create bars with more subtle colors
+    colors = ['#8BBABB', '#C7B7A3']  # Soft teal and beige
+    for i, (model_data, model_errors, color) in enumerate(zip(data, errors, colors)):
+        positions = [x + i * bar_width for x in r1]
+        bars = ax.bar(positions, model_data, bar_width, label=model_display_names[i], color=color, alpha=1.0)
+        
+        # Add error bars except for MedQA
+        for j, (pos, val, err) in enumerate(zip(positions, model_data, model_errors)):
+            if metric_display_names[j] != 'MedQA':  # Skip error bars for MedQA
+                ax.errorbar(pos, val, yerr=[[err[0]], [err[1]]], fmt='none', color='#666666', capsize=5)
+        
+        # Add percentage labels for HuaTuo's MedDS and NEJM-CR
+        if model_display_names[i] == 'HuatuoGPT-o1-8B':
+            for j, (rect, metric) in enumerate(zip(bars, metric_display_names)):
+                if metric in ['MedDS', 'NEJM-CR']:
+                    height = rect.get_height()
+                    ax.text((rect.get_x() + rect.get_width()/2.) - .2, height + 1.5,
+                           f'{int(round(height))}%',
+                           ha='center', va='bottom',
+                           color='black',
+                           fontsize=10)
+
+    # Customize the plot
+    ax.set_ylabel('Accuracy (%)', fontsize=12, labelpad=10)
+    ax.set_xticks([r + bar_width/2 for r in r1])
+    ax.set_xticklabels(metric_display_names, rotation=45, ha='right')
+    ax.legend(loc='upper right', frameon=True, fancybox=True, shadow=True)
+
+    # Add grid for better readability
+    ax.grid(True, axis='y', linestyle='--', alpha=0.3, color='gray')
+    ax.set_ylim(0, 100)  # Full percentage range
+
+    # Set background colors
+    ax.set_facecolor('#f8f9fa')
+    fig.patch.set_facecolor('#ffffff')
+
+    # Add subtle spines
+    for spine in ax.spines.values():
+        spine.set_color('#dddddd')
+
+    # Adjust layout and save
+    plt.tight_layout()
+    plt.savefig('med-s1/data/model_comparison_subset.pdf', dpi=300, bbox_inches='tight', format='pdf')
+    plt.close()
+
+def main():
+    # Load results
+    results_path = os.environ.get('RESULTS_JSON', 'med-s1/results.json')
+    print(f"Loading results from {results_path}")
+    results = load_results(results_path)
+    
+    # Create comparison CSV
+    create_comparison_csv(results, 'med-s1/data/model_comparison.csv')
+    
+    # Create plots
+    plot_comparison(results, 'med-s1/data/model_comparison.png')
+    plot_reasoning_syntax_impact(results, 'med-s1/data/reasoning_syntax_impact_with_ci.png', with_ci=True)
+    plot_sample_efficiency(results, 'med-s1/data/sample_efficiency_with_ci.png', with_ci=True)
+    plot_perturbation_impact(results, 'med-s1/data/perturbation_impact_with_ci.png', with_ci=True)
+    plot_model_subset_comparison()
 
 if __name__ == "__main__":
     main()

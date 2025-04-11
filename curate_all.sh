@@ -16,6 +16,16 @@
 # bash curate_med_s1k.sh medqa-5k-random-no-cot
 # bash curate_med_s1k.sh medqa-10k-random-no-cot
 
+# RQ3: what transformations?
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-qa-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-qa-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-abl-extract-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-abl-structure-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-abl-depth-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-abl-purity-qwen-tuned
+bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-qa-reason-qwen-tuned
+
 # Case reports
 bash curate_med_s1k.sh medqa-nejmcr-1k-random-cot-extract-qwen-tuned
 bash curate_med_s1k.sh medqa-nejmcr-1k-random-nejmcr-extract-qwen-tuned

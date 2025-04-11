@@ -120,6 +120,10 @@ from curation_methods.clinical_formatting import (
     transform_to_nejmcr_qa,
     transform_to_nejmcr_reason
 )
+from curation_methods.clinical_formatting_ablation import (
+    transform_to_nejmcr_reason_ablated,
+    ABLATION_CONFIGS
+)
 
 async def transform_async(index: int, transforms: List[Union[str, Tuple[str, str]]], experiment_name: str = "medqa-nejmcr-1k-random") -> Dict[str, Any]:
     """Analyze different extraction methods and transformations on a specific example.
@@ -207,18 +211,28 @@ async def transform_async(index: int, transforms: List[Union[str, Tuple[str, str
                 transform_type = transform.lower() if isinstance(transform, str) else str(transform)
                 # Default to cot for string transforms
                 field = "cot"
-                valid_transforms = ["cot", "nejmcr", "gemini", "nejmcr-transform", "gemini-nejmcr", "nejmcr-qa", "nejmcr-reason", "nejm-qa", "nejm-reason"]
+                
+                # Check for ablation transforms first
+                if transform_type.startswith("nejmcr-reason-"):
+                    transform_type = "nejmcr-reason"  # Handle as nejmcr-reason with ablation
+                
                 # Normalize transform names
                 if transform_type == "nejm-qa":
                     transform_type = "nejmcr-qa"
                 elif transform_type == "nejm-reason":
                     transform_type = "nejmcr-reason"
+                
+                valid_transforms = ["cot", "nejmcr", "gemini", "nejmcr-transform", "gemini-nejmcr",
+                                  "nejmcr-qa", "nejmcr-reason"]
+                
                 if transform_type not in valid_transforms:
-                    # For non-standard transforms, treat as custom CoT prompt
+                    # For non-standard transforms that aren't ablations, treat as custom CoT prompt
                     if not isinstance(transform, str) or not transform.strip():
                         raise ValueError(f"Invalid transform: {transform}")
             
-            logger.info(f"Applying transform: {transform[:100]}...")
+            logger.info(f"Applying transform type: {transform_type}")
+            if transform_type == "nejmcr-reason":
+                logger.info(f"Transform string: {transform}")
             
             # Store current state before transform
             intermediate = {
@@ -285,8 +299,33 @@ async def transform_async(index: int, transforms: List[Union[str, Tuple[str, str
                     elif line.startswith("Answer:"):
                         result["transformed"]["answer"] = line[7:].strip()
             elif transform_type == "nejmcr-reason":
-                # For NEJMCR reason, generate new reasoning based on Q&A
-                transformed = await transform_to_nejmcr_reason(
+                # For NEJMCR reason, check for ablation config
+                ablation_name = None
+                transform_str = str(transform)
+                
+                # Extract ablation name from method name
+                if transform_str.startswith("nejmcr-reason-"):
+                    ablation_name = transform_str.split("-")[-1]
+                    logger.info(f"Extracted ablation name: {ablation_name}")
+                
+                # Handle tuple format
+                if isinstance(transform, tuple) and len(transform) == 2:
+                    _, ablation_name = transform
+                
+                # Validate ablation name
+                if ablation_name and ablation_name in ABLATION_CONFIGS:
+                    logger.info(f"Using ablation: {ablation_name}")
+                    # Use ablated transformation with original content
+                    transformed = await transform_to_nejmcr_reason_ablated(
+                        result["original"]["reasoning"],
+                        result["original"]["question"],
+                        result["original"]["answer"],
+                        model_key,
+                        ABLATION_CONFIGS[ablation_name]
+                    )
+                else:
+                    # Use original transformation
+                    transformed = await transform_to_nejmcr_reason(
                     result["transformed"]["reasoning"],  # cot
                     result["transformed"]["question"],   # question
                     result["transformed"]["answer"],     # answer
@@ -340,14 +379,17 @@ async def transform_async(index: int, transforms: List[Union[str, Tuple[str, str
                     else:
                         raise ValueError(f"Invalid field to transform: {field}")
                 else:
-                    # Legacy support - transform CoT only
-                    prompt = transform.format(
-                        cot=current_values["cot"],
-                        question=current_values["question"],
-                        answer=current_values["answer"]
-                    )
-                    transformed = await get_model_response(prompt, model=model_key, max_tokens=8192)
-                    result["transformed"]["reasoning"] = transformed
+                    # Legacy support - transform CoT only if not an ablation transform
+                    if not str(transform).startswith("nejmcr-reason-"):
+                        prompt = transform.format(
+                            cot=current_values["cot"],
+                            question=current_values["question"],
+                            answer=current_values["answer"]
+                        )
+                        transformed = await get_model_response(prompt, model=model_key, max_tokens=8192)
+                        result["transformed"]["reasoning"] = transformed
+                    else:
+                        raise ValueError(f"Invalid transform type: {transform}")
             
             if not transformed:
                 raise ValueError(f"Transform produced no result: {transform}")
@@ -390,7 +432,10 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Test different extraction methods on specific examples')
     parser.add_argument('index', type=int, help='Index in the dataset to analyze')
-    parser.add_argument('--method', type=str, choices=['gemini', 'nejmcr', 'nejmcr-transform', 'gemini-nejmcr'],
+    parser.add_argument('--method', type=str,
+                      choices=['gemini', 'nejmcr', 'nejmcr-transform', 'gemini-nejmcr',
+                              'nejmcr-reason-extraction', 'nejmcr-reason-structure',
+                              'nejmcr-reason-depth', 'nejmcr-reason-purity', 'nejmcr-reason-style'],
                       required=True, help='Extraction method to test')
     parser.add_argument('--experiment', type=str, default="medqa-nejmcr-1k-random",
                       help='Name of experiment to get example from')

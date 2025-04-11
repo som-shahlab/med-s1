@@ -27,6 +27,7 @@ from .clinical_formatting import (
     transform_to_nejmcr_reason,
     transform_to_nejmcr_clean
 )
+from .clinical_formatting_ablation import transform_to_nejmcr_reason_ablated, ABLATION_CONFIGS
 
 # Get MED_S1_DIR from environment
 MED_S1_DIR = os.environ.get('MED_S1_DIR', '/share/pi/nigam/users/calebwin/med-s1')
@@ -78,14 +79,9 @@ async def _apply_extraction_method(df: pd.DataFrame, config: Dict, extract_metho
         logging.info(f"Processing batch {i//batch_size + 1}/{total_batches} ({len(batch)} examples)")
 
         # Create tasks for all valid rows at once
-        if extract_method in ["Chain of Thought", "NEJM Case Report", "NEJMCR Transform", "Gemini", "Gemini-NEJMCR", "NEJMCR Q&A", "NEJMCR Reasoning"]:
-            # For methods that need Question/Response or row data, pass the row
-            tasks = [transform_func(row['Complex_CoT'], model_key, row=row, **kwargs)
-                    for _, row in batch.iterrows()]
-        else:
-            # For other methods, use original signature
-            tasks = [transform_func(row['Complex_CoT'], model_key, **kwargs)
-                    for _, row in batch.iterrows()]
+        # Always pass row to transform_func since many methods need it
+        tasks = [transform_func(row['Complex_CoT'], model_key, row=row, **kwargs)
+                for _, row in batch.iterrows()]
 
         # Process batch with concurrent API calls
         batch_results = await asyncio.gather(*tasks)
@@ -333,7 +329,31 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
             # Store pre-transform state for this method
             df.loc[df['selected_for_training'], f'Complex_CoT_before_{extract_method}'] = df.loc[df['selected_for_training'], 'Complex_CoT']
             
-            if extract_method == "step":
+            # Check for ablation transforms first
+            if extract_method.startswith("nejmcr-reason-"):
+                ablation_name = extract_method.split("-")[-1]
+                if ablation_name not in ABLATION_CONFIGS:
+                    raise ValueError(f"Unknown ablation configuration: {ablation_name}")
+                
+                logging.info(f"Using ablation configuration: {ablation_name}")
+                ablation_flags = ABLATION_CONFIGS[ablation_name]
+                
+                # Create wrapper for ablated transformation
+                async def ablation_wrapper(cot: str, model_key: str, row: pd.Series = None, **kwargs) -> str:
+                    if row is None:
+                        raise ValueError("Row data is required for ablation transforms")
+                    logging.info(f"Applying ablation {ablation_name} to row {row.name}")
+                    return await transform_to_nejmcr_reason_ablated(
+                        cot,
+                        row['Question'],
+                        row['Response'],
+                        model_key,
+                        ablation_flags
+                    )
+                
+                df = await _apply_extraction_method(df, full_config, f"NEJMCR Reason ({ablation_name})", ablation_wrapper)
+            
+            elif extract_method == "step":
                 df = await _apply_extraction_method(df, full_config, "step", transform_to_steps, extract_type="step")
             elif extract_method == "1-sentence":
                 df = await _apply_extraction_method(df, full_config, "1-sentence", transform_to_steps, extract_type="1-sentence")
@@ -430,27 +450,20 @@ async def apply_step_extraction(df: pd.DataFrame, config: Dict) -> pd.DataFrame:
                 df = await _apply_extraction_method(df, full_config, "NEJMCR Q&A", nejmcr_qa_wrapper)
                 
             elif extract_method == "nejmcr-reason":
-                # Create wrapper for NEJMCR reasoning transformation
+                # Create wrapper for standard NEJMCR reasoning transformation
                 async def nejmcr_reason_wrapper(cot: str, model_key: str, row: pd.Series) -> str:
-                    # Log input for debugging
                     logging.info(f"NEJMCR Reason input for idx {row.name}:")
                     logging.info(f"Question: {row['Question']}")
                     logging.info(f"Answer: {row['Response']}")
                     logging.info(f"Original CoT: {cot[:100]}...")
                     
-                    # Generate new reasoning based on the updated Q&A
-                    new_reasoning = await transform_to_nejmcr_reason(
+                    return await transform_to_nejmcr_reason(
                         cot,
-                        row['Question'],  # Using updated question from nejmcr-qa
-                        row['Response'],  # Using updated answer from nejmcr-qa
+                        row['Question'],
+                        row['Response'],
                         model_key
                     )
-                    
-                    # Log output for verification
-                    logging.info(f"Generated new reasoning: {new_reasoning[:100]}...")
-                    return new_reasoning
                 
-                # Use existing parallelization infrastructure
                 df = await _apply_extraction_method(df, full_config, "NEJMCR Reasoning", nejmcr_reason_wrapper)
             elif extract_method == "nejmcr-clean":
                 # Create wrapper for NEJMCR clean transformation

@@ -19,9 +19,8 @@ elif [ "$(whoami)" == "mwornow" ]; then
     export MED_S1_DIR="/share/pi/nigam/mwornow/med-s1"
 fi
 
-# Parse arguments and set time limit
+# Parse arguments
 debug=false
-test_time_scaling=false
 experiment_name=""
 
 while [[ $# -gt 0 ]]; do
@@ -30,16 +29,11 @@ while [[ $# -gt 0 ]]; do
             debug=true
             shift
             ;;
-        --test-time-scaling)
-            test_time_scaling=true
-            shift
-            ;;
         *)
             if [ -z "$experiment_name" ]; then
                 experiment_name="$1"
             else
-                echo "Usage: $0 [--debug] [--test-time-scaling] <experiment_name>"
-                echo "Note: test_time_scaling will be automatically enabled if specified in experiment config"
+                echo "Usage: $0 [--debug] <experiment_name>"
                 exit 1
             fi
             shift
@@ -48,8 +42,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$experiment_name" ]; then
-    echo "Usage: $0 [--debug] [--test-time-scaling] <experiment_name>"
-    echo "Note: test_time_scaling will be automatically enabled if specified in experiment config"
+    echo "Usage: $0 [--debug] <experiment_name>"
     exit 1
 fi
 
@@ -72,13 +65,6 @@ fi
 config=$(echo "$resolved_config" | jq -r '.config')
 model_key=$(echo "$resolved_config" | jq -r '.model_key')
 model_path=$(echo "$resolved_config" | jq -r '.model_path')
-
-# Check if test_time_scaling is enabled in config
-config_test_time_scaling=$(echo "$resolved_config" | jq -r '.test_time_scaling')
-if [ "$config_test_time_scaling" = "true" ]; then
-    echo "Enabling test time scaling from config"
-    test_time_scaling=true
-fi
 
 # Create logs directory
 echo "Creating logs directory..."
@@ -113,22 +99,14 @@ echo "Starting evaluation..."
 echo "Output directory: ${output_dir}"
 
 # Build eval.py command
-# cmd="python ${MED_S1_DIR}/eval/eval.py \
-#     --experiment_name ${experiment_name} \
-#     --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
-#     --path_to_output_dir ${output_dir}"
 cmd="python ${MED_S1_DIR}/eval/eval.py \
     --experiment_name ${experiment_name} \
+    --path_to_eval_json ${MED_S1_DIR}/eval/data/eval_data.json \
     --path_to_output_dir ${output_dir}"
 
 # Add debug flags if in debug mode
 if [ "$debug" = true ]; then
     cmd="$cmd --debug --debug_samples 1"
-fi
-
-# Add test time scaling flag if enabled
-if [ "$test_time_scaling" = true ]; then
-    cmd="$cmd --test_time_scaling"
 fi
 
 # Run evaluation
